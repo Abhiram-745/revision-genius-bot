@@ -504,50 +504,81 @@ USE THE CALCULATED DURATIONS ABOVE - DO NOT use flat durations for focus topics!
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ` : '';
 
+    // Build a precise blocked time map for event context with exact ISO timestamps
+    const buildBlockedTimeMap = (evts: any[]): string => {
+      const blockedByDate: Record<string, Array<{start: string, end: string, title: string}>> = {};
+      
+      evts.forEach((evt: any) => {
+        const startDate = new Date(evt.start_time);
+        const endDate = new Date(evt.end_time);
+        const dateKey = startDate.toISOString().split('T')[0]; // YYYY-MM-DD format
+        
+        if (!blockedByDate[dateKey]) {
+          blockedByDate[dateKey] = [];
+        }
+        
+        // Format times as HH:MM for clarity
+        const startHH = startDate.getHours().toString().padStart(2, '0');
+        const startMM = startDate.getMinutes().toString().padStart(2, '0');
+        const endHH = endDate.getHours().toString().padStart(2, '0');
+        const endMM = endDate.getMinutes().toString().padStart(2, '0');
+        
+        blockedByDate[dateKey].push({
+          start: `${startHH}:${startMM}`,
+          end: `${endHH}:${endMM}`,
+          title: evt.title
+        });
+      });
+      
+      // Sort each day's events by start time
+      Object.keys(blockedByDate).forEach(date => {
+        blockedByDate[date].sort((a, b) => a.start.localeCompare(b.start));
+      });
+      
+      return Object.entries(blockedByDate)
+        .map(([date, times]) => {
+          const blocks = times.map(t => `  ⛔ ${t.start}-${t.end} (${t.title})`).join('\n');
+          return `📅 ${date}:\n${blocks}`;
+        })
+        .join('\n\n');
+    };
+    
     const eventsContext = events.length > 0
       ? `
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 🔴 BLOCKED EVENT TIMES - ABSOLUTE NO-SCHEDULE ZONES 🔴
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-⚠️ CRITICAL: These events are ONLY for BLOCKING time - DO NOT include them in your generated schedule!
-⚠️ Events like "Badminton", "Football", etc. are USER COMMITMENTS that block study time
-⚠️ DO NOT generate study sessions with these event names - they are already scheduled by the user!
+⚠️ CRITICAL: These events BLOCK study time - DO NOT schedule during these times!
+⚠️ Events like "Badminton", "Football", etc. are USER COMMITMENTS
+⚠️ DO NOT generate study sessions with event names - they are NOT study topics!
 
-These time slots are COMPLETELY UNAVAILABLE for study sessions:
+**BLOCKED TIMES BY DATE (YYYY-MM-DD format - same as your output):**
 
+${buildBlockedTimeMap(events)}
+
+**DETAILED EVENT LIST:**
 ${events.map((evt: any) => {
   const startDate = new Date(evt.start_time);
   const endDate = new Date(evt.end_time);
   const durationMins = Math.round((endDate.getTime() - startDate.getTime()) / (1000 * 60));
-  return `⛔ BLOCKED TIME: ${evt.title}
-   📅 Date: ${startDate.toLocaleDateString()}
-   ⏰ Time: ${startDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} → ${endDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
-   ⏱️  Duration: ${durationMins} minutes BLOCKED
-   ${evt.description ? `📝 ${evt.description}` : ''}
-   🚫 DO NOT CREATE ANY STUDY SESSIONS DURING THIS TIME
-   ⚠️  SKIP FROM ${startDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} TO ${endDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`;
-}).join('\n\n')}
+  const dateStr = startDate.toISOString().split('T')[0];
+  const startTime = startDate.getHours().toString().padStart(2, '0') + ':' + startDate.getMinutes().toString().padStart(2, '0');
+  const endTime = endDate.getHours().toString().padStart(2, '0') + ':' + endDate.getMinutes().toString().padStart(2, '0');
+  return `⛔ "${evt.title}" on ${dateStr} from ${startTime} to ${endTime} (${durationMins} mins BLOCKED)`;
+}).join('\n')}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-**CRITICAL EVENT BLOCKING RULES - MUST FOLLOW EXACTLY:**
+**🚨 CRITICAL EVENT BLOCKING RULES 🚨**
 
-🚫 WHAT YOU MUST NOT DO:
-✗ DO NOT create study sessions with event names (e.g., "Badminton", "Football")
-✗ DO NOT schedule anything during blocked times
-✗ If event is 18:00-21:00 (180 mins), the ENTIRE 3-hour block is BLOCKED
-✗ You cannot schedule at 18:00, 18:15, 18:30, 19:00, 19:30, 20:00, 20:30, 20:45
-
-✓ WHAT YOU MUST DO:
-✓ ONLY schedule study sessions for TOPICS and HOMEWORK from the provided lists
-✓ Skip over event times completely - leave them empty in your schedule
-✓ Next available time slot after 18:00-21:00 event is 21:00 or later
-✓ Schedule work BEFORE event starts OR AFTER event ends
-✓ Events take ABSOLUTE PRIORITY over all study activities
-✓ **RESUME SCHEDULING AFTER EVENTS END**: After an event finishes, you MUST continue scheduling study sessions until the user's requested end time
-✓ Example: If event ends at 21:00 and user wants to study until 23:00, schedule 2 hours of work from 21:00-23:00
-✓ **FILL THE ENTIRE DAY**: Events create gaps, but you must fill the time BEFORE and AFTER events
+1. NEVER schedule a session that starts between an event's start and end time
+2. NEVER schedule a session that would END during an event
+3. If event is 18:00-21:00, you CANNOT use: 18:00, 18:15, 18:30... up to 20:45
+4. First available slot after 18:00-21:00 event is 21:00
+5. Schedule study sessions BEFORE the event starts OR AFTER it ends
+6. RESUME scheduling after events end - fill the day!
+7. Any session overlapping with an event will be AUTOMATICALLY REMOVED by post-processing
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 `
@@ -1751,11 +1782,12 @@ ${prompt}` }
               return false;
             }
             
-            // Check for event overlap but DO NOT remove; just log for debugging
+            // CRITICAL FIX: Actually REMOVE sessions that overlap with events
             const isOverlapping = overlapsWithEvent(date, session.time, session.duration);
             if (isOverlapping) {
-              console.log(`⚠️ Session overlaps event but kept in schedule: ${date} ${session.time} ${session.subject || ''} - ${session.topic || ''}`);
+              console.log(`🚫 REMOVED: Session overlaps with blocked event - ${date} ${session.time} ${session.subject || ''} - ${session.topic || ''}`);
               overlapWarningCount++;
+              return false; // REMOVE the overlapping session
             }
             
             return true;
