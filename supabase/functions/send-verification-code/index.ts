@@ -157,7 +157,9 @@ const handler = async (req: Request): Promise<Response> => {
       const errorMessage = errorObj.message || "";
       if (errorObj.statusCode === 403 || errorMessage.includes("testing emails") || errorMessage.includes("verify a domain")) {
         return new Response(
-          JSON.stringify({ error: "Email verification temporarily unavailable. Please try again." }),
+          JSON.stringify({ 
+            error: "Email service is in testing mode. Please contact support or use abhiramkakarla1@gmail.com for testing." 
+          }),
           { status: 403, headers: { "Content-Type": "application/json", ...corsHeaders } }
         );
       }
