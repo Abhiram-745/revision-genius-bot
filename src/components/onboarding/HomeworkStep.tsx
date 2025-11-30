@@ -9,6 +9,7 @@ import { Plus, Trash2, Image as ImageIcon, X } from "lucide-react";
 import { Subject } from "../OnboardingWizard";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 export interface Homework {
   id?: string;
@@ -289,7 +290,8 @@ const HomeworkStep = ({ subjects, homeworks, setHomeworks }: HomeworkStepProps) 
       {homeworks.length > 0 && (
         <div className="space-y-2">
           <Label>Added Homework ({homeworks.length})</Label>
-          <div className="space-y-2">
+          <ScrollArea className="h-auto max-h-[35vh]">
+            <div className="space-y-2 pr-2">
               {homeworks.map((hw) => (
                 <Card key={hw.id}>
                   <CardContent className="p-3 sm:p-4">
@@ -329,6 +331,7 @@ const HomeworkStep = ({ subjects, homeworks, setHomeworks }: HomeworkStepProps) 
                 </Card>
               ))}
             </div>
+          </ScrollArea>
         </div>
       )}
 

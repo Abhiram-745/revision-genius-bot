@@ -5,6 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { StudyPreferences, DayTimeSlot } from "../OnboardingWizard";
 import { Card } from "@/components/ui/card";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface PreferencesStepProps {
   preferences: StudyPreferences;
@@ -134,7 +135,8 @@ const PreferencesStep = ({ preferences, setPreferences }: PreferencesStepProps) 
 
         <div className="space-y-2">
           <Label>Study Days & Time Periods</Label>
-          <div className="rounded-md border p-2 space-y-2">
+          <ScrollArea className="h-auto max-h-[25vh]">
+            <div className="rounded-md border p-2 space-y-2 pr-2">
               {weekDays.map((day) => {
                 const slot = preferences.day_time_slots.find((s) => s.day === day.value);
                 return (
@@ -173,9 +175,10 @@ const PreferencesStep = ({ preferences, setPreferences }: PreferencesStepProps) 
                       )}
                     </div>
                   </Card>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
+          </ScrollArea>
         </div>
 
         <div className="space-y-2">

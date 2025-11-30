@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Slider } from "@/components/ui/slider";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface DifficultTopicsStepProps {
   subjects: Subject[];
@@ -214,48 +215,50 @@ const DifficultTopicsStep = ({ subjects, topics, setTopics, onAnalysisComplete, 
               <p className="text-xs text-muted-foreground text-amber-600">
                 💡 Click on any topic to add notes about why you find it difficult
               </p>
-              <div className="space-y-2">
-                {focusTopics.map((topic, index) => (
-                  <div 
-                    key={index} 
-                    className="flex items-center justify-between p-3 bg-muted rounded-lg cursor-pointer hover:bg-muted/80 transition-colors border-2 border-transparent hover:border-primary/30"
-                    onClick={() => handleTopicClick(topic)}
-                  >
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2">
-                        <p className="font-medium">{topic.name}</p>
+              <ScrollArea className="h-auto max-h-[35vh]">
+                <div className="space-y-2 pr-2">
+                  {focusTopics.map((topic, index) => (
+                    <div 
+                      key={index} 
+                      className="flex items-center justify-between p-3 bg-muted rounded-lg cursor-pointer hover:bg-muted/80 transition-colors border-2 border-transparent hover:border-primary/30"
+                      onClick={() => handleTopicClick(topic)}
+                    >
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <p className="font-medium">{topic.name}</p>
+                          {topic.difficulties && (
+                            <MessageSquare className="h-4 w-4 text-primary" />
+                          )}
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          {getSubjectName(topic.subjectId)}
+                        </p>
+                        {topic.confidence < 10 && (
+                          <Badge variant="outline" className="text-xs mt-1">
+                            Confidence: {topic.confidence}/10
+                          </Badge>
+                        )}
                         {topic.difficulties && (
-                          <MessageSquare className="h-4 w-4 text-primary" />
+                          <p className="text-xs text-primary italic mt-1 line-clamp-1">
+                            "{topic.difficulties}"
+                          </p>
                         )}
                       </div>
-                      <p className="text-xs text-muted-foreground">
-                        {getSubjectName(topic.subjectId)}
-                      </p>
-                      {topic.confidence < 10 && (
-                        <Badge variant="outline" className="text-xs mt-1">
-                          Confidence: {topic.confidence}/10
-                        </Badge>
-                      )}
-                      {topic.difficulties && (
-                        <p className="text-xs text-primary italic mt-1 line-clamp-1">
-                          "{topic.difficulties}"
-                        </p>
-                      )}
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          removeFocusTopic(topic.name);
+                        }}
+                        className="text-destructive hover:text-destructive"
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        removeFocusTopic(topic.name);
-                      }}
-                      className="text-destructive hover:text-destructive"
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              </ScrollArea>
             </div>
           )}
         </CardContent>

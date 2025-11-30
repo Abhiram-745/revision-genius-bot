@@ -23,6 +23,7 @@ import type { Subject, Topic, TestDate, StudyPreferences } from "./OnboardingWiz
 import { checkCanRegenerateTimetable, incrementUsage } from "@/hooks/useUserRole";
 import PaywallDialog from "@/components/PaywallDialog";
 import { useQueryClient } from "@tanstack/react-query";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface TimetableEditDialogProps {
   timetableId: string;
@@ -265,7 +266,7 @@ export const TimetableEditDialog = ({
         </DialogHeader>
 
         <Tabs defaultValue="dates" className="w-full flex-1 flex flex-col min-h-0">
-          <TabsList className="grid w-full grid-cols-6">
+          <TabsList className="grid w-full grid-cols-6 flex-shrink-0">
             <TabsTrigger value="dates">Dates</TabsTrigger>
             <TabsTrigger value="subjects">Subjects</TabsTrigger>
             <TabsTrigger value="topics">Topics</TabsTrigger>
@@ -274,34 +275,36 @@ export const TimetableEditDialog = ({
             <TabsTrigger value="preferences">Preferences</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="dates" className="space-y-4 overflow-y-auto flex-1 pr-2">
-            <TimetableDatesEditStep
-              startDate={editStartDate}
-              setStartDate={setEditStartDate}
-              endDate={editEndDate}
-              setEndDate={setEditEndDate}
-            />
-          </TabsContent>
+          <ScrollArea className="flex-1 mt-4">
+            <TabsContent value="dates" className="space-y-4 pr-4 mt-0">
+              <TimetableDatesEditStep
+                startDate={editStartDate}
+                setStartDate={setEditStartDate}
+                endDate={editEndDate}
+                setEndDate={setEditEndDate}
+              />
+            </TabsContent>
 
-          <TabsContent value="subjects" className="space-y-4 overflow-y-auto flex-1 pr-2">
-            <SubjectsStep subjects={subjects} setSubjects={setSubjects} />
-          </TabsContent>
+            <TabsContent value="subjects" className="space-y-4 pr-4 mt-0">
+              <SubjectsStep subjects={subjects} setSubjects={setSubjects} />
+            </TabsContent>
 
-          <TabsContent value="topics" className="space-y-4 overflow-y-auto flex-1 pr-2">
-            <TopicsEditStep subjects={subjects} topics={topics} setTopics={setTopics} />
-          </TabsContent>
+            <TabsContent value="topics" className="space-y-4 pr-4 mt-0">
+              <TopicsEditStep subjects={subjects} topics={topics} setTopics={setTopics} />
+            </TabsContent>
 
-          <TabsContent value="tests" className="space-y-4 overflow-y-auto flex-1 pr-2">
-            <TestDatesStep subjects={subjects} testDates={testDates} setTestDates={setTestDates} />
-          </TabsContent>
+            <TabsContent value="tests" className="space-y-4 pr-4 mt-0">
+              <TestDatesStep subjects={subjects} testDates={testDates} setTestDates={setTestDates} />
+            </TabsContent>
 
-          <TabsContent value="homework" className="space-y-4 overflow-y-auto flex-1 pr-2">
-            <HomeworkEditStep subjects={subjects} />
-          </TabsContent>
+            <TabsContent value="homework" className="space-y-4 pr-4 mt-0">
+              <HomeworkEditStep subjects={subjects} />
+            </TabsContent>
 
-          <TabsContent value="preferences" className="space-y-4 overflow-y-auto flex-1 pr-2">
-            <PreferencesStep preferences={preferences} setPreferences={setPreferences} />
-          </TabsContent>
+            <TabsContent value="preferences" className="space-y-4 pr-4 mt-0">
+              <PreferencesStep preferences={preferences} setPreferences={setPreferences} />
+            </TabsContent>
+          </ScrollArea>
         </Tabs>
 
         {/* Generation Progress - shows during regeneration */}
