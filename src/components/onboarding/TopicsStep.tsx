@@ -498,7 +498,7 @@ const TopicsStep = ({ subjects, topics, setTopics }: TopicsStepProps) => {
 
           {!showPriorityOrder ? (
             /* Grouped by Subject View */
-            <ScrollArea className="flex-1 border rounded-lg" style={{ maxHeight: 'calc(100vh - 500px)', minHeight: '150px' }}>
+            <ScrollArea className="flex-1 border rounded-lg h-[200px] sm:h-[250px] md:h-[300px]">
               {filteredTopics.length === 0 ? (
                 <p className="text-sm text-muted-foreground text-center py-4">
                   No topics match your search.
@@ -554,7 +554,7 @@ const TopicsStep = ({ subjects, topics, setTopics }: TopicsStepProps) => {
                   💡 Drag topics to set priority order. Higher priority topics will get more study time in your timetable.
                 </p>
               </div>
-              <ScrollArea className="flex-1 border rounded-lg p-3 bg-muted/20" style={{ maxHeight: 'calc(100vh - 500px)', minHeight: '150px' }}>
+              <ScrollArea className="flex-1 border rounded-lg p-3 bg-muted/20 h-[200px] sm:h-[250px] md:h-[300px]">
                 <DndContext
                   sensors={sensors}
                   collisionDetection={closestCenter}

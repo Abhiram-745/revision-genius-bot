@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Joyride, { Step, CallBackProps, STATUS, ACTIONS } from "react-joyride";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -11,14 +11,42 @@ interface ProductTourProps {
 
 const ProductTour = ({ tourKey, steps, onComplete, run = false }: ProductTourProps) => {
   const [runTour, setRunTour] = useState(false);
+  const [filteredSteps, setFilteredSteps] = useState<Step[]>([]);
+
+  // Check if any dialog or modal is open
+  const isDialogOpen = useCallback(() => {
+    return document.querySelector('[role="dialog"]') !== null || 
+           document.querySelector('[data-state="open"]') !== null;
+  }, []);
+
+  // Check if target element exists and is visible
+  const isTargetVisible = useCallback((target: string | HTMLElement) => {
+    if (typeof target === 'string') {
+      if (target === 'body') return true;
+      const element = document.querySelector(target);
+      if (!element) return false;
+      const rect = element.getBoundingClientRect();
+      return rect.width > 0 && rect.height > 0;
+    }
+    return true;
+  }, []);
 
   useEffect(() => {
     if (run) {
-      checkTourStatus();
+      // Add delay to let DOM settle and avoid conflicts
+      const timer = setTimeout(() => {
+        checkTourStatus();
+      }, 1500);
+      return () => clearTimeout(timer);
     }
   }, [run, tourKey]);
 
   const checkTourStatus = async () => {
+    // Don't show tour if a dialog is open
+    if (isDialogOpen()) {
+      return;
+    }
+
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
@@ -27,7 +55,13 @@ const ProductTour = ({ tourKey, steps, onComplete, run = false }: ProductTourPro
     const tourStatus = JSON.parse(completedTours);
 
     if (!tourStatus[tourKey]) {
-      setRunTour(true);
+      // Filter steps to only include those with visible targets
+      const visibleSteps = steps.filter(step => isTargetVisible(step.target as string));
+      
+      if (visibleSteps.length > 0) {
+        setFilteredSteps(visibleSteps);
+        setRunTour(true);
+      }
     }
   };
 
@@ -50,9 +84,14 @@ const ProductTour = ({ tourKey, steps, onComplete, run = false }: ProductTourPro
     }
   };
 
+  // Don't render if no steps or dialog is open
+  if (filteredSteps.length === 0 || isDialogOpen()) {
+    return null;
+  }
+
   return (
     <Joyride
-      steps={steps}
+      steps={filteredSteps}
       run={runTour}
       continuous
       showProgress

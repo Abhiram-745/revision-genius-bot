@@ -130,6 +130,20 @@ const Auth = () => {
         // Ban dialog will be shown via useEffect watching banInfo
         return;
       }
+      if (error.message === 'EMAIL_NOT_VERIFIED') {
+        // User hasn't verified their email - show verification screen
+        setVerificationEmail(email.toLowerCase());
+        setShowVerification(true);
+        toast.info("Please verify your email to continue");
+        // Resend verification code
+        try {
+          await sendVerificationCode(email);
+          toast.success("Verification code sent to your email");
+        } catch (sendError) {
+          console.error("Failed to resend verification code:", sendError);
+        }
+        return;
+      }
       toast.error(error.message || "Failed to sign in");
     } finally {
       setLoading(false);
