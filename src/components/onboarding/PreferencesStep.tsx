@@ -5,7 +5,6 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
 import { StudyPreferences } from "../OnboardingWizard";
 import { Card } from "@/components/ui/card";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Clock, Brain, MessageSquare, Calendar, Sun, UtensilsCrossed, GraduationCap } from "lucide-react";
 
 interface PreferencesStepProps {
@@ -78,8 +77,7 @@ const PreferencesStep = ({ preferences, setPreferences }: PreferencesStepProps) 
         <p className="text-xs text-muted-foreground">
           Set which days you study and your available time windows for each day.
         </p>
-        <ScrollArea className="h-auto max-h-[35vh]">
-          <div className="space-y-2 pr-2">
+        <div className="space-y-2">
             {weekDays.map((day) => {
               const slot = preferences.day_time_slots.find((s) => s.day === day.value);
               return (
@@ -120,8 +118,7 @@ const PreferencesStep = ({ preferences, setPreferences }: PreferencesStepProps) 
                 </Card>
               );
             })}
-          </div>
-        </ScrollArea>
+        </div>
       </div>
 
       {/* Additional Time Slots */}

@@ -69,6 +69,7 @@ export const EventsWidget = () => {
       const { data, error } = await supabase
         .from("events")
         .select("*")
+        .eq("user_id", user.id) // Only fetch current user's events
         .is("parent_event_id", null) // Only fetch parent events, not instances
         .order("start_time", { ascending: true });
 
