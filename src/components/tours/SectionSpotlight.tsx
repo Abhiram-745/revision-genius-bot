@@ -73,10 +73,10 @@ const SectionSpotlight = ({ sectionKey, onComplete, sectionSteps }: SectionSpotl
       stepIndex={stepIndex}
       continuous={false}
       showProgress={false}
-      showSkipButton={false}
-      disableOverlayClose={true}
-      disableCloseOnEsc={true}
-      hideCloseButton={true}
+      showSkipButton={true}
+      disableOverlayClose={false}
+      disableCloseOnEsc={false}
+      hideCloseButton={false}
       spotlightClicks={true}
       scrollToFirstStep={true}
       scrollOffset={120}
@@ -128,10 +128,13 @@ const SectionSpotlight = ({ sectionKey, onComplete, sectionSteps }: SectionSpotl
           display: "none",
         },
         buttonSkip: {
-          display: "none",
+          color: "hsl(0, 0%, 70%)",
+          fontSize: "13px",
         },
         buttonClose: {
-          display: "none",
+          color: "hsl(0, 0%, 70%)",
+          width: "14px",
+          height: "14px",
         },
       }}
       floaterProps={{
