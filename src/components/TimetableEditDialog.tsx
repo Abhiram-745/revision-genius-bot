@@ -15,6 +15,7 @@ import SubjectsStep from "./onboarding/SubjectsStep";
 import TopicsEditStep from "./onboarding/TopicsEditStep";
 import TestDatesStep from "./onboarding/TestDatesStep";
 import PreferencesStep from "./onboarding/PreferencesStep";
+import TimingStep from "./onboarding/TimingStep";
 import HomeworkEditStep from "./onboarding/HomeworkEditStep";
 import GenerationProgress from "./onboarding/GenerationProgress";
 import TimetableDatesEditStep from "./onboarding/TimetableDatesEditStep";
@@ -266,45 +267,64 @@ export const TimetableEditDialog = ({
         </DialogHeader>
 
         <Tabs defaultValue="dates" className="w-full flex-1 flex flex-col min-h-0">
-          <TabsList className="grid w-full grid-cols-6 flex-shrink-0">
+          <TabsList className="grid w-full grid-cols-7 flex-shrink-0">
             <TabsTrigger value="dates">Dates</TabsTrigger>
             <TabsTrigger value="subjects">Subjects</TabsTrigger>
             <TabsTrigger value="topics">Topics</TabsTrigger>
             <TabsTrigger value="tests">Tests</TabsTrigger>
             <TabsTrigger value="homework">Homework</TabsTrigger>
             <TabsTrigger value="preferences">Preferences</TabsTrigger>
+            <TabsTrigger value="timing">Timing</TabsTrigger>
           </TabsList>
 
-          <ScrollArea className="flex-1 mt-4">
-            <TabsContent value="dates" className="space-y-4 pr-4 mt-0">
-              <TimetableDatesEditStep
-                startDate={editStartDate}
-                setStartDate={setEditStartDate}
-                endDate={editEndDate}
-                setEndDate={setEditEndDate}
-              />
+          <div className="flex-1 mt-4 min-h-0">
+            <TabsContent value="dates" className="mt-0 h-full">
+              <ScrollArea className="h-[50vh] pr-4">
+                <TimetableDatesEditStep
+                  startDate={editStartDate}
+                  setStartDate={setEditStartDate}
+                  endDate={editEndDate}
+                  setEndDate={setEditEndDate}
+                />
+              </ScrollArea>
             </TabsContent>
 
-            <TabsContent value="subjects" className="space-y-4 pr-4 mt-0">
-              <SubjectsStep subjects={subjects} setSubjects={setSubjects} />
+            <TabsContent value="subjects" className="mt-0 h-full">
+              <ScrollArea className="h-[50vh] pr-4">
+                <SubjectsStep subjects={subjects} setSubjects={setSubjects} />
+              </ScrollArea>
             </TabsContent>
 
-            <TabsContent value="topics" className="space-y-4 pr-4 mt-0">
-              <TopicsEditStep subjects={subjects} topics={topics} setTopics={setTopics} />
+            <TabsContent value="topics" className="mt-0 h-full">
+              <ScrollArea className="h-[50vh] pr-4">
+                <TopicsEditStep subjects={subjects} topics={topics} setTopics={setTopics} />
+              </ScrollArea>
             </TabsContent>
 
-            <TabsContent value="tests" className="space-y-4 pr-4 mt-0">
-              <TestDatesStep subjects={subjects} testDates={testDates} setTestDates={setTestDates} />
+            <TabsContent value="tests" className="mt-0 h-full">
+              <ScrollArea className="h-[50vh] pr-4">
+                <TestDatesStep subjects={subjects} testDates={testDates} setTestDates={setTestDates} />
+              </ScrollArea>
             </TabsContent>
 
-            <TabsContent value="homework" className="space-y-4 pr-4 mt-0">
-              <HomeworkEditStep subjects={subjects} />
+            <TabsContent value="homework" className="mt-0 h-full">
+              <ScrollArea className="h-[50vh] pr-4">
+                <HomeworkEditStep subjects={subjects} />
+              </ScrollArea>
             </TabsContent>
 
-            <TabsContent value="preferences" className="space-y-4 pr-4 mt-0">
-              <PreferencesStep preferences={preferences} setPreferences={setPreferences} />
+            <TabsContent value="preferences" className="mt-0 h-full">
+              <ScrollArea className="h-[50vh] pr-4">
+                <PreferencesStep preferences={preferences} setPreferences={setPreferences} />
+              </ScrollArea>
             </TabsContent>
-          </ScrollArea>
+
+            <TabsContent value="timing" className="mt-0 h-full">
+              <ScrollArea className="h-[50vh] pr-4">
+                <TimingStep preferences={preferences} setPreferences={setPreferences} />
+              </ScrollArea>
+            </TabsContent>
+          </div>
         </Tabs>
 
         {/* Generation Progress - shows during regeneration */}
