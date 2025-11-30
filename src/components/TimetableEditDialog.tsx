@@ -17,6 +17,7 @@ import TestDatesStep from "./onboarding/TestDatesStep";
 import PreferencesStep from "./onboarding/PreferencesStep";
 import HomeworkEditStep from "./onboarding/HomeworkEditStep";
 import GenerationProgress from "./onboarding/GenerationProgress";
+import TimetableDatesEditStep from "./onboarding/TimetableDatesEditStep";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { Subject, Topic, TestDate, StudyPreferences } from "./OnboardingWizard";
 import { checkCanRegenerateTimetable, incrementUsage } from "@/hooks/useUserRole";
@@ -108,6 +109,8 @@ export const TimetableEditDialog = ({
   const [isRegenerating, setIsRegenerating] = useState(false);
   const [generationStage, setGenerationStage] = useState<string>("");
   const [showPaywall, setShowPaywall] = useState(false);
+  const [editStartDate, setEditStartDate] = useState(startDate);
+  const [editEndDate, setEditEndDate] = useState(endDate);
 
   const handleRegenerate = async () => {
     if (subjects.length === 0) {
@@ -157,8 +160,8 @@ export const TimetableEditDialog = ({
         .from("events")
         .select("*")
         .eq("user_id", user.id)
-        .gte("start_time", `${startDate}T00:00:00`)
-        .lte("end_time", `${endDate}T23:59:59`)
+        .gte("start_time", `${editStartDate}T00:00:00`)
+        .lte("end_time", `${editEndDate}T23:59:59`)
         .order("start_time", { ascending: true });
 
       if (eventsError) throw eventsError;
@@ -198,8 +201,8 @@ export const TimetableEditDialog = ({
             })) || [],
             events: uniqueEvents,
             aiNotes: preferences.aiNotes || "",
-            startDate,
-            endDate,
+            startDate: editStartDate,
+            endDate: editEndDate,
           },
         }
       );
@@ -213,7 +216,7 @@ export const TimetableEditDialog = ({
       // Update stage to finalizing
       setGenerationStage("finalizing");
 
-      // Update the timetable with new schedule and configuration
+      // Update the timetable with new schedule, dates, and configuration
       const { error: updateError } = await supabase
         .from("timetables")
         .update({
@@ -222,6 +225,8 @@ export const TimetableEditDialog = ({
           topics: topics as any,
           test_dates: testDates as any,
           preferences: preferences as any,
+          start_date: editStartDate,
+          end_date: editEndDate,
         })
         .eq("id", timetableId);
 
@@ -259,14 +264,24 @@ export const TimetableEditDialog = ({
           </DialogDescription>
         </DialogHeader>
 
-        <Tabs defaultValue="subjects" className="w-full flex-1 flex flex-col min-h-0">
-          <TabsList className="grid w-full grid-cols-5">
+        <Tabs defaultValue="dates" className="w-full flex-1 flex flex-col min-h-0">
+          <TabsList className="grid w-full grid-cols-6">
+            <TabsTrigger value="dates">Dates</TabsTrigger>
             <TabsTrigger value="subjects">Subjects</TabsTrigger>
             <TabsTrigger value="topics">Topics</TabsTrigger>
             <TabsTrigger value="tests">Tests</TabsTrigger>
             <TabsTrigger value="homework">Homework</TabsTrigger>
             <TabsTrigger value="preferences">Preferences</TabsTrigger>
           </TabsList>
+
+          <TabsContent value="dates" className="space-y-4 overflow-y-auto flex-1 pr-2">
+            <TimetableDatesEditStep
+              startDate={editStartDate}
+              setStartDate={setEditStartDate}
+              endDate={editEndDate}
+              setEndDate={setEditEndDate}
+            />
+          </TabsContent>
 
           <TabsContent value="subjects" className="space-y-4 overflow-y-auto flex-1 pr-2">
             <SubjectsStep subjects={subjects} setSubjects={setSubjects} />
