@@ -246,6 +246,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         throw new Error('ACCOUNT_BANNED');
       }
 
+      // Check email verification status BEFORE allowing login
+      const isVerified = await checkEmailVerified(email);
+      if (!isVerified) {
+        throw new Error('EMAIL_NOT_VERIFIED');
+      }
+
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password
@@ -255,7 +261,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       setSession(data.session);
       setUser(data.user);
-      await checkEmailVerified(email);
     } catch (err: any) {
       setError(err.message);
       throw err;

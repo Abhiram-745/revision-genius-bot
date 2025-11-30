@@ -20,17 +20,34 @@ const TourManager = () => {
   const location = useLocation();
   const [activeTour, setActiveTour] = useState<string | null>(null);
 
+  // Check if any dialog or modal is open
+  const isDialogOpen = () => {
+    return document.querySelector('[role="dialog"]') !== null || 
+           document.querySelector('[data-state="open"]') !== null;
+  };
+
   useEffect(() => {
     // Don't show tours if guided onboarding is in progress
     const checkOnboardingStatus = async () => {
+      // Don't show tours if a dialog is open
+      if (isDialogOpen()) {
+        setActiveTour(null);
+        return;
+      }
+
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
       
-      const onboardingStage = localStorage.getItem(`onboarding_stage_${user.id}`);
-      const onboardingCompleted = localStorage.getItem(`onboarding_completed_${user.id}`);
-      
-      // Only show context-sensitive tours after guided onboarding is complete
-      if (!onboardingCompleted || onboardingStage !== "completed") {
+      // Only show tours for users who have at least one timetable (not brand new users)
+      const { data: timetables } = await supabase
+        .from("timetables")
+        .select("id")
+        .eq("user_id", user.id)
+        .limit(1);
+
+      // Don't show tours for brand new users - let them explore first
+      if (!timetables || timetables.length === 0) {
+        setActiveTour(null);
         return;
       }
       
@@ -64,10 +81,10 @@ const TourManager = () => {
       }
     };
     
-    // Small delay to ensure DOM elements are rendered
+    // Longer delay to ensure DOM elements are rendered and dialogs are closed
     const timer = setTimeout(() => {
       checkOnboardingStatus();
-    }, 800);
+    }, 2000);
 
     return () => clearTimeout(timer);
   }, [location.pathname]);
