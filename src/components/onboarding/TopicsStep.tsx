@@ -16,6 +16,7 @@ import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, v
 import { CSS } from '@dnd-kit/utilities';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Slider } from "@/components/ui/slider";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface TopicsStepProps {
   subjects: Subject[];
@@ -310,7 +311,7 @@ const TopicsStep = ({ subjects, topics, setTopics }: TopicsStepProps) => {
   }, {} as Record<string, Topic[]>);
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 flex flex-col">
       {/* Subject Navigation Header */}
       <div className="space-y-3 flex-shrink-0">
         <div className="flex items-center justify-between">
@@ -467,7 +468,7 @@ const TopicsStep = ({ subjects, topics, setTopics }: TopicsStepProps) => {
     </Tabs>
 
       {topics.length > 0 && (
-        <div className="space-y-4 pt-6 border-t flex flex-col min-h-0">
+        <div className="space-y-4 pt-6 border-t flex flex-col flex-1 min-h-0">
           <div className="flex items-center justify-between">
             <div className="space-y-1">
               <Label className="text-base font-semibold">All Topics</Label>
@@ -497,7 +498,7 @@ const TopicsStep = ({ subjects, topics, setTopics }: TopicsStepProps) => {
 
           {!showPriorityOrder ? (
             /* Grouped by Subject View */
-            <div className="flex-1 min-h-0 overflow-y-auto border rounded-lg max-h-[40vh]">
+            <ScrollArea className="flex-1 border rounded-lg" style={{ maxHeight: 'calc(100vh - 500px)', minHeight: '150px' }}>
               {filteredTopics.length === 0 ? (
                 <p className="text-sm text-muted-foreground text-center py-4">
                   No topics match your search.
@@ -544,16 +545,16 @@ const TopicsStep = ({ subjects, topics, setTopics }: TopicsStepProps) => {
                   })}
                 </Accordion>
               )}
-            </div>
+            </ScrollArea>
           ) : (
             /* Priority Order View with Drag and Drop */
-            <div className="space-y-3">
-              <div className="p-3 bg-muted/30 rounded-lg border">
+            <div className="space-y-3 flex-1 flex flex-col min-h-0">
+              <div className="p-3 bg-muted/30 rounded-lg border flex-shrink-0">
                 <p className="text-xs text-muted-foreground">
                   💡 Drag topics to set priority order. Higher priority topics will get more study time in your timetable.
                 </p>
               </div>
-              <div className="flex-1 min-h-0 overflow-y-auto border rounded-lg p-3 bg-muted/20 max-h-[40vh]">
+              <ScrollArea className="flex-1 border rounded-lg p-3 bg-muted/20" style={{ maxHeight: 'calc(100vh - 500px)', minHeight: '150px' }}>
                 <DndContext
                   sensors={sensors}
                   collisionDetection={closestCenter}
@@ -582,7 +583,7 @@ const TopicsStep = ({ subjects, topics, setTopics }: TopicsStepProps) => {
                     </div>
                   </SortableContext>
                 </DndContext>
-              </div>
+              </ScrollArea>
             </div>
           )}
         </div>
