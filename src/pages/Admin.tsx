@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import Header from "@/components/Header";
-import { Users, Crown, Ban, Search, Eye, Calendar, BookOpen, Clock, AlertTriangle, CheckCircle, XCircle, Loader2 } from "lucide-react";
+import { Users, Crown, Ban, Search, Eye, Calendar, BookOpen, Clock, AlertTriangle, CheckCircle, XCircle, Loader2, ChevronRight, ArrowLeft } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -17,6 +17,7 @@ import { Label } from "@/components/ui/label";
 import PageTransition from "@/components/PageTransition";
 import { triggerConfetti, triggerEmoji } from "@/utils/celebrations";
 import { motion, AnimatePresence } from "framer-motion";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 
 interface UserData {
   id: string;
@@ -53,6 +54,11 @@ const Admin = () => {
   const [selectedUser, setSelectedUser] = useState<UserData | null>(null);
   const [userStats, setUserStats] = useState<UserStats | null>(null);
   const [statsLoading, setStatsLoading] = useState(false);
+  const [selectedTimetable, setSelectedTimetable] = useState<any | null>(null);
+  const [selectedEvent, setSelectedEvent] = useState<any | null>(null);
+  const [selectedHomework, setSelectedHomework] = useState<any | null>(null);
+  const [selectedSession, setSelectedSession] = useState<any | null>(null);
+  const [selectedScore, setSelectedScore] = useState<any | null>(null);
 
   // Dialog states
   const [banDialogOpen, setBanDialogOpen] = useState(false);
@@ -270,8 +276,17 @@ const Admin = () => {
     }
   };
 
+  const resetSelectedItems = () => {
+    setSelectedTimetable(null);
+    setSelectedEvent(null);
+    setSelectedHomework(null);
+    setSelectedSession(null);
+    setSelectedScore(null);
+  };
+
   const handleViewUser = async (user: UserData) => {
     setSelectedUser(user);
+    resetSelectedItems();
     setStatsLoading(true);
     
     try {
@@ -719,7 +734,7 @@ const Admin = () => {
           </Dialog>
 
           {/* User Details Dialog */}
-          <Dialog open={!!selectedUser} onOpenChange={() => setSelectedUser(null)}>
+          <Dialog open={!!selectedUser} onOpenChange={(open) => { if (!open) { setSelectedUser(null); resetSelectedItems(); } }}>
             <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden">
               <DialogHeader className="flex flex-row items-center justify-between">
                 <DialogTitle className="flex items-center gap-3">
@@ -803,81 +818,291 @@ const Admin = () => {
 
                     <ScrollArea className="h-[350px] mt-4">
                       <TabsContent value="timetables" className="space-y-2 mt-0">
-                        {userStats.timetables.length === 0 ? (
+                        {selectedTimetable ? (
+                          <div className="space-y-4">
+                            <Button variant="ghost" size="sm" onClick={() => setSelectedTimetable(null)} className="gap-2">
+                              <ArrowLeft className="h-4 w-4" />
+                              Back to list
+                            </Button>
+                            <div className="p-4 border rounded-lg bg-muted/30">
+                              <h3 className="font-semibold text-lg mb-2">{selectedTimetable.name}</h3>
+                              <p className="text-sm text-muted-foreground mb-4">
+                                {selectedTimetable.start_date} to {selectedTimetable.end_date}
+                              </p>
+                              
+                              {selectedTimetable.subjects && (
+                                <div className="mb-4">
+                                  <Label className="text-sm font-medium">Subjects:</Label>
+                                  <div className="flex flex-wrap gap-1 mt-1">
+                                    {(selectedTimetable.subjects as any[]).map((s: any, i: number) => (
+                                      <Badge key={i} variant="outline">{s.name}</Badge>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+
+                              {selectedTimetable.schedule && (
+                                <div>
+                                  <Label className="text-sm font-medium mb-2 block">Schedule:</Label>
+                                  <Accordion type="multiple" className="w-full">
+                                    {Object.entries(selectedTimetable.schedule as Record<string, any[]>).map(([date, sessions]) => (
+                                      <AccordionItem key={date} value={date}>
+                                        <AccordionTrigger className="text-sm">
+                                          {new Date(date).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'short' })}
+                                          <Badge variant="secondary" className="ml-2">{(sessions as any[]).length} sessions</Badge>
+                                        </AccordionTrigger>
+                                        <AccordionContent>
+                                          <div className="space-y-2 pl-2">
+                                            {(sessions as any[]).map((session: any, idx: number) => (
+                                              <div key={idx} className="p-2 bg-background border rounded text-sm">
+                                                <div className="flex justify-between items-start">
+                                                  <div>
+                                                    <p className="font-medium">{session.subject}</p>
+                                                    <p className="text-xs text-muted-foreground">{session.topic || 'General study'}</p>
+                                                  </div>
+                                                  <div className="text-right text-xs text-muted-foreground">
+                                                    <p>{session.startTime} - {session.endTime}</p>
+                                                    <Badge variant="outline" className="mt-1">{session.type || 'study'}</Badge>
+                                                  </div>
+                                                </div>
+                                              </div>
+                                            ))}
+                                          </div>
+                                        </AccordionContent>
+                                      </AccordionItem>
+                                    ))}
+                                  </Accordion>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        ) : userStats?.timetables.length === 0 ? (
                           <p className="text-muted-foreground text-center py-8">No timetables</p>
                         ) : (
-                          userStats.timetables.map((tt: any) => (
-                            <div key={tt.id} className="p-3 border rounded-lg hover:bg-muted/50 transition-colors">
-                              <p className="font-medium">{tt.name}</p>
-                              <p className="text-sm text-muted-foreground">
-                                {tt.start_date} to {tt.end_date}
-                              </p>
+                          userStats?.timetables.map((tt: any) => (
+                            <div 
+                              key={tt.id} 
+                              className="p-3 border rounded-lg hover:bg-muted/50 transition-colors cursor-pointer flex items-center justify-between group"
+                              onClick={() => setSelectedTimetable(tt)}
+                            >
+                              <div>
+                                <p className="font-medium">{tt.name}</p>
+                                <p className="text-sm text-muted-foreground">
+                                  {tt.start_date} to {tt.end_date}
+                                </p>
+                                {tt.subjects && (
+                                  <p className="text-xs text-muted-foreground mt-1">
+                                    {(tt.subjects as any[]).length} subjects • {tt.schedule ? Object.keys(tt.schedule).length : 0} days scheduled
+                                  </p>
+                                )}
+                              </div>
+                              <ChevronRight className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
                             </div>
                           ))
                         )}
                       </TabsContent>
 
                       <TabsContent value="events" className="space-y-2 mt-0">
-                        {userStats.events.length === 0 ? (
+                        {selectedEvent ? (
+                          <div className="space-y-4">
+                            <Button variant="ghost" size="sm" onClick={() => setSelectedEvent(null)} className="gap-2">
+                              <ArrowLeft className="h-4 w-4" />
+                              Back to list
+                            </Button>
+                            <div className="p-4 border rounded-lg bg-muted/30">
+                              <h3 className="font-semibold text-lg mb-2">{selectedEvent.title}</h3>
+                              <div className="space-y-2 text-sm">
+                                <p><span className="text-muted-foreground">Start:</span> {new Date(selectedEvent.start_time).toLocaleString()}</p>
+                                <p><span className="text-muted-foreground">End:</span> {new Date(selectedEvent.end_time).toLocaleString()}</p>
+                                {selectedEvent.description && (
+                                  <p><span className="text-muted-foreground">Description:</span> {selectedEvent.description}</p>
+                                )}
+                                {selectedEvent.is_recurring && (
+                                  <Badge variant="outline">Recurring: {selectedEvent.recurrence_rule}</Badge>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        ) : userStats?.events.length === 0 ? (
                           <p className="text-muted-foreground text-center py-8">No events</p>
                         ) : (
-                          userStats.events.map((evt: any) => (
-                            <div key={evt.id} className="p-3 border rounded-lg hover:bg-muted/50 transition-colors">
-                              <p className="font-medium">{evt.title}</p>
-                              <p className="text-sm text-muted-foreground">
-                                {new Date(evt.start_time).toLocaleString()}
-                              </p>
+                          userStats?.events.map((evt: any) => (
+                            <div 
+                              key={evt.id} 
+                              className="p-3 border rounded-lg hover:bg-muted/50 transition-colors cursor-pointer flex items-center justify-between group"
+                              onClick={() => setSelectedEvent(evt)}
+                            >
+                              <div>
+                                <p className="font-medium">{evt.title}</p>
+                                <p className="text-sm text-muted-foreground">
+                                  {new Date(evt.start_time).toLocaleString()}
+                                </p>
+                              </div>
+                              <ChevronRight className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
                             </div>
                           ))
                         )}
                       </TabsContent>
 
                       <TabsContent value="homework" className="space-y-2 mt-0">
-                        {userStats.homeworks.length === 0 ? (
+                        {selectedHomework ? (
+                          <div className="space-y-4">
+                            <Button variant="ghost" size="sm" onClick={() => setSelectedHomework(null)} className="gap-2">
+                              <ArrowLeft className="h-4 w-4" />
+                              Back to list
+                            </Button>
+                            <div className="p-4 border rounded-lg bg-muted/30">
+                              <h3 className="font-semibold text-lg mb-2">{selectedHomework.title}</h3>
+                              <div className="space-y-2 text-sm">
+                                <p><span className="text-muted-foreground">Subject:</span> {selectedHomework.subject}</p>
+                                <p><span className="text-muted-foreground">Due:</span> {selectedHomework.due_date}</p>
+                                {selectedHomework.duration && (
+                                  <p><span className="text-muted-foreground">Duration:</span> {selectedHomework.duration} mins</p>
+                                )}
+                                {selectedHomework.description && (
+                                  <p><span className="text-muted-foreground">Description:</span> {selectedHomework.description}</p>
+                                )}
+                                <Badge variant={selectedHomework.completed ? "default" : "secondary"}>
+                                  {selectedHomework.completed ? "Completed" : "Pending"}
+                                </Badge>
+                              </div>
+                            </div>
+                          </div>
+                        ) : userStats?.homeworks.length === 0 ? (
                           <p className="text-muted-foreground text-center py-8">No homework</p>
                         ) : (
-                          userStats.homeworks.map((hw: any) => (
-                            <div key={hw.id} className="p-3 border rounded-lg hover:bg-muted/50 transition-colors">
-                              <p className="font-medium">{hw.title}</p>
-                              <p className="text-sm text-muted-foreground">
-                                {hw.subject} - Due: {hw.due_date}
-                              </p>
-                              <Badge variant={hw.completed ? "default" : "secondary"}>
-                                {hw.completed ? "Completed" : "Pending"}
-                              </Badge>
+                          userStats?.homeworks.map((hw: any) => (
+                            <div 
+                              key={hw.id} 
+                              className="p-3 border rounded-lg hover:bg-muted/50 transition-colors cursor-pointer flex items-center justify-between group"
+                              onClick={() => setSelectedHomework(hw)}
+                            >
+                              <div>
+                                <p className="font-medium">{hw.title}</p>
+                                <p className="text-sm text-muted-foreground">
+                                  {hw.subject} - Due: {hw.due_date}
+                                </p>
+                                <Badge variant={hw.completed ? "default" : "secondary"}>
+                                  {hw.completed ? "Completed" : "Pending"}
+                                </Badge>
+                              </div>
+                              <ChevronRight className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
                             </div>
                           ))
                         )}
                       </TabsContent>
 
                       <TabsContent value="sessions" className="space-y-2 mt-0">
-                        {userStats.studySessions.length === 0 ? (
+                        {selectedSession ? (
+                          <div className="space-y-4">
+                            <Button variant="ghost" size="sm" onClick={() => setSelectedSession(null)} className="gap-2">
+                              <ArrowLeft className="h-4 w-4" />
+                              Back to list
+                            </Button>
+                            <div className="p-4 border rounded-lg bg-muted/30">
+                              <h3 className="font-semibold text-lg mb-2">{selectedSession.subject}</h3>
+                              <div className="space-y-2 text-sm">
+                                <p><span className="text-muted-foreground">Topic:</span> {selectedSession.topic || 'N/A'}</p>
+                                <p><span className="text-muted-foreground">Type:</span> {selectedSession.session_type}</p>
+                                <p><span className="text-muted-foreground">Planned:</span> {new Date(selectedSession.planned_start).toLocaleString()}</p>
+                                <p><span className="text-muted-foreground">Duration:</span> {selectedSession.planned_duration_minutes} mins planned</p>
+                                {selectedSession.actual_duration_minutes && (
+                                  <p><span className="text-muted-foreground">Actual:</span> {selectedSession.actual_duration_minutes} mins</p>
+                                )}
+                                {selectedSession.focus_score && (
+                                  <p><span className="text-muted-foreground">Focus Score:</span> {selectedSession.focus_score}/10</p>
+                                )}
+                                {selectedSession.notes && (
+                                  <p><span className="text-muted-foreground">Notes:</span> {selectedSession.notes}</p>
+                                )}
+                                <Badge variant={selectedSession.status === "completed" ? "default" : "secondary"}>
+                                  {selectedSession.status}
+                                </Badge>
+                              </div>
+                            </div>
+                          </div>
+                        ) : userStats?.studySessions.length === 0 ? (
                           <p className="text-muted-foreground text-center py-8">No study sessions</p>
                         ) : (
-                          userStats.studySessions.map((session: any) => (
-                            <div key={session.id} className="p-3 border rounded-lg hover:bg-muted/50 transition-colors">
-                              <p className="font-medium">{session.subject}</p>
-                              <p className="text-sm text-muted-foreground">
-                                {session.topic} - {session.planned_duration_minutes} mins
-                              </p>
-                              <Badge variant={session.status === "completed" ? "default" : "secondary"}>
-                                {session.status}
-                              </Badge>
+                          userStats?.studySessions.map((session: any) => (
+                            <div 
+                              key={session.id} 
+                              className="p-3 border rounded-lg hover:bg-muted/50 transition-colors cursor-pointer flex items-center justify-between group"
+                              onClick={() => setSelectedSession(session)}
+                            >
+                              <div>
+                                <p className="font-medium">{session.subject}</p>
+                                <p className="text-sm text-muted-foreground">
+                                  {session.topic} - {session.planned_duration_minutes} mins
+                                </p>
+                                <Badge variant={session.status === "completed" ? "default" : "secondary"}>
+                                  {session.status}
+                                </Badge>
+                              </div>
+                              <ChevronRight className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
                             </div>
                           ))
                         )}
                       </TabsContent>
 
                       <TabsContent value="scores" className="space-y-2 mt-0">
-                        {userStats.testScores.length === 0 ? (
+                        {selectedScore ? (
+                          <div className="space-y-4">
+                            <Button variant="ghost" size="sm" onClick={() => setSelectedScore(null)} className="gap-2">
+                              <ArrowLeft className="h-4 w-4" />
+                              Back to list
+                            </Button>
+                            <div className="p-4 border rounded-lg bg-muted/30">
+                              <h3 className="font-semibold text-lg mb-2">{selectedScore.subject} - {selectedScore.test_type}</h3>
+                              <div className="space-y-2 text-sm">
+                                <p><span className="text-muted-foreground">Date:</span> {selectedScore.test_date}</p>
+                                <p><span className="text-muted-foreground">Score:</span> {selectedScore.marks_obtained}/{selectedScore.total_marks} ({selectedScore.percentage}%)</p>
+                                
+                                {selectedScore.strengths?.length > 0 && (
+                                  <div>
+                                    <span className="text-muted-foreground">Strengths:</span>
+                                    <ul className="list-disc list-inside ml-2">
+                                      {selectedScore.strengths.map((s: string, i: number) => <li key={i}>{s}</li>)}
+                                    </ul>
+                                  </div>
+                                )}
+                                
+                                {selectedScore.weaknesses?.length > 0 && (
+                                  <div>
+                                    <span className="text-muted-foreground">Weaknesses:</span>
+                                    <ul className="list-disc list-inside ml-2">
+                                      {selectedScore.weaknesses.map((w: string, i: number) => <li key={i}>{w}</li>)}
+                                    </ul>
+                                  </div>
+                                )}
+                                
+                                {selectedScore.recommendations?.length > 0 && (
+                                  <div>
+                                    <span className="text-muted-foreground">Recommendations:</span>
+                                    <ul className="list-disc list-inside ml-2">
+                                      {selectedScore.recommendations.map((r: string, i: number) => <li key={i}>{r}</li>)}
+                                    </ul>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        ) : userStats?.testScores.length === 0 ? (
                           <p className="text-muted-foreground text-center py-8">No test scores</p>
                         ) : (
-                          userStats.testScores.map((score: any) => (
-                            <div key={score.id} className="p-3 border rounded-lg hover:bg-muted/50 transition-colors">
-                              <p className="font-medium">{score.subject} - {score.test_type}</p>
-                              <p className="text-sm text-muted-foreground">
-                                Score: {score.marks_obtained}/{score.total_marks} ({score.percentage}%)
-                              </p>
+                          userStats?.testScores.map((score: any) => (
+                            <div 
+                              key={score.id} 
+                              className="p-3 border rounded-lg hover:bg-muted/50 transition-colors cursor-pointer flex items-center justify-between group"
+                              onClick={() => setSelectedScore(score)}
+                            >
+                              <div>
+                                <p className="font-medium">{score.subject} - {score.test_type}</p>
+                                <p className="text-sm text-muted-foreground">
+                                  Score: {score.marks_obtained}/{score.total_marks} ({score.percentage}%)
+                                </p>
+                              </div>
+                              <ChevronRight className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
                             </div>
                           ))
                         )}
