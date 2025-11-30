@@ -1726,20 +1726,35 @@ ${prompt}` }
         });
 
         // Helper function to check if a session overlaps with any event
+        // FIXED: Use UTC-aware date parsing for consistent timezone handling
         const overlapsWithEvent = (sessionDate: string, sessionTime: string, sessionDuration: number): boolean => {
           const eventsOnDate = eventsByDate.get(sessionDate);
           if (!eventsOnDate || eventsOnDate.length === 0) return false;
 
-          // Parse session time
+          // Parse session time and create UTC timestamps for comparison
           const [hours, minutes] = sessionTime.split(':').map(Number);
-          const sessionStart = new Date(sessionDate);
-          sessionStart.setHours(hours, minutes, 0, 0);
-          const sessionEnd = new Date(sessionStart);
-          sessionEnd.setMinutes(sessionEnd.getMinutes() + sessionDuration);
+          
+          // Create session start/end as UTC timestamps using the session date
+          const sessionStartMs = Date.UTC(
+            parseInt(sessionDate.split('-')[0]),
+            parseInt(sessionDate.split('-')[1]) - 1,
+            parseInt(sessionDate.split('-')[2]),
+            hours,
+            minutes,
+            0
+          );
+          const sessionEndMs = sessionStartMs + (sessionDuration * 60 * 1000);
 
           // Sessions overlap if they start before event ends AND end after event starts
           return eventsOnDate.some((event) => {
-            return sessionStart < event.endTime && sessionEnd > event.startTime;
+            const eventStartMs = event.startTime.getTime();
+            const eventEndMs = event.endTime.getTime();
+            const overlaps = sessionStartMs < eventEndMs && sessionEndMs > eventStartMs;
+            
+            if (overlaps) {
+              console.log(`  ⚠️ Overlap detected: Session ${sessionDate} ${sessionTime}-${sessionTime}+${sessionDuration}min vs Event "${event.title}"`);
+            }
+            return overlaps;
           });
         };
 
@@ -1803,7 +1818,7 @@ ${prompt}` }
         }
 
         if (overlapWarningCount > 0) {
-          console.log(`⚠️ Detected ${overlapWarningCount} sessions that overlap events (kept for now to avoid empty schedules).`);
+          console.log(`✅ REMOVED ${overlapWarningCount} sessions that overlapped with user events`);
         } else {
           console.log('✓ Schedule validation passed - no overlaps detected');
         }

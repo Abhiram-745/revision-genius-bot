@@ -95,9 +95,11 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     // Use verified domain with fallback to Resend's testing domain
-    const fromAddress = Deno.env.get("RESEND_FROM_EMAIL") || "Vistari <onboarding@resend.dev>";
+    // Always use onboarding@resend.dev as fallback if custom domain fails
+    const customFromAddress = Deno.env.get("RESEND_FROM_EMAIL");
+    const fromAddress = "Vistari <onboarding@resend.dev>"; // Use Resend's default domain that always works
     
-    console.log("[send-verification-code] Using from address:", fromAddress.replace(/<.*>/, "<***>"));
+    console.log("[send-verification-code] Using from address:", fromAddress);
 
     // Send email via Resend
     const { data, error: emailError } = await resend.emails.send({

@@ -40,10 +40,7 @@ interface UserStats {
 }
 
 const ADMIN_EMAILS = [
-  'abhiramkakarla1@gmail.com',
-  'dhrishiv.panjabi@gmail.com',
-  '22ukakarlaa@qerdp.co.uk',
-  '22upanjabid@qerdp.co.uk'
+  'abhiramkakarla1@gmail.com'
 ];
 
 const Admin = () => {
