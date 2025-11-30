@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface TopicsEditStepProps {
   subjects: Subject[];
@@ -219,69 +220,71 @@ const TopicsEditStep = ({ subjects, topics, setTopics }: TopicsEditStepProps) =>
         <Card>
           <CardContent className="pt-6">
             <Label className="mb-3 block">Topics in {currentSubject.name} ({currentSubjectTopics.length})</Label>
-            <div className="space-y-2 max-h-[300px] overflow-y-auto pr-2">
-              {topics.filter(t => t.subject_id === currentSubjectId).map((topic, index) => {
-                const originalIndex = topics.indexOf(topic);
-                const isEditing = editingIndex === originalIndex;
-                
-                return (
-                  <div
-                    key={originalIndex}
-                    className="flex items-center gap-2 p-3 bg-muted rounded-lg"
-                  >
-                    {isEditing ? (
-                      <>
-                        <Input
-                          value={editingName}
-                          onChange={(e) => setEditingName(e.target.value)}
-                          onKeyPress={(e) => e.key === "Enter" && saveEdit(originalIndex)}
-                          className="flex-1"
-                          autoFocus
-                        />
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => saveEdit(originalIndex)}
-                          className="text-primary hover:text-primary"
-                        >
-                          <Check className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={cancelEdit}
-                          className="text-muted-foreground hover:text-foreground"
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
-                      </>
-                    ) : (
-                      <>
-                        <div className="flex-1">
-                          <p className="font-medium">{topic.name}</p>
-                        </div>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => startEditing(originalIndex, topic.name)}
-                          className="text-muted-foreground hover:text-primary"
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => removeTopic(originalIndex)}
-                          className="text-destructive hover:text-destructive"
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
-                      </>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
+            <ScrollArea className="h-auto max-h-[35vh]">
+              <div className="space-y-2 pr-2">
+                {topics.filter(t => t.subject_id === currentSubjectId).map((topic, index) => {
+                  const originalIndex = topics.indexOf(topic);
+                  const isEditing = editingIndex === originalIndex;
+                  
+                  return (
+                    <div
+                      key={originalIndex}
+                      className="flex items-center gap-2 p-3 bg-muted rounded-lg"
+                    >
+                      {isEditing ? (
+                        <>
+                          <Input
+                            value={editingName}
+                            onChange={(e) => setEditingName(e.target.value)}
+                            onKeyPress={(e) => e.key === "Enter" && saveEdit(originalIndex)}
+                            className="flex-1"
+                            autoFocus
+                          />
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => saveEdit(originalIndex)}
+                            className="text-primary hover:text-primary"
+                          >
+                            <Check className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={cancelEdit}
+                            className="text-muted-foreground hover:text-foreground"
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </>
+                      ) : (
+                        <>
+                          <div className="flex-1">
+                            <p className="font-medium">{topic.name}</p>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => startEditing(originalIndex, topic.name)}
+                            className="text-muted-foreground hover:text-primary"
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => removeTopic(originalIndex)}
+                            className="text-destructive hover:text-destructive"
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </ScrollArea>
           </CardContent>
         </Card>
       )}

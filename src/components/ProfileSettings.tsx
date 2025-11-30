@@ -15,6 +15,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
 import { Separator } from "@/components/ui/separator";
 import { useTourReset } from "@/hooks/useTourReset";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface ProfileSettingsProps {
   open: boolean;
@@ -151,8 +152,8 @@ const ProfileSettings = ({ open, onOpenChange, onProfileUpdate }: ProfileSetting
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[450px] animate-scale-in">
-        <DialogHeader>
+      <DialogContent className="sm:max-w-[450px] animate-scale-in max-h-[85vh] flex flex-col">
+        <DialogHeader className="flex-shrink-0">
           <DialogTitle className="flex items-center gap-3 text-xl">
             <div className="p-2 bg-gradient-primary rounded-lg">
               <User className="h-5 w-5 text-white" />
@@ -163,62 +164,133 @@ const ProfileSettings = ({ open, onOpenChange, onProfileUpdate }: ProfileSetting
             Update your profile information and preferences.
           </DialogDescription>
         </DialogHeader>
-        <div className="space-y-6 py-6">
-          <div className="flex flex-col items-center gap-4">
-            <div className="relative">
-              <Avatar className="h-24 w-24 ring-4 ring-primary/20">
-                <AvatarImage src={avatarUrl || undefined} />
-                <AvatarFallback className="bg-gradient-primary text-white text-2xl">
-                  {fullName?.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2) || "U"}
-                </AvatarFallback>
-              </Avatar>
-              <label
-                htmlFor="avatar-upload"
-                className={`absolute bottom-0 right-0 p-2 bg-primary text-white rounded-full cursor-pointer hover:bg-primary/90 transition-all shadow-lg ${uploading ? 'opacity-50 cursor-not-allowed' : ''}`}
+        
+        <ScrollArea className="flex-1 pr-4">
+          <div className="space-y-6 py-6">
+            <div className="flex flex-col items-center gap-4">
+              <div className="relative">
+                <Avatar className="h-24 w-24 ring-4 ring-primary/20">
+                  <AvatarImage src={avatarUrl || undefined} />
+                  <AvatarFallback className="bg-gradient-primary text-white text-2xl">
+                    {fullName?.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2) || "U"}
+                  </AvatarFallback>
+                </Avatar>
+                <label
+                  htmlFor="avatar-upload"
+                  className={`absolute bottom-0 right-0 p-2 bg-primary text-white rounded-full cursor-pointer hover:bg-primary/90 transition-all shadow-lg ${uploading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                >
+                  <Camera className="h-4 w-4" />
+                  <input
+                    id="avatar-upload"
+                    type="file"
+                    accept="image/*"
+                    onChange={handleAvatarUpload}
+                    disabled={uploading}
+                    className="hidden"
+                  />
+                </label>
+              </div>
+              <div className="text-center">
+                <p className="text-sm font-medium">Profile Picture</p>
+                <p className="text-xs text-muted-foreground">Click camera to upload</p>
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <Label htmlFor="full-name" className="text-sm font-semibold">Full Name</Label>
+              <Input
+                id="full-name"
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                placeholder="Enter your full name"
+                className="h-11 text-base transition-all duration-200 focus:ring-2 focus:ring-primary/20"
+              />
+            </div>
+
+            <div className="space-y-3">
+              <Label htmlFor="email" className="text-sm font-semibold">Email Address</Label>
+              <Input
+                id="email"
+                value={email}
+                disabled
+                className="bg-muted/50 h-11 text-base"
+              />
+              <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+                <span className="inline-block w-1.5 h-1.5 bg-muted-foreground/50 rounded-full"></span>
+                Email address cannot be changed
+              </p>
+            </div>
+
+            <Separator />
+
+            {/* Tutorial Reset Section */}
+            <div className="space-y-4">
+              <div>
+                <h3 className="text-lg font-display font-semibold">Reset Tutorials</h3>
+                <p className="text-sm text-muted-foreground">
+                  Restart all interactive tutorials to see the guided tours again when you visit each section.
+                </p>
+              </div>
+              
+              <Button
+                onClick={resetAllTours}
+                variant="outline"
+                className="w-full gap-2"
               >
-                <Camera className="h-4 w-4" />
-                <input
-                  id="avatar-upload"
-                  type="file"
-                  accept="image/*"
-                  onChange={handleAvatarUpload}
-                  disabled={uploading}
-                  className="hidden"
-                />
-              </label>
+                <RotateCcw className="h-4 w-4" />
+                Reset All Tutorials
+              </Button>
             </div>
-            <div className="text-center">
-              <p className="text-sm font-medium">Profile Picture</p>
-              <p className="text-xs text-muted-foreground">Click camera to upload</p>
+
+            <Separator />
+
+            {/* Export Account Section */}
+            <div className="space-y-4">
+              <div>
+                <h3 className="text-lg font-display font-semibold">Export Account Data</h3>
+                <p className="text-sm text-muted-foreground">
+                  Download all your Vistara data as a JSON file for backup or migration to another account.
+                </p>
+              </div>
+              
+              <Button
+                onClick={async () => {
+                  try {
+                    setLoading(true);
+                    const { data, error } = await supabase.functions.invoke('export-account');
+                    
+                    if (error) throw error;
+                    
+                    // Create download
+                    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `vistara-export-${email}-${new Date().toISOString().split('T')[0]}.json`;
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                    document.body.removeChild(a);
+                    
+                    toast.success("Export complete! Your data has been downloaded.");
+                  } catch (error: any) {
+                    console.error('Export error:', error);
+                    toast.error(error?.message || "Failed to export data. Please try again.");
+                  } finally {
+                    setLoading(false);
+                  }
+                }}
+                disabled={loading}
+                variant="outline"
+                className="w-full"
+              >
+                {loading ? "Exporting..." : "Export Account Data"}
+              </Button>
             </div>
           </div>
+        </ScrollArea>
 
-          <div className="space-y-3">
-            <Label htmlFor="full-name" className="text-sm font-semibold">Full Name</Label>
-            <Input
-              id="full-name"
-              value={fullName}
-              onChange={(e) => setFullName(e.target.value)}
-              placeholder="Enter your full name"
-              className="h-11 text-base transition-all duration-200 focus:ring-2 focus:ring-primary/20"
-            />
-          </div>
-
-          <div className="space-y-3">
-            <Label htmlFor="email" className="text-sm font-semibold">Email Address</Label>
-            <Input
-              id="email"
-              value={email}
-              disabled
-              className="bg-muted/50 h-11 text-base"
-            />
-            <p className="text-xs text-muted-foreground flex items-center gap-1.5">
-              <span className="inline-block w-1.5 h-1.5 bg-muted-foreground/50 rounded-full"></span>
-              Email address cannot be changed
-            </p>
-          </div>
-        </div>
-        <div className="flex justify-end gap-3 pt-2">
+        <div className="flex justify-end gap-3 pt-4 border-t flex-shrink-0">
           <Button
             variant="outline"
             onClick={() => onOpenChange(false)}
@@ -240,73 +312,6 @@ const ProfileSettings = ({ open, onOpenChange, onProfileUpdate }: ProfileSetting
             ) : (
               "Save Changes"
             )}
-          </Button>
-        </div>
-
-        <Separator className="my-6" />
-
-        {/* Tutorial Reset Section */}
-        <div className="space-y-4">
-          <div>
-            <h3 className="text-lg font-display font-semibold">Reset Tutorials</h3>
-            <p className="text-sm text-muted-foreground">
-              Restart all interactive tutorials to see the guided tours again when you visit each section.
-            </p>
-          </div>
-          
-          <Button
-            onClick={resetAllTours}
-            variant="outline"
-            className="w-full gap-2"
-          >
-            <RotateCcw className="h-4 w-4" />
-            Reset All Tutorials
-          </Button>
-        </div>
-
-        <Separator className="my-6" />
-
-        {/* Export Account Section */}
-        <div className="space-y-4">
-          <div>
-            <h3 className="text-lg font-display font-semibold">Export Account Data</h3>
-            <p className="text-sm text-muted-foreground">
-              Download all your Vistara data as a JSON file for backup or migration to another account.
-            </p>
-          </div>
-          
-          <Button
-            onClick={async () => {
-              try {
-                setLoading(true);
-                const { data, error } = await supabase.functions.invoke('export-account');
-                
-                if (error) throw error;
-                
-                // Create download
-                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `vistara-export-${email}-${new Date().toISOString().split('T')[0]}.json`;
-                document.body.appendChild(a);
-                a.click();
-                window.URL.revokeObjectURL(url);
-                document.body.removeChild(a);
-                
-                toast.success("Export complete! Your data has been downloaded.");
-              } catch (error: any) {
-                console.error('Export error:', error);
-                toast.error(error?.message || "Failed to export data. Please try again.");
-              } finally {
-                setLoading(false);
-              }
-            }}
-            disabled={loading}
-            variant="outline"
-            className="w-full"
-          >
-            {loading ? "Exporting..." : "Export Account Data"}
           </Button>
         </div>
       </DialogContent>

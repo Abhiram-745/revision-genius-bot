@@ -5,6 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { X, Plus } from "lucide-react";
 import { Subject, TestDate } from "../OnboardingWizard";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface TestDatesStepProps {
   subjects: Subject[];
@@ -97,29 +98,31 @@ const TestDatesStep = ({ subjects, testDates, setTestDates }: TestDatesStepProps
       {testDates.length > 0 && (
         <div className="space-y-2">
           <Label>Your Test Dates ({testDates.length})</Label>
-          <div className="space-y-2">
-            {testDates.map((test, index) => (
-              <div
-                key={index}
-                className="flex items-center justify-between p-3 bg-muted rounded-lg"
-              >
-                <div>
-                  <p className="font-medium">{getSubjectName(test.subject_id)}</p>
-                  <p className="text-sm text-muted-foreground">
-                    {new Date(test.test_date).toLocaleDateString("en-GB")} • {test.test_type}
-                  </p>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => removeTestDate(index)}
-                  className="text-destructive hover:text-destructive"
+          <ScrollArea className="h-auto max-h-[35vh]">
+            <div className="space-y-2 pr-2">
+              {testDates.map((test, index) => (
+                <div
+                  key={index}
+                  className="flex items-center justify-between p-3 bg-muted rounded-lg"
                 >
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
-            ))}
-          </div>
+                  <div>
+                    <p className="font-medium">{getSubjectName(test.subject_id)}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {new Date(test.test_date).toLocaleDateString("en-GB")} • {test.test_type}
+                    </p>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => removeTestDate(index)}
+                    className="text-destructive hover:text-destructive"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </ScrollArea>
         </div>
       )}
     </div>
