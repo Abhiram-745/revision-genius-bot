@@ -616,6 +616,261 @@ Schedule EASIER topics during ${peak.worstTimeWindow.toUpperCase()} hours.
       console.log('No existing insights found, proceeding without peak hours data');
     }
 
+    // ========================================================================
+    // PHASE 1.5: Fetch Historical Learning Data (Reflections & Progress)
+    // ========================================================================
+    
+    let historicalStruggleContext = "";
+    const struggledTopicNames: Set<string> = new Set();
+    
+    try {
+      // Fetch ALL reflections across ALL timetables for this user
+      const { data: allReflections } = await supabaseClient
+        .from('topic_reflections')
+        .select('subject, topic, reflection_data')
+        .eq('user_id', user.id);
+      
+      // Fetch topic progress data
+      const { data: topicProgress } = await supabaseClient
+        .from('topic_progress')
+        .select('*')
+        .eq('user_id', user.id);
+      
+      if (allReflections && allReflections.length > 0) {
+        console.log(`📚 Found ${allReflections.length} historical reflections`);
+        
+        // Analyze historical struggle points
+        const topicStruggleMap = new Map<string, { 
+          topic: string; 
+          subject: string;
+          avgFocus: number; 
+          incompleteCount: number; 
+          totalReflections: number;
+          difficulties: string[];
+        }>();
+        
+        for (const reflection of allReflections) {
+          const topicKey = reflection.topic.toLowerCase().trim();
+          const data = reflection.reflection_data as any;
+          
+          if (!topicStruggleMap.has(topicKey)) {
+            topicStruggleMap.set(topicKey, {
+              topic: reflection.topic,
+              subject: reflection.subject,
+              avgFocus: 0,
+              incompleteCount: 0,
+              totalReflections: 0,
+              difficulties: []
+            });
+          }
+          
+          const entry = topicStruggleMap.get(topicKey)!;
+          entry.totalReflections++;
+          
+          // Track focus levels (lower = more struggle)
+          if (data?.focusLevel !== undefined) {
+            entry.avgFocus = ((entry.avgFocus * (entry.totalReflections - 1)) + data.focusLevel) / entry.totalReflections;
+          }
+          
+          // Track incomplete sessions
+          if (data?.completed === 'partially' || data?.completed === 'no') {
+            entry.incompleteCount++;
+          }
+          
+          // Track difficulty ratings
+          if (data?.difficulty && data.difficulty >= 4) {
+            entry.difficulties.push(`Rated ${data.difficulty}/5 difficulty`);
+          }
+          
+          // Track challenging aspects mentioned
+          if (data?.challengingAspects && Array.isArray(data.challengingAspects)) {
+            for (const aspect of data.challengingAspects) {
+              if (aspect.content) {
+                entry.difficulties.push(aspect.content.substring(0, 50));
+              }
+            }
+          }
+        }
+        
+        // Identify topics with struggles (low focus OR high incomplete rate)
+        const struggleTopics: Array<{ topic: string; subject: string; severity: number; reason: string }> = [];
+        
+        for (const [topicKey, entry] of topicStruggleMap) {
+          let severity = 0;
+          const reasons: string[] = [];
+          
+          // Low focus (< 60%)
+          if (entry.avgFocus > 0 && entry.avgFocus < 60) {
+            severity += (60 - entry.avgFocus) / 10;
+            reasons.push(`Avg focus: ${Math.round(entry.avgFocus)}%`);
+          }
+          
+          // High incomplete rate (> 30%)
+          const incompleteRate = entry.incompleteCount / entry.totalReflections;
+          if (incompleteRate > 0.3) {
+            severity += incompleteRate * 5;
+            reasons.push(`${Math.round(incompleteRate * 100)}% incomplete`);
+          }
+          
+          // Multiple difficulty mentions
+          if (entry.difficulties.length >= 2) {
+            severity += entry.difficulties.length;
+            reasons.push(`${entry.difficulties.length} difficulty mentions`);
+          }
+          
+          if (severity > 2) {
+            struggleTopics.push({
+              topic: entry.topic,
+              subject: entry.subject,
+              severity,
+              reason: reasons.join(', ')
+            });
+            struggledTopicNames.add(topicKey);
+          }
+        }
+        
+        // Sort by severity (highest first)
+        struggleTopics.sort((a, b) => b.severity - a.severity);
+        
+        if (struggleTopics.length > 0) {
+          console.log(`⚠️ Identified ${struggleTopics.length} struggle topics from history`);
+          
+          historicalStruggleContext = `
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📚 HISTORICAL STRUGGLE ANALYSIS (AUTO-DETECTED) 📚
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Based on this user's ENTIRE study history, they struggle with these topics:
+
+${struggleTopics.slice(0, 10).map((t, i) => `${i + 1}. "${t.topic}" (${t.subject})
+   → ${t.reason}
+   → Severity score: ${t.severity.toFixed(1)}/10`).join('\n\n')}
+
+⚠️ IMPORTANT: Give these topics EXTRA study time even if NOT explicitly marked as difficult!
+⚠️ Schedule these topics during PEAK PERFORMANCE hours.
+⚠️ Consider shorter sessions with more repetition for these topics.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+`;
+        }
+      }
+      
+      // Also check topic progress for low mastery
+      if (topicProgress && topicProgress.length > 0) {
+        for (const progress of topicProgress) {
+          if (progress.mastery_level === 'struggling' || progress.progress_percentage < 30) {
+            // Find matching current topic
+            const topicKey = topics.find((t: any) => 
+              t.subject_id === progress.subject_id
+            )?.name?.toLowerCase().trim();
+            
+            if (topicKey) {
+              struggledTopicNames.add(topicKey);
+            }
+          }
+        }
+      }
+      
+    } catch (error) {
+      console.log('No historical reflections found, proceeding without struggle analysis');
+    }
+
+    // ========================================================================
+    // Find overlapping topics between current timetable and historical struggles
+    // ========================================================================
+    
+    const overlappingTopics: Array<{ currentTopic: string; subject: string; isStruggleTopic: boolean }> = [];
+    
+    for (const topic of topics) {
+      const normalizedTopic = topic.name.toLowerCase().trim();
+      const subject = subjects.find((s: any) => s.id === topic.subject_id);
+      
+      // Check if this topic matches any struggled topic (fuzzy match)
+      let isStruggleTopic = struggledTopicNames.has(normalizedTopic);
+      
+      if (!isStruggleTopic) {
+        // Fuzzy match against struggled topics
+        for (const struggledTopic of struggledTopicNames) {
+          if (isValidTopicFuzzy(normalizedTopic, new Set([struggledTopic])) ||
+              isValidTopicFuzzy(struggledTopic, new Set([normalizedTopic]))) {
+            isStruggleTopic = true;
+            break;
+          }
+        }
+      }
+      
+      overlappingTopics.push({
+        currentTopic: topic.name,
+        subject: subject?.name || 'Unknown',
+        isStruggleTopic
+      });
+    }
+    
+    const matchedStruggleTopics = overlappingTopics.filter(t => t.isStruggleTopic);
+    console.log(`🔗 ${matchedStruggleTopics.length} current topics match historical struggles`);
+
+    // ========================================================================
+    // Calculate FULL COVERAGE requirements
+    // ========================================================================
+    
+    const totalTopics = topics.length;
+    const totalDays = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+    const avgTopicsPerDay = Math.ceil(totalTopics / totalDays);
+    
+    // Calculate minimum session durations to fit all topics
+    const minSessionsNeeded = totalTopics; // At least 1 session per topic
+    const totalSessionTime = minSessionsNeeded * effectiveSessionDuration;
+    const totalBreakTime = minSessionsNeeded * effectiveBreakDuration;
+    const totalRequiredForCoverage = totalSessionTime + totalBreakTime;
+    
+    let coverageAdjustedDuration = effectiveSessionDuration;
+    let coverageAdjustedBreak = effectiveBreakDuration;
+    
+    if (totalRequiredForCoverage > totalAvailableMinutes && totalAvailableMinutes > 0) {
+      // Need to reduce durations to fit all topics
+      const reductionFactor = totalAvailableMinutes / totalRequiredForCoverage;
+      coverageAdjustedDuration = Math.max(20, Math.round(effectiveSessionDuration * reductionFactor));
+      coverageAdjustedBreak = Math.max(5, Math.round(effectiveBreakDuration * Math.max(0.6, reductionFactor)));
+      
+      console.log(`⚙️ Coverage adjustment: ${totalTopics} topics need ${totalRequiredForCoverage}min, have ${totalAvailableMinutes}min`);
+      console.log(`   Sessions: ${effectiveSessionDuration} → ${coverageAdjustedDuration}min, Breaks: ${effectiveBreakDuration} → ${coverageAdjustedBreak}min`);
+    }
+    
+    const fullCoverageContext = `
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🎯 FULL TOPIC COVERAGE REQUIREMENT 🎯
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+EVERY topic MUST be scheduled AT LEAST ONCE - NO EXCEPTIONS!
+
+📊 COVERAGE STATS:
+- Total topics to cover: ${totalTopics}
+- Days available: ${totalDays}
+- Avg topics per day needed: ${avgTopicsPerDay}
+- Available study time: ${totalAvailableMinutes} minutes (${(totalAvailableMinutes / 60).toFixed(1)} hours)
+
+📌 PRIORITY HIERARCHY (allocate time accordingly):
+1. HIGH PRIORITY (${matchedStruggleTopics.length} topics) - Historical struggles + user-marked difficult
+   → Schedule 2-3 sessions of ${coverageAdjustedDuration} mins each
+   → Schedule during PEAK performance hours
+   
+2. MEDIUM PRIORITY - Topics with upcoming tests
+   → Schedule 1-2 sessions of ${coverageAdjustedDuration} mins each
+   
+3. STANDARD PRIORITY - All other topics  
+   → Schedule at least 1 session of ${coverageAdjustedDuration} mins
+
+${matchedStruggleTopics.length > 0 ? `
+🔴 AUTO-BOOSTED TOPICS (from historical data):
+${matchedStruggleTopics.map(t => `  • ${t.currentTopic} (${t.subject})`).join('\n')}
+` : ''}
+
+⚠️ CRITICAL: If time is limited:
+- REDUCE session duration (minimum ${coverageAdjustedDuration} mins)
+- REDUCE break duration (minimum ${coverageAdjustedBreak} mins)
+- NEVER SKIP a topic entirely!
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+`;
+
     console.log("Generating timetable with:", {
       subjectsCount: subjects.length,
       topicsCount: topics.length,
@@ -864,6 +1119,10 @@ USE THESE ADJUSTED DURATIONS for all sessions.
 
     const firstSlot = preferences.day_time_slots.find((slot: any) => slot.enabled) || { startTime: "09:00", endTime: "22:00" };
 
+    // Use coverage-adjusted durations for final scheduling
+    const finalSessionDuration = coverageAdjustedDuration;
+    const finalBreakDuration = coverageAdjustedBreak;
+
     const prompt = `You are an expert educational planner. Create a study timetable.
 
 ${freeSlotsContext}
@@ -877,6 +1136,10 @@ ${modeContext}
 ${schoolHoursContext}
 
 ${peakHoursContext}
+
+${historicalStruggleContext}
+
+${fullCoverageContext}
 
 SUBJECTS: ${subjectsContext}
 
@@ -893,20 +1156,22 @@ ${userNotesContext}
 STUDY PREFERENCES:
 - Daily study hours target: ${preferences.daily_study_hours}
 - Available days: ${enabledDays}
-- Session duration: ${effectiveSessionDuration} minutes
-- Break duration: ${effectiveBreakDuration} minutes
+- Session duration: ${finalSessionDuration} minutes (adjusted for full coverage)
+- Break duration: ${finalBreakDuration} minutes
 
 TIMETABLE PERIOD: ${startDate} to ${endDate}
 
 **CRITICAL REQUIREMENTS:**
 1. ONLY schedule in the ✅ FREE time slots listed above
 2. ALL sessions MUST end BEFORE the free slot ends
-3. Include ALL topics at least once
+3. Include ALL ${totalTopics} topics at least once - NO EXCEPTIONS
 4. Include ALL homework BEFORE due dates
-5. Add ${effectiveBreakDuration}-min breaks between sessions
+5. Add ${finalBreakDuration}-min breaks between sessions
 6. NEVER schedule during ⛔ BLOCKED event times
 7. Events are NOT study topics - do NOT add them as sessions
 8. Fill all available free time productively
+9. Give EXTRA sessions to topics marked as historical struggles
+10. If time is limited, use shorter ${finalSessionDuration}-min sessions to fit ALL topics
 
 **OUTPUT FORMAT (JSON only, no markdown):**
 {
@@ -914,7 +1179,7 @@ TIMETABLE PERIOD: ${startDate} to ${endDate}
     "YYYY-MM-DD": [
       {
         "time": "HH:MM",
-        "duration": ${effectiveSessionDuration},
+        "duration": ${finalSessionDuration},
         "subject": "subject name",
         "topic": "topic name",
         "type": "practice|exam_questions|homework|revision|break",
@@ -935,7 +1200,8 @@ Session types:
 VERIFICATION BEFORE RESPONDING:
 ✓ Every session starts and ends within a ✅ FREE slot
 ✓ No sessions overlap with ⛔ BLOCKED times
-✓ All topics included at least once
+✓ ALL ${totalTopics} topics included at least once
+✓ Historical struggle topics have 2+ sessions
 ✓ All homework scheduled before due dates
 ✓ Breaks added between sessions`;
 
@@ -1242,20 +1508,44 @@ ${prompt}` }
       console.log(`🕐 Time window validation: ${timeWindowRemovedCount} sessions removed`);
 
       // ========================================================================
-      // PHASE 5: Gap Filling
+      // PHASE 5: Gap Filling - Prioritize struggled topics
       // ========================================================================
       
       const totalRemoved = hallucinationCount + overlapRemovedCount + timeWindowRemovedCount;
       
-      if (totalRemoved > 5) {
-        console.log(`🔧 ${totalRemoved} sessions were removed. Starting gap filling...`);
+      // Also check if any topics are missing from the schedule
+      const scheduledTopics = new Set<string>();
+      for (const [, sessions] of Object.entries(scheduleData.schedule)) {
+        for (const session of sessions as any[]) {
+          if (session.topic) {
+            scheduledTopics.add(session.topic.toLowerCase().trim());
+          }
+        }
+      }
+      
+      const missingTopics = topics.filter((t: any) => {
+        const topicKey = t.name.toLowerCase().trim();
+        return !scheduledTopics.has(topicKey) && !isValidTopicFuzzy(topicKey, scheduledTopics);
+      });
+      
+      console.log(`📋 Missing topics check: ${missingTopics.length} topics not yet scheduled`);
+      
+      // Sort topics to prioritize struggled ones first
+      const sortedTopicsForGapFill = [...topics].sort((a: any, b: any) => {
+        const aIsStruggle = struggledTopicNames.has(a.name.toLowerCase().trim()) ? 1 : 0;
+        const bIsStruggle = struggledTopicNames.has(b.name.toLowerCase().trim()) ? 1 : 0;
+        return bIsStruggle - aIsStruggle; // Struggle topics first
+      });
+      
+      if (totalRemoved > 5 || missingTopics.length > 0) {
+        console.log(`🔧 ${totalRemoved} sessions were removed, ${missingTopics.length} topics missing. Starting gap filling...`);
         scheduleData.schedule = fillGapsWithSessions(
           scheduleData.schedule,
           allDayFreeSlots,
-          topics,
+          sortedTopicsForGapFill,
           subjects,
-          effectiveSessionDuration,
-          effectiveBreakDuration,
+          finalSessionDuration,
+          finalBreakDuration,
           timetableMode || 'balanced'
         );
       }

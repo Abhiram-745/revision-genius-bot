@@ -246,12 +246,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         throw new Error('ACCOUNT_BANNED');
       }
 
-      // Check email verification status BEFORE allowing login
-      const isVerified = await checkEmailVerified(email);
-      if (!isVerified) {
-        throw new Error('EMAIL_NOT_VERIFIED');
-      }
-
+      // Login directly - email verification is only required during signup
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password
