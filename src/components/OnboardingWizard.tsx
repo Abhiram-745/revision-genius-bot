@@ -185,7 +185,7 @@ const OnboardingWizard = ({ onComplete, onCancel }: OnboardingWizardProps) => {
   return (
     <>
       <WizardTour currentStep={step} />
-      <Card className="w-full max-w-3xl mx-auto shadow-lg flex flex-col h-[calc(100vh-4rem)] sm:h-[85vh]">
+      <Card className="w-full max-w-3xl mx-auto shadow-lg flex flex-col h-[calc(100vh-2rem)] sm:h-[90vh] max-h-[900px]">
         <CardHeader className="flex-shrink-0 pb-2 sm:pb-4 px-4 sm:px-6">
           <div className="space-y-2">
             <div className="flex items-center justify-between text-xs sm:text-sm text-muted-foreground">
