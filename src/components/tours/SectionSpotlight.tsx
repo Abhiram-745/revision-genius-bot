@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
-import Joyride, { Step, CallBackProps, STATUS, EVENTS } from "react-joyride";
+import Joyride, { Step, CallBackProps, STATUS, EVENTS, ACTIONS } from "react-joyride";
 
 interface SectionSpotlightProps {
   sectionKey: string | null;
@@ -47,16 +47,17 @@ const SectionSpotlight = ({ sectionKey, onComplete, sectionSteps }: SectionSpotl
   const handleCallback = (data: CallBackProps) => {
     const { status, type, action } = data;
     
-    // Handle close button click, skip, or any action that should close the tour
-    if (
+    // For single-step tours, the "Close" button fires ACTIONS.NEXT
+    const shouldClose = 
       type === EVENTS.TOUR_END ||
       type === EVENTS.TARGET_NOT_FOUND ||
-      type === EVENTS.STEP_AFTER ||
-      action === 'close' ||
-      action === 'skip' ||
+      action === ACTIONS.CLOSE ||
+      action === ACTIONS.SKIP ||
+      action === ACTIONS.NEXT ||
       status === STATUS.FINISHED || 
-      status === STATUS.SKIPPED
-    ) {
+      status === STATUS.SKIPPED;
+    
+    if (shouldClose) {
       setRun(false);
       if (sectionKey) {
         onComplete(sectionKey);
