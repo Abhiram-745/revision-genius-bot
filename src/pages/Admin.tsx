@@ -41,7 +41,8 @@ interface UserStats {
 }
 
 const ADMIN_EMAILS = [
-  'abhiramkakarla1@gmail.com'
+  'abhiramkakarla1@gmail.com',
+  'dhrishiv.panjabi@gmail.com'
 ];
 
 const Admin = () => {
