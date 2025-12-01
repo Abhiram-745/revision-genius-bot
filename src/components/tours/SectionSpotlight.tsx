@@ -45,18 +45,18 @@ const SectionSpotlight = ({ sectionKey, onComplete, sectionSteps }: SectionSpotl
   }, [sectionKey, sectionSteps]);
 
   const handleCallback = (data: CallBackProps) => {
-    const { status, type } = data;
+    const { status, type, action } = data;
     
-    // Handle scroll events to keep spotlight aligned
-    if (type === EVENTS.TARGET_NOT_FOUND) {
-      setRun(false);
-      if (sectionKey) {
-        onComplete(sectionKey);
-      }
-      return;
-    }
-    
-    if (status === STATUS.FINISHED || status === STATUS.SKIPPED) {
+    // Handle close button click, skip, or any action that should close the tour
+    if (
+      type === EVENTS.TOUR_END ||
+      type === EVENTS.TARGET_NOT_FOUND ||
+      type === EVENTS.STEP_AFTER ||
+      action === 'close' ||
+      action === 'skip' ||
+      status === STATUS.FINISHED || 
+      status === STATUS.SKIPPED
+    ) {
       setRun(false);
       if (sectionKey) {
         onComplete(sectionKey);
