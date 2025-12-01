@@ -8,6 +8,15 @@ export const useTourReset = () => {
 
     // Clear all tour completion data
     localStorage.removeItem(`tour_completed_${user.id}`);
+    
+    // Clear all section tour data (viewed and dismissed)
+    const keys = Object.keys(localStorage);
+    keys.forEach(key => {
+      if (key.startsWith(`section_tours_`) && key.includes(user.id)) {
+        localStorage.removeItem(key);
+      }
+    });
+    
     toast.success("All tutorials have been reset. Navigate to any section to see the tour again!");
   };
 

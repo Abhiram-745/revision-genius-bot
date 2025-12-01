@@ -1,9 +1,10 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import Joyride, { Step, CallBackProps, STATUS, EVENTS, ACTIONS } from "react-joyride";
+import SectionSpotlightTooltip from "./SectionSpotlightTooltip";
 
 interface SectionSpotlightProps {
   sectionKey: string | null;
-  onComplete: (sectionKey: string) => void;
+  onComplete: (sectionKey: string, permanent?: boolean) => void;
   sectionSteps: Record<string, Step>;
 }
 
@@ -11,11 +12,11 @@ const SectionSpotlight = ({ sectionKey, onComplete, sectionSteps }: SectionSpotl
   const [run, setRun] = useState(false);
   const [currentStep, setCurrentStep] = useState<Step[]>([]);
   const [stepIndex, setStepIndex] = useState(0);
+  const dontShowAgainRef = useRef(false);
 
   // Force re-render on scroll to recalculate spotlight position
   const handleScroll = useCallback(() => {
     if (run) {
-      // Trigger a small state update to force Joyride to recalculate position
       setStepIndex((prev) => prev);
     }
   }, [run]);
@@ -27,7 +28,6 @@ const SectionSpotlight = ({ sectionKey, onComplete, sectionSteps }: SectionSpotl
 
   useEffect(() => {
     if (sectionKey && sectionSteps[sectionKey]) {
-      // Create step with better positioning options
       const step = {
         ...sectionSteps[sectionKey],
         placement: 'auto' as const,
@@ -36,7 +36,7 @@ const SectionSpotlight = ({ sectionKey, onComplete, sectionSteps }: SectionSpotl
       };
       setCurrentStep([step]);
       setStepIndex(0);
-      // Small delay to ensure DOM element exists and is in view
+      dontShowAgainRef.current = false;
       setTimeout(() => setRun(true), 200);
     } else {
       setRun(false);
@@ -44,10 +44,13 @@ const SectionSpotlight = ({ sectionKey, onComplete, sectionSteps }: SectionSpotl
     }
   }, [sectionKey, sectionSteps]);
 
+  const handleDontShowAgain = useCallback((dontShow: boolean) => {
+    dontShowAgainRef.current = dontShow;
+  }, []);
+
   const handleCallback = (data: CallBackProps) => {
     const { status, type, action } = data;
     
-    // For single-step tours, the "Close" button fires ACTIONS.NEXT
     const shouldClose = 
       type === EVENTS.TOUR_END ||
       type === EVENTS.TARGET_NOT_FOUND ||
@@ -60,7 +63,7 @@ const SectionSpotlight = ({ sectionKey, onComplete, sectionSteps }: SectionSpotl
     if (shouldClose) {
       setRun(false);
       if (sectionKey) {
-        onComplete(sectionKey);
+        onComplete(sectionKey, dontShowAgainRef.current);
       }
     }
   };
@@ -74,22 +77,22 @@ const SectionSpotlight = ({ sectionKey, onComplete, sectionSteps }: SectionSpotl
       stepIndex={stepIndex}
       continuous={false}
       showProgress={false}
-      showSkipButton={true}
+      showSkipButton={false}
       disableOverlayClose={false}
       disableCloseOnEsc={false}
-      hideCloseButton={false}
+      hideCloseButton={true}
       spotlightClicks={true}
       scrollToFirstStep={true}
       scrollOffset={120}
       disableScrolling={false}
       callback={handleCallback}
+      tooltipComponent={(props) => (
+        <SectionSpotlightTooltip {...props} onDontShowAgain={handleDontShowAgain} />
+      )}
       styles={{
         options: {
           primaryColor: "hsl(190, 70%, 50%)",
-          textColor: "hsl(0, 0%, 98%)",
-          backgroundColor: "hsl(222, 47%, 11%)",
           overlayColor: "rgba(0, 0, 0, 0.85)",
-          arrowColor: "hsl(190, 70%, 50%)",
           zIndex: 10000,
         },
         overlay: {
@@ -98,44 +101,6 @@ const SectionSpotlight = ({ sectionKey, onComplete, sectionSteps }: SectionSpotl
         spotlight: {
           borderRadius: "16px",
           boxShadow: "0 0 0 4px hsl(190, 70%, 50%), 0 0 40px 15px hsla(190, 70%, 50%, 0.5)",
-        },
-        tooltip: {
-          borderRadius: "16px",
-          padding: "24px 28px",
-          boxShadow: "0 25px 80px -20px rgba(0, 0, 0, 0.6)",
-          fontSize: "15px",
-          maxWidth: "360px",
-          border: "1px solid hsla(190, 70%, 50%, 0.3)",
-          background: "linear-gradient(145deg, hsl(222, 47%, 11%), hsl(222, 47%, 8%))",
-        },
-        tooltipContainer: {
-          textAlign: "center",
-        },
-        tooltipContent: {
-          fontSize: "15px",
-          lineHeight: "1.7",
-          padding: "0",
-          color: "hsl(0, 0%, 90%)",
-        },
-        buttonNext: {
-          backgroundColor: "hsl(190, 70%, 50%)",
-          borderRadius: "12px",
-          padding: "14px 28px",
-          fontSize: "14px",
-          fontWeight: 600,
-          boxShadow: "0 6px 20px hsla(190, 70%, 50%, 0.5)",
-        },
-        buttonBack: {
-          display: "none",
-        },
-        buttonSkip: {
-          color: "hsl(0, 0%, 70%)",
-          fontSize: "13px",
-        },
-        buttonClose: {
-          color: "hsl(0, 0%, 70%)",
-          width: "14px",
-          height: "14px",
         },
       }}
       floaterProps={{
@@ -146,6 +111,9 @@ const SectionSpotlight = ({ sectionKey, onComplete, sectionSteps }: SectionSpotl
         styles: {
           floater: {
             filter: "drop-shadow(0 15px 40px rgba(0, 0, 0, 0.4))",
+          },
+          arrow: {
+            color: "hsl(222, 47%, 11%)",
           },
         },
       }}
