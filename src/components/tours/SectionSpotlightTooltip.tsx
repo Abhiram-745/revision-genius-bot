@@ -65,7 +65,7 @@ const SectionSpotlightTooltip = ({
         <Checkbox
           id="dont-show-again"
           checked={dontShowAgain}
-          onCheckedChange={(checked) => setDontShowAgain(checked === true)}
+          onCheckedChange={(checked: boolean | "indeterminate") => setDontShowAgain(checked === true)}
           className="border-muted-foreground data-[state=checked]:bg-primary data-[state=checked]:border-primary"
         />
         <label
