@@ -180,7 +180,8 @@ const TimetableView = () => {
 
     const updatedSchedule = { ...timetable.schedule };
     const session = updatedSchedule[date][sessionIndex];
-    session.completed = !session.completed;
+    const newCompletedState = !session.completed; // Store new state before mutating
+    session.completed = newCompletedState;
 
     const { error } = await supabase
       .from("timetables")
@@ -192,9 +193,11 @@ const TimetableView = () => {
     } else {
       setTimetable({ ...timetable, schedule: updatedSchedule });
       
-      // Update study streak when marking complete
-      if (session.completed && session.type !== "break") {
-        await updateStudyStreak(date, session.duration);
+      if (newCompletedState) {
+        // Update study streak when marking complete (not for breaks)
+        if (session.type !== "break") {
+          await updateStudyStreak(date, session.duration);
+        }
         // Open reflection dialog for study sessions
         if (session.type === "study") {
           setReflectionSession({ date, index: sessionIndex, session });
