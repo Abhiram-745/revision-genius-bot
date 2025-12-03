@@ -175,12 +175,18 @@ const TimetableView = () => {
     }
   };
 
-  const toggleSessionComplete = async (date: string, sessionIndex: number) => {
-    if (!timetable) return;
+  const toggleSessionComplete = async (date: string, originalIndex: number) => {
+    if (!timetable || originalIndex === undefined || originalIndex < 0) return;
 
     const updatedSchedule = { ...timetable.schedule };
-    const session = updatedSchedule[date][sessionIndex];
-    const newCompletedState = !session.completed; // Store new state before mutating
+    const session = updatedSchedule[date]?.[originalIndex];
+    
+    if (!session) {
+      toast.error("Session not found");
+      return;
+    }
+    
+    const newCompletedState = !session.completed;
     session.completed = newCompletedState;
 
     const { error } = await supabase
@@ -200,7 +206,7 @@ const TimetableView = () => {
         }
         // Open reflection dialog for study sessions
         if (session.type === "study") {
-          setReflectionSession({ date, index: sessionIndex, session });
+          setReflectionSession({ date, index: originalIndex, session });
         } else {
           toast.success("Session marked as complete!");
         }
@@ -268,20 +274,28 @@ const TimetableView = () => {
     return d instanceof Date && !isNaN(d.getTime());
   };
 
+  // Extended session type that tracks original index
+  interface MergedSession extends TimetableSession {
+    originalIndex?: number; // Track original index in timetable.schedule
+  }
+
   // Merge events into schedule for display - memoized to prevent duplicates
   // MUST be called before early returns to follow Rules of Hooks
   const mergedSchedule = useMemo(() => {
-    if (!timetable) return {};
+    if (!timetable) return {} as { [date: string]: MergedSession[] };
     
     // CRITICAL: First, remove ALL existing events from the schedule
     // This prevents duplicates when events are already stored in timetable.schedule
-    const cleanedSchedule: TimetableSchedule = {};
+    const cleanedSchedule: { [date: string]: MergedSession[] } = {};
     
     Object.keys(timetable.schedule).forEach((date) => {
-      // Filter out all sessions with type='event' to get a clean base schedule
-      cleanedSchedule[date] = timetable.schedule[date].filter(
-        (session) => session.type !== 'event'
-      );
+      // Filter out all sessions with type='event' and track original indices
+      cleanedSchedule[date] = timetable.schedule[date]
+        .map((session, originalIdx) => ({
+          ...session,
+          originalIndex: originalIdx, // Track the original index
+        }))
+        .filter((session) => session.type !== 'event');
     });
     
     // Now add fresh events from the events table
@@ -298,12 +312,13 @@ const TimetableView = () => {
       const endTime = new Date(event.end_time);
       const durationMinutes = Math.round((endTime.getTime() - startTime.getTime()) / (1000 * 60));
 
-      const eventSession: TimetableSession = {
+      const eventSession: MergedSession = {
         time: eventTime,
         duration: durationMinutes,
         subject: event.title,
         topic: event.description || 'Event',
         type: 'event',
+        // Events don't have originalIndex since they're not in timetable.schedule
       };
 
       if (!cleanedSchedule[eventDate]) {
@@ -483,12 +498,16 @@ const TimetableView = () => {
                 <CardContent>
                   <div className="space-y-3">
                     {sessions && sessions.length > 0 ? (
-                      sessions.map((session, idx) => (
+                      sessions.map((session, idx) => {
+                        const originalIdx = session.originalIndex;
+                        const hasValidOriginalIndex = originalIdx !== undefined && originalIdx >= 0;
+                        
+                        return (
                         <div
                           key={idx}
                           onClick={() =>
-                            session.type !== "break" && session.type !== "event" &&
-                            setSelectedSession({ date, index: idx, session })
+                            session.type !== "break" && session.type !== "event" && hasValidOriginalIndex &&
+                            setSelectedSession({ date, index: originalIdx, session })
                           }
                           data-tour={idx === 0 ? "session-card" : undefined}
                           className={`p-4 rounded-xl border-l-4 transition-all duration-300 ${
@@ -552,14 +571,14 @@ const TimetableView = () => {
                                 </p>
                               )}
                             </div>
-                            {session.type !== "break" && session.type !== "event" && (
+                            {session.type !== "break" && session.type !== "event" && hasValidOriginalIndex && (
                               <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
                                 {!session.completed && (
                                   <Button
                                     size="sm"
                                     variant="default"
                                     data-tour={idx === 0 ? "session-start-btn" : undefined}
-                                    onClick={() => setTimerSession({ date, index: idx, session })}
+                                    onClick={() => setTimerSession({ date, index: originalIdx, session })}
                                   >
                                     Start
                                   </Button>
@@ -567,7 +586,7 @@ const TimetableView = () => {
                                 <Checkbox
                                   data-tour={idx === 0 ? "session-checkbox" : undefined}
                                   checked={session.completed || false}
-                                  onCheckedChange={() => toggleSessionComplete(date, idx)}
+                                  onCheckedChange={() => toggleSessionComplete(date, originalIdx)}
                                   className="h-5 w-5"
                                 />
                               </div>
@@ -579,7 +598,8 @@ const TimetableView = () => {
                             )}
                           </div>
                         </div>
-                      ))
+                      );
+                      })
                     ) : (
                       <p className="text-muted-foreground text-sm">
                         No sessions scheduled for this day
