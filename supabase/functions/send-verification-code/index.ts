@@ -96,9 +96,20 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Use verified custom domain from secret, fallback to Resend's testing domain
     const customFromEmail = Deno.env.get("RESEND_FROM_EMAIL");
-    const fromAddress = customFromEmail 
-      ? `Vistara <${customFromEmail}>` 
-      : "Vistara <onboarding@resend.dev>";
+    let fromAddress: string;
+    
+    if (customFromEmail) {
+      // Check if the secret already contains angle brackets (pre-formatted)
+      if (customFromEmail.includes('<') && customFromEmail.includes('>')) {
+        // Already formatted, use as-is
+        fromAddress = customFromEmail;
+      } else {
+        // Raw email, wrap with name
+        fromAddress = `Vistara <${customFromEmail}>`;
+      }
+    } else {
+      fromAddress = "Vistara <onboarding@resend.dev>";
+    }
     
     console.log("[send-verification-code] Using from address:", fromAddress);
 
