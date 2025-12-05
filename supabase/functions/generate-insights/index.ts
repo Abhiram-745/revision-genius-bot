@@ -7,59 +7,6 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Retry configuration
-const MAX_RETRIES = 3;
-const INITIAL_DELAY_MS = 1000;
-
-async function fetchWithRetry(url: string, options: RequestInit, retries = MAX_RETRIES): Promise<Response> {
-  let lastError: Error | null = null;
-  
-  for (let attempt = 0; attempt <= retries; attempt++) {
-    try {
-      if (attempt > 0) {
-        const delay = INITIAL_DELAY_MS * Math.pow(2, attempt - 1);
-        console.log(`Retry attempt ${attempt}/${retries} - waiting ${delay}ms...`);
-        await new Promise(resolve => setTimeout(resolve, delay));
-      }
-      
-      const response = await fetch(url, options);
-      
-      if (!response.ok) {
-        if ((response.status === 503 || response.status === 429) && attempt < retries) {
-          console.log(`Received ${response.status}, will retry...`);
-          continue;
-        }
-        
-        if (response.status === 503) {
-          throw new Error("We're experiencing heavy traffic right now. Please try again in a few moments.");
-        } else if (response.status === 429) {
-          throw new Error("Too many requests. Please wait a moment and try again.");
-        } else if (response.status === 402) {
-          throw new Error("AI service credits exhausted. Please contact support.");
-        }
-        
-        throw new Error(`AI request failed with status ${response.status}`);
-      }
-      
-      return response;
-    } catch (err) {
-      lastError = err instanceof Error ? err : new Error('Unknown error');
-      
-      if (lastError.message.includes("heavy traffic") || 
-          lastError.message.includes("Too many requests") ||
-          lastError.message.includes("credits exhausted")) {
-        throw lastError;
-      }
-      
-      if (attempt >= retries) {
-        throw lastError;
-      }
-    }
-  }
-  
-  throw lastError || new Error("Request failed after all retries");
-}
-
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -201,57 +148,79 @@ Format your response as JSON with this structure:
   "overallSummary": "string"
 }`;
 
-    const OPEN_ROUTER_API_KEY = Deno.env.get('OPEN_ROUTER_API_KEY');
-    if (!OPEN_ROUTER_API_KEY) {
-      throw new Error("OPEN_ROUTER_API_KEY not configured");
+    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+    if (!LOVABLE_API_KEY) {
+      throw new Error("LOVABLE_API_KEY not configured");
     }
 
-    const response = await fetchWithRetry(
-      'https://openrouter.ai/api/v1/chat/completions',
-      {
-        method: "POST",
-        headers: { 
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${OPEN_ROUTER_API_KEY}`,
-          "HTTP-Referer": Deno.env.get('SUPABASE_URL') || "https://vistari.app"
-        },
-        body: JSON.stringify({
-          model: "x-ai/grok-4.1-fast:free",
-          messages: [
-            { role: "user", content: `You are an expert educational analyst who creates personalized learning insights.\n\n${prompt}` }
-          ],
-          max_tokens: 4096,
-        }),
-      }
-    );
+    console.log('Calling Lovable AI gateway...');
+
+    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+      method: "POST",
+      headers: { 
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${LOVABLE_API_KEY}`,
+      },
+      body: JSON.stringify({
+        model: "google/gemini-2.5-flash",
+        messages: [
+          { 
+            role: "system", 
+            content: "You are an expert educational analyst who creates personalized learning insights. Always respond with valid JSON only, no markdown code blocks." 
+          },
+          { role: "user", content: prompt }
+        ],
+      }),
+    });
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("OpenAI API error:", response.status, errorText);
-      throw new Error(`OpenAI API request failed: ${response.status}`);
+      console.error("Lovable AI error:", response.status, errorText);
+      
+      if (response.status === 429) {
+        return new Response(JSON.stringify({ error: "Rate limit exceeded. Please try again in a moment." }), {
+          status: 429,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      if (response.status === 402) {
+        return new Response(JSON.stringify({ error: "AI credits exhausted. Please add credits to continue." }), {
+          status: 402,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      
+      throw new Error(`AI request failed: ${response.status}`);
     }
 
-    const openaiResult = await response.json();
-    console.log('OpenAI response:', JSON.stringify(openaiResult, null, 2));
+    const aiResult = await response.json();
+    console.log('AI response received');
 
-    // Extract content from OpenAI response
+    // Extract content from response
     let insightsText: string | undefined;
-    if (openaiResult.choices?.[0]?.message?.content) {
-      insightsText = openaiResult.choices[0].message.content;
+    if (aiResult.choices?.[0]?.message?.content) {
+      insightsText = aiResult.choices[0].message.content;
     }
 
     if (!insightsText || insightsText.trim() === "") {
-      console.error('Empty AI response. Raw result:', JSON.stringify(openaiResult, null, 2));
+      console.error('Empty AI response. Raw result:', JSON.stringify(aiResult, null, 2));
       throw new Error('AI did not generate a response. Please try again.');
     }
 
     // Extract JSON from markdown code blocks if present
-    const jsonMatch = insightsText.match(/```json\n([\s\S]*?)\n```/);
+    let jsonText = insightsText;
+    const jsonMatch = insightsText.match(/```json\n?([\s\S]*?)\n?```/);
     if (jsonMatch) {
-      insightsText = jsonMatch[1];
+      jsonText = jsonMatch[1];
+    } else {
+      // Try to find JSON object directly
+      const jsonObjectMatch = insightsText.match(/\{[\s\S]*\}/);
+      if (jsonObjectMatch) {
+        jsonText = jsonObjectMatch[0];
+      }
     }
 
-    const insights = JSON.parse(insightsText);
+    const insights = JSON.parse(jsonText);
 
     // Save insights to database
     const { error: upsertError } = await supabase
