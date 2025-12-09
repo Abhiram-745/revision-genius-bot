@@ -69,47 +69,96 @@ const Landing = () => {
           style={{ y: heroY, opacity: heroOpacity }}
           className="relative min-h-[85vh] flex items-center justify-center px-6 pt-20 pb-16"
         >
-          {/* Floating decorative cards in hero */}
-          <div className="hidden lg:block absolute left-10 top-32">
+          {/* Floating UI Feature Cards with Arrows */}
+          <div className="hidden xl:block absolute left-6 top-24 z-10">
             <FloatingIcon delay={0} duration={4}>
-              <div className="bg-card/80 backdrop-blur-sm border border-primary/20 rounded-2xl p-4 shadow-lg">
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                    <Zap className="w-4 h-4 text-primary" />
+              <Card className="w-64 bg-card/90 backdrop-blur-sm border-l-4 border-l-primary shadow-xl">
+                <CardContent className="p-4">
+                  <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center mb-3">
+                    <Brain className="w-5 h-5 text-primary" />
                   </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground">Current Streak</p>
-                    <p className="font-bold text-primary">12 days 🔥</p>
-                  </div>
-                </div>
-              </div>
+                  <h4 className="font-bold text-sm mb-1">AI-Powered Planning</h4>
+                  <p className="text-xs text-muted-foreground">Smart algorithms create optimal study schedules based on your learning patterns.</p>
+                </CardContent>
+              </Card>
             </FloatingIcon>
+            {/* Arrow pointing right */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 1 }}
+              className="absolute -right-16 top-1/2 -translate-y-1/2"
+            >
+              <svg width="60" height="40" viewBox="0 0 60 40" className="text-primary/40">
+                <path d="M0 20 Q30 5 50 20" fill="none" stroke="currentColor" strokeWidth="2" strokeDasharray="4 4" />
+                <path d="M45 15 L55 20 L45 25" fill="none" stroke="currentColor" strokeWidth="2" />
+              </svg>
+            </motion.div>
           </div>
 
-          <div className="hidden lg:block absolute right-16 top-40">
-            <FloatingIcon delay={1} duration={5}>
-              <div className="bg-card/80 backdrop-blur-sm border border-secondary/20 rounded-2xl p-4 shadow-lg">
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-lg bg-secondary/10 flex items-center justify-center">
-                    <TrendingUp className="w-4 h-4 text-secondary" />
-                  </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground">Progress</p>
-                    <p className="font-bold text-secondary">+23% this week</p>
-                  </div>
-                </div>
-              </div>
-            </FloatingIcon>
-          </div>
-
-          <div className="hidden lg:block absolute left-20 bottom-40">
+          <div className="hidden xl:block absolute right-6 top-28 z-10">
             <FloatingIcon delay={0.5} duration={4.5}>
-              <div className="bg-gradient-to-br from-accent/20 to-accent/10 border border-accent/30 rounded-2xl p-4 shadow-lg">
-                <div className="flex items-center gap-2">
-                  <Award className="w-6 h-6 text-accent" />
-                  <span className="font-medium text-sm">Achievement Unlocked!</span>
-                </div>
-              </div>
+              <Card className="w-64 bg-card/90 backdrop-blur-sm border-l-4 border-l-secondary shadow-xl">
+                <CardContent className="p-4">
+                  <div className="w-10 h-10 rounded-xl bg-secondary/10 flex items-center justify-center mb-3">
+                    <RefreshCw className="w-5 h-5 text-secondary" />
+                  </div>
+                  <h4 className="font-bold text-sm mb-1">Adaptive Rescheduling</h4>
+                  <p className="text-xs text-muted-foreground">Missed a session? The AI automatically adjusts your plan to keep you on track.</p>
+                </CardContent>
+              </Card>
+            </FloatingIcon>
+            {/* Arrow pointing down-left */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 1.2 }}
+              className="absolute -left-12 bottom-0 translate-y-full"
+            >
+              <svg width="50" height="60" viewBox="0 0 50 60" className="text-secondary/40">
+                <path d="M40 0 Q45 30 20 50" fill="none" stroke="currentColor" strokeWidth="2" strokeDasharray="4 4" />
+                <path d="M25 45 L18 55 L15 43" fill="none" stroke="currentColor" strokeWidth="2" />
+              </svg>
+            </motion.div>
+          </div>
+
+          <div className="hidden xl:block absolute left-12 bottom-36 z-10">
+            <FloatingIcon delay={1} duration={5}>
+              <Card className="w-60 bg-card/90 backdrop-blur-sm border-l-4 border-l-accent shadow-xl">
+                <CardContent className="p-4">
+                  <div className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center mb-3">
+                    <BarChart3 className="w-5 h-5 text-accent" />
+                  </div>
+                  <h4 className="font-bold text-sm mb-1">Progress Analytics</h4>
+                  <p className="text-xs text-muted-foreground">Track your confidence levels and see your improvement over time.</p>
+                </CardContent>
+              </Card>
+            </FloatingIcon>
+            {/* Arrow pointing up-right */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 1.4 }}
+              className="absolute -right-14 -top-8"
+            >
+              <svg width="50" height="50" viewBox="0 0 50 50" className="text-accent/40">
+                <path d="M10 45 Q15 20 40 10" fill="none" stroke="currentColor" strokeWidth="2" strokeDasharray="4 4" />
+                <path d="M35 5 L45 8 L38 16" fill="none" stroke="currentColor" strokeWidth="2" />
+              </svg>
+            </motion.div>
+          </div>
+
+          <div className="hidden xl:block absolute right-10 bottom-32 z-10">
+            <FloatingIcon delay={1.5} duration={5.5}>
+              <Card className="w-60 bg-card/90 backdrop-blur-sm border-l-4 border-l-primary shadow-xl">
+                <CardContent className="p-4">
+                  <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center mb-3">
+                    <MessageSquare className="w-5 h-5 text-primary" />
+                  </div>
+                  <h4 className="font-bold text-sm mb-1">Session Reflections</h4>
+                  <p className="text-xs text-muted-foreground">Quick feedback after each session helps the AI understand your needs.</p>
+                </CardContent>
+              </Card>
             </FloatingIcon>
           </div>
 
