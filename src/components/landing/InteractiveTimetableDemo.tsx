@@ -1,10 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   ArrowRight, Calendar, Clock, CheckCircle2, Dumbbell, BookOpen, 
   Brain, FlaskConical, Sigma, Play, Sparkles, Timer, Star, 
   TrendingUp, Target, ThumbsUp, ThumbsDown, Lightbulb, X,
-  Zap, Award, BarChart3
+  Zap, Award, BarChart3, Upload, FileText, AlertTriangle, Wand2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -14,6 +14,7 @@ import FloatingIcon from "./FloatingIcon";
 interface Session {
   id: string;
   time: string;
+  endTime: string;
   duration: string;
   subject: string;
   topic: string;
@@ -23,10 +24,12 @@ interface Session {
   completed: boolean;
 }
 
+// Fixed realistic timings for a school day
 const demoSessions: Session[] = [
   {
     id: "1",
-    time: "07:30",
+    time: "06:45",
+    endTime: "07:15",
     duration: "30 min",
     subject: "Mathematics",
     topic: "Quadratic Equations Practice",
@@ -37,10 +40,11 @@ const demoSessions: Session[] = [
   },
   {
     id: "2",
-    time: "08:15",
+    time: "07:15",
+    endTime: "07:30",
     duration: "15 min",
     subject: "Break",
-    topic: "Breakfast & refresh",
+    topic: "Breakfast & get ready for school",
     type: "break",
     icon: <Clock className="w-5 h-5" />,
     color: "muted",
@@ -48,7 +52,8 @@ const demoSessions: Session[] = [
   },
   {
     id: "3",
-    time: "08:30",
+    time: "15:30",
+    endTime: "16:15",
     duration: "45 min",
     subject: "Biology",
     topic: "Cell Division - Mitosis",
@@ -59,7 +64,8 @@ const demoSessions: Session[] = [
   },
   {
     id: "4",
-    time: "16:00",
+    time: "16:30",
+    endTime: "18:00",
     duration: "90 min",
     subject: "Football Practice",
     topic: "Team training session",
@@ -70,10 +76,11 @@ const demoSessions: Session[] = [
   },
   {
     id: "5",
-    time: "18:00",
+    time: "18:30",
+    endTime: "19:15",
     duration: "45 min",
     subject: "Physics",
-    topic: "Forces & Motion",
+    topic: "Forces & Motion - Newton's Laws",
     type: "study",
     icon: <Brain className="w-5 h-5" />,
     color: "primary",
@@ -81,7 +88,8 @@ const demoSessions: Session[] = [
   },
   {
     id: "6",
-    time: "19:00",
+    time: "19:30",
+    endTime: "20:00",
     duration: "30 min",
     subject: "Chemistry",
     topic: "Atomic Structure Review",
@@ -92,7 +100,7 @@ const demoSessions: Session[] = [
   },
 ];
 
-type DemoStep = "timetable" | "timer" | "reflection" | "insights";
+type DemoStep = "generation" | "timetable" | "timer" | "reflection" | "insights";
 
 interface InteractiveTimetableDemoProps {
   onArrowClick: () => void;
@@ -101,9 +109,10 @@ interface InteractiveTimetableDemoProps {
 const InteractiveTimetableDemo = ({ onArrowClick }: InteractiveTimetableDemoProps) => {
   const [sessions, setSessions] = useState(demoSessions);
   const [isHovering, setIsHovering] = useState<string | null>(null);
-  const [currentStep, setCurrentStep] = useState<DemoStep>("timetable");
+  const [currentStep, setCurrentStep] = useState<DemoStep>("generation");
   const [activeSession, setActiveSession] = useState<Session | null>(null);
   const [timerProgress, setTimerProgress] = useState(0);
+  const [generationStep, setGenerationStep] = useState(0);
   const [reflectionData, setReflectionData] = useState({
     confidence: 3,
     difficulty: 2,
@@ -113,11 +122,20 @@ const InteractiveTimetableDemo = ({ onArrowClick }: InteractiveTimetableDemoProp
   const completedCount = sessions.filter(s => s.completed && s.type === "study").length;
   const totalStudy = sessions.filter(s => s.type === "study").length;
 
+  // Auto-advance generation steps
+  useEffect(() => {
+    if (currentStep === "generation" && generationStep < 4) {
+      const timer = setTimeout(() => {
+        setGenerationStep(prev => prev + 1);
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [currentStep, generationStep]);
+
   const startSession = (session: Session) => {
     if (session.type !== "study" || session.completed) return;
     setActiveSession(session);
     setCurrentStep("timer");
-    // Simulate timer progress
     setTimerProgress(0);
     const interval = setInterval(() => {
       setTimerProgress(prev => {
@@ -150,65 +168,300 @@ const InteractiveTimetableDemo = ({ onArrowClick }: InteractiveTimetableDemoProp
     setReflectionData({ confidence: 3, difficulty: 2, notes: "" });
   };
 
+  const skipToTimetable = () => {
+    setGenerationStep(4);
+    setTimeout(() => setCurrentStep("timetable"), 500);
+  };
+
   return (
     <div className="w-full max-w-5xl mx-auto relative">
-      {/* Floating Decorative Cards */}
-      <div className="hidden lg:block absolute -left-32 top-20 z-0">
-        <FloatingIcon delay={0} duration={4}>
-          <div className="bg-card/80 backdrop-blur-sm border border-border rounded-2xl p-4 shadow-lg w-48">
-            <div className="flex items-center gap-2 mb-2">
-              <Award className="w-5 h-5 text-accent" />
-              <span className="text-sm font-medium">Streak</span>
-            </div>
-            <p className="text-2xl font-bold text-accent">7 days 🔥</p>
-          </div>
-        </FloatingIcon>
-      </div>
-
-      <div className="hidden lg:block absolute -right-32 top-10 z-0">
-        <FloatingIcon delay={1} duration={5}>
-          <div className="bg-card/80 backdrop-blur-sm border border-border rounded-2xl p-4 shadow-lg w-52">
-            <div className="flex items-center gap-2 mb-2">
-              <TrendingUp className="w-5 h-5 text-primary" />
-              <span className="text-sm font-medium">Weekly Progress</span>
-            </div>
-            <div className="space-y-1">
-              <div className="flex justify-between text-sm">
-                <span>Maths</span>
-                <span className="text-primary">+15%</span>
-              </div>
-              <Progress value={85} className="h-2" />
-            </div>
-          </div>
-        </FloatingIcon>
-      </div>
-
-      <div className="hidden lg:block absolute -left-24 bottom-32 z-0">
-        <FloatingIcon delay={0.5} duration={4.5}>
-          <div className="bg-gradient-to-br from-primary/20 to-secondary/20 border border-primary/30 rounded-2xl p-4 shadow-lg w-44">
-            <div className="flex items-center gap-2 mb-2">
-              <Sparkles className="w-5 h-5 text-primary" />
-              <span className="text-sm font-medium">XP Today</span>
-            </div>
-            <p className="text-2xl font-bold text-primary">+250</p>
-          </div>
-        </FloatingIcon>
-      </div>
-
-      <div className="hidden lg:block absolute -right-28 bottom-20 z-0">
-        <FloatingIcon delay={1.5} duration={5.5}>
-          <div className="bg-card/80 backdrop-blur-sm border border-border rounded-2xl p-4 shadow-lg w-48">
-            <div className="flex items-center gap-2 mb-2">
-              <Target className="w-5 h-5 text-secondary" />
-              <span className="text-sm font-medium">Goal</span>
-            </div>
-            <p className="text-sm text-muted-foreground">3/4 sessions done</p>
-            <Progress value={75} className="h-2 mt-2" />
-          </div>
-        </FloatingIcon>
-      </div>
-
       <AnimatePresence mode="wait">
+        {currentStep === "generation" && (
+          <motion.div
+            key="generation"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="relative z-10 min-h-[600px]"
+          >
+            {/* Header */}
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="text-center mb-12"
+            >
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-secondary/10 border border-secondary/20 mb-4">
+                <Wand2 className="w-4 h-4 text-secondary" />
+                <span className="text-sm font-medium text-secondary">AI Generation Preview</span>
+              </div>
+              <h3 className="text-2xl md:text-3xl font-display font-bold mb-2">
+                Watch your timetable come to life
+              </h3>
+              <p className="text-muted-foreground">
+                See how Vistara creates your personalized study plan
+              </p>
+            </motion.div>
+
+            {/* Generation Steps with Floating Cards */}
+            <div className="relative flex flex-col items-center gap-8">
+              
+              {/* Step 1: Upload Notes */}
+              <motion.div
+                initial={{ opacity: 0, x: -100, rotate: -5 }}
+                animate={{ 
+                  opacity: generationStep >= 0 ? 1 : 0, 
+                  x: generationStep >= 0 ? 0 : -100,
+                  rotate: generationStep >= 0 ? -3 : -5
+                }}
+                transition={{ type: "spring", damping: 20 }}
+                className="absolute left-0 md:left-10 top-0"
+              >
+                <FloatingIcon delay={0} duration={4}>
+                  <Card className="w-64 border-2 border-primary/30 bg-card/95 backdrop-blur-sm shadow-xl">
+                    <CardContent className="p-5">
+                      <div className="flex items-center gap-3 mb-3">
+                        <motion.div 
+                          animate={{ rotate: [0, 10, -10, 0] }}
+                          transition={{ duration: 2, repeat: Infinity }}
+                          className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center"
+                        >
+                          <Upload className="w-5 h-5 text-primary" />
+                        </motion.div>
+                        <div>
+                          <p className="font-semibold text-sm">Step 1</p>
+                          <p className="text-xs text-muted-foreground">Upload Notes</p>
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2 text-xs">
+                          <FileText className="w-3 h-3 text-muted-foreground" />
+                          <span>Biology_Notes.pdf</span>
+                          <CheckCircle2 className="w-3 h-3 text-primary ml-auto" />
+                        </div>
+                        <div className="flex items-center gap-2 text-xs">
+                          <FileText className="w-3 h-3 text-muted-foreground" />
+                          <span>Maths_Revision.pdf</span>
+                          <CheckCircle2 className="w-3 h-3 text-primary ml-auto" />
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </FloatingIcon>
+              </motion.div>
+
+              {/* Step 2: AI Parsing Topics */}
+              <motion.div
+                initial={{ opacity: 0, y: 50 }}
+                animate={{ 
+                  opacity: generationStep >= 1 ? 1 : 0, 
+                  y: generationStep >= 1 ? 0 : 50 
+                }}
+                transition={{ type: "spring", damping: 20 }}
+                className="absolute right-0 md:right-10 top-20"
+              >
+                <FloatingIcon delay={0.5} duration={4.5}>
+                  <Card className="w-72 border-2 border-secondary/30 bg-card/95 backdrop-blur-sm shadow-xl">
+                    <CardContent className="p-5">
+                      <div className="flex items-center gap-3 mb-3">
+                        <motion.div 
+                          animate={{ scale: [1, 1.1, 1] }}
+                          transition={{ duration: 1.5, repeat: Infinity }}
+                          className="w-10 h-10 rounded-xl bg-secondary/10 flex items-center justify-center"
+                        >
+                          <Brain className="w-5 h-5 text-secondary" />
+                        </motion.div>
+                        <div>
+                          <p className="font-semibold text-sm">Step 2</p>
+                          <p className="text-xs text-muted-foreground">AI Parsing Topics</p>
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        {["Quadratic Equations", "Cell Division", "Newton's Laws", "Atomic Structure"].map((topic, i) => (
+                          <motion.div 
+                            key={topic}
+                            initial={{ opacity: 0, x: -10 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: i * 0.2 }}
+                            className="flex items-center gap-2 text-xs bg-secondary/5 rounded-lg px-2 py-1.5"
+                          >
+                            <Sparkles className="w-3 h-3 text-secondary" />
+                            <span>{topic}</span>
+                          </motion.div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </FloatingIcon>
+              </motion.div>
+
+              {/* Step 3: Difficulty Analysis */}
+              <motion.div
+                initial={{ opacity: 0, x: -80 }}
+                animate={{ 
+                  opacity: generationStep >= 2 ? 1 : 0, 
+                  x: generationStep >= 2 ? 0 : -80 
+                }}
+                transition={{ type: "spring", damping: 20 }}
+                className="absolute left-4 md:left-20 top-48"
+              >
+                <FloatingIcon delay={1} duration={5}>
+                  <Card className="w-60 border-2 border-accent/30 bg-card/95 backdrop-blur-sm shadow-xl">
+                    <CardContent className="p-5">
+                      <div className="flex items-center gap-3 mb-3">
+                        <motion.div 
+                          animate={{ rotate: [0, 5, -5, 0] }}
+                          transition={{ duration: 3, repeat: Infinity }}
+                          className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center"
+                        >
+                          <AlertTriangle className="w-5 h-5 text-accent" />
+                        </motion.div>
+                        <div>
+                          <p className="font-semibold text-sm">Step 3</p>
+                          <p className="text-xs text-muted-foreground">Focus Points</p>
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between text-xs">
+                          <span>Quadratic Equations</span>
+                          <span className="text-destructive font-medium">Hard</span>
+                        </div>
+                        <div className="flex items-center justify-between text-xs">
+                          <span>Newton's Laws</span>
+                          <span className="text-accent font-medium">Medium</span>
+                        </div>
+                        <div className="flex items-center justify-between text-xs">
+                          <span>Cell Division</span>
+                          <span className="text-primary font-medium">Easy</span>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </FloatingIcon>
+              </motion.div>
+
+              {/* Step 4: Schedule Optimization */}
+              <motion.div
+                initial={{ opacity: 0, x: 80 }}
+                animate={{ 
+                  opacity: generationStep >= 3 ? 1 : 0, 
+                  x: generationStep >= 3 ? 0 : 80 
+                }}
+                transition={{ type: "spring", damping: 20 }}
+                className="absolute right-4 md:right-16 top-64"
+              >
+                <FloatingIcon delay={1.5} duration={5.5}>
+                  <Card className="w-64 border-2 border-primary/30 bg-gradient-to-br from-card to-primary/5 backdrop-blur-sm shadow-xl">
+                    <CardContent className="p-5">
+                      <div className="flex items-center gap-3 mb-3">
+                        <motion.div 
+                          animate={{ rotate: 360 }}
+                          transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+                          className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center"
+                        >
+                          <Calendar className="w-5 h-5 text-primary" />
+                        </motion.div>
+                        <div>
+                          <p className="font-semibold text-sm">Step 4</p>
+                          <p className="text-xs text-muted-foreground">Optimizing Schedule</p>
+                        </div>
+                      </div>
+                      <div className="space-y-2 text-xs">
+                        <div className="flex items-center gap-2">
+                          <CheckCircle2 className="w-3 h-3 text-primary" />
+                          <span>Avoiding Football Practice</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <CheckCircle2 className="w-3 h-3 text-primary" />
+                          <span>Morning sessions added</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <CheckCircle2 className="w-3 h-3 text-primary" />
+                          <span>Breaks scheduled</span>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </FloatingIcon>
+              </motion.div>
+
+              {/* Center Progress Indicator */}
+              <motion.div 
+                className="flex flex-col items-center justify-center py-32"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+              >
+                <div className="relative w-32 h-32 mb-6">
+                  {/* Animated rings */}
+                  <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
+                    className="absolute inset-0 border-4 border-dashed border-primary/20 rounded-full"
+                  />
+                  <motion.div
+                    animate={{ rotate: -360 }}
+                    transition={{ duration: 12, repeat: Infinity, ease: "linear" }}
+                    className="absolute inset-2 border-4 border-dashed border-secondary/20 rounded-full"
+                  />
+                  <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 6, repeat: Infinity, ease: "linear" }}
+                    className="absolute inset-4 border-4 border-dashed border-accent/20 rounded-full"
+                  />
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <motion.div
+                      animate={{ scale: [1, 1.2, 1] }}
+                      transition={{ duration: 2, repeat: Infinity }}
+                      className="w-16 h-16 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center"
+                    >
+                      <Wand2 className="w-8 h-8 text-white" />
+                    </motion.div>
+                  </div>
+                </div>
+                
+                <motion.p 
+                  className="text-lg font-medium mb-2"
+                  animate={{ opacity: [0.5, 1, 0.5] }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                >
+                  {generationStep === 0 && "Analyzing your notes..."}
+                  {generationStep === 1 && "Extracting topics..."}
+                  {generationStep === 2 && "Identifying focus areas..."}
+                  {generationStep === 3 && "Building your schedule..."}
+                  {generationStep >= 4 && "Timetable ready! ✨"}
+                </motion.p>
+                
+                <div className="flex gap-2 mb-6">
+                  {[0, 1, 2, 3].map((step) => (
+                    <motion.div
+                      key={step}
+                      className={`w-3 h-3 rounded-full ${
+                        step <= generationStep ? "bg-primary" : "bg-muted"
+                      }`}
+                      animate={{ scale: step === generationStep ? [1, 1.3, 1] : 1 }}
+                      transition={{ duration: 0.5, repeat: step === generationStep ? Infinity : 0 }}
+                    />
+                  ))}
+                </div>
+
+                <Button 
+                  onClick={skipToTimetable}
+                  variant={generationStep >= 4 ? "default" : "outline"}
+                  className={generationStep >= 4 ? "bg-gradient-to-r from-primary to-secondary hover:opacity-90" : ""}
+                >
+                  {generationStep >= 4 ? (
+                    <>
+                      View Your Timetable
+                      <ArrowRight className="ml-2 w-4 h-4" />
+                    </>
+                  ) : (
+                    "Skip Preview"
+                  )}
+                </Button>
+              </motion.div>
+            </div>
+          </motion.div>
+        )}
+
         {currentStep === "timetable" && (
           <motion.div
             key="timetable"
@@ -217,6 +470,62 @@ const InteractiveTimetableDemo = ({ onArrowClick }: InteractiveTimetableDemoProp
             exit={{ opacity: 0, x: 20 }}
             className="relative z-10"
           >
+            {/* Floating Stats Cards */}
+            <div className="hidden lg:block absolute -left-32 top-20 z-0">
+              <FloatingIcon delay={0} duration={4}>
+                <div className="bg-card/80 backdrop-blur-sm border border-border rounded-2xl p-4 shadow-lg w-48">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Award className="w-5 h-5 text-accent" />
+                    <span className="text-sm font-medium">Streak</span>
+                  </div>
+                  <p className="text-2xl font-bold text-accent">7 days 🔥</p>
+                </div>
+              </FloatingIcon>
+            </div>
+
+            <div className="hidden lg:block absolute -right-32 top-10 z-0">
+              <FloatingIcon delay={1} duration={5}>
+                <div className="bg-card/80 backdrop-blur-sm border border-border rounded-2xl p-4 shadow-lg w-52">
+                  <div className="flex items-center gap-2 mb-2">
+                    <TrendingUp className="w-5 h-5 text-primary" />
+                    <span className="text-sm font-medium">Weekly Progress</span>
+                  </div>
+                  <div className="space-y-1">
+                    <div className="flex justify-between text-sm">
+                      <span>Maths</span>
+                      <span className="text-primary">+15%</span>
+                    </div>
+                    <Progress value={85} className="h-2" />
+                  </div>
+                </div>
+              </FloatingIcon>
+            </div>
+
+            <div className="hidden lg:block absolute -left-24 bottom-32 z-0">
+              <FloatingIcon delay={0.5} duration={4.5}>
+                <div className="bg-gradient-to-br from-primary/20 to-secondary/20 border border-primary/30 rounded-2xl p-4 shadow-lg w-44">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Sparkles className="w-5 h-5 text-primary" />
+                    <span className="text-sm font-medium">XP Today</span>
+                  </div>
+                  <p className="text-2xl font-bold text-primary">+250</p>
+                </div>
+              </FloatingIcon>
+            </div>
+
+            <div className="hidden lg:block absolute -right-28 bottom-20 z-0">
+              <FloatingIcon delay={1.5} duration={5.5}>
+                <div className="bg-card/80 backdrop-blur-sm border border-border rounded-2xl p-4 shadow-lg w-48">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Target className="w-5 h-5 text-secondary" />
+                    <span className="text-sm font-medium">Goal</span>
+                  </div>
+                  <p className="text-sm text-muted-foreground">3/4 sessions done</p>
+                  <Progress value={75} className="h-2 mt-2" />
+                </div>
+              </FloatingIcon>
+            </div>
+
             {/* Header */}
             <motion.div 
               initial={{ opacity: 0, y: 20 }}
@@ -225,10 +534,10 @@ const InteractiveTimetableDemo = ({ onArrowClick }: InteractiveTimetableDemoProp
             >
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-4">
                 <Play className="w-4 h-4 text-primary" />
-                <span className="text-sm font-medium text-primary">Interactive Demo</span>
+                <span className="text-sm font-medium text-primary">Your Generated Schedule</span>
               </div>
               <h3 className="text-2xl md:text-3xl font-display font-bold mb-2">
-                Your Wednesday Schedule
+                Wednesday, 15th January
               </h3>
               <p className="text-muted-foreground">
                 Click a study session to start the timer and experience the full flow!
@@ -282,7 +591,7 @@ const InteractiveTimetableDemo = ({ onArrowClick }: InteractiveTimetableDemoProp
                     <CardContent className="p-4">
                       <div className="flex items-center gap-4">
                         {/* Time */}
-                        <div className="text-center min-w-[60px]">
+                        <div className="text-center min-w-[80px]">
                           <p className={`font-bold ${session.completed ? "text-muted-foreground" : "text-foreground"}`}>
                             {session.time}
                           </p>
@@ -293,17 +602,19 @@ const InteractiveTimetableDemo = ({ onArrowClick }: InteractiveTimetableDemoProp
                         <div className={`w-px h-12 ${session.completed ? "bg-muted-foreground/20" : "bg-border"}`} />
 
                         {/* Icon */}
-                        <div 
-                          className={`w-10 h-10 rounded-xl flex items-center justify-center transition-transform ${
-                            isHovering === session.id && session.type === "study" && !session.completed ? "scale-110" : ""
-                          }`}
+                        <motion.div 
+                          className={`w-10 h-10 rounded-xl flex items-center justify-center transition-transform`}
+                          animate={{ 
+                            scale: isHovering === session.id && session.type === "study" && !session.completed ? 1.1 : 1,
+                            rotate: isHovering === session.id && session.type === "study" && !session.completed ? [0, -5, 5, 0] : 0
+                          }}
                           style={{
                             backgroundColor: session.completed ? "hsl(var(--muted))" : `hsl(var(--${session.color}) / 0.1)`,
                             color: session.completed ? "hsl(var(--muted-foreground))" : `hsl(var(--${session.color}))`
                           }}
                         >
                           {session.icon}
-                        </div>
+                        </motion.div>
 
                         {/* Content */}
                         <div className="flex-1">
@@ -378,7 +689,6 @@ const InteractiveTimetableDemo = ({ onArrowClick }: InteractiveTimetableDemoProp
             <Card className="max-w-lg mx-auto border-2 border-primary/30 shadow-2xl">
               <CardContent className="p-8">
                 <div className="text-center space-y-6">
-                  {/* Session Info */}
                   <div className="space-y-2">
                     <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-sm font-medium">
                       <Timer className="w-4 h-4" />
@@ -388,21 +698,11 @@ const InteractiveTimetableDemo = ({ onArrowClick }: InteractiveTimetableDemoProp
                     <p className="text-muted-foreground">{activeSession.topic}</p>
                   </div>
 
-                  {/* Timer Circle */}
                   <div className="relative w-48 h-48 mx-auto">
                     <svg className="w-full h-full transform -rotate-90">
-                      <circle
-                        cx="96"
-                        cy="96"
-                        r="88"
-                        stroke="hsl(var(--muted))"
-                        strokeWidth="8"
-                        fill="none"
-                      />
+                      <circle cx="96" cy="96" r="88" stroke="hsl(var(--muted))" strokeWidth="8" fill="none" />
                       <motion.circle
-                        cx="96"
-                        cy="96"
-                        r="88"
+                        cx="96" cy="96" r="88"
                         stroke="url(#gradient)"
                         strokeWidth="8"
                         fill="none"
@@ -428,7 +728,6 @@ const InteractiveTimetableDemo = ({ onArrowClick }: InteractiveTimetableDemoProp
                     </div>
                   </div>
 
-                  {/* Progress */}
                   <div className="space-y-2">
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">Progress</span>
@@ -437,7 +736,6 @@ const InteractiveTimetableDemo = ({ onArrowClick }: InteractiveTimetableDemoProp
                     <Progress value={timerProgress} className="h-2" />
                   </div>
 
-                  {/* Action Button */}
                   <Button 
                     size="lg" 
                     onClick={finishSession}
@@ -447,11 +745,7 @@ const InteractiveTimetableDemo = ({ onArrowClick }: InteractiveTimetableDemoProp
                     Finish Session
                   </Button>
 
-                  <Button 
-                    variant="ghost" 
-                    onClick={backToTimetable}
-                    className="text-muted-foreground"
-                  >
+                  <Button variant="ghost" onClick={backToTimetable} className="text-muted-foreground">
                     <X className="mr-2 w-4 h-4" />
                     Cancel
                   </Button>
@@ -472,11 +766,11 @@ const InteractiveTimetableDemo = ({ onArrowClick }: InteractiveTimetableDemoProp
             <Card className="max-w-lg mx-auto border-2 border-secondary/30 shadow-2xl">
               <CardContent className="p-8">
                 <div className="space-y-6">
-                  {/* Header */}
                   <div className="text-center space-y-2">
                     <motion.div
                       initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
+                      animate={{ scale: 1, rotate: [0, 10, -10, 0] }}
+                      transition={{ rotate: { repeat: Infinity, duration: 2 } }}
                       className="w-16 h-16 rounded-full bg-gradient-to-br from-secondary to-accent flex items-center justify-center mx-auto"
                     >
                       <Brain className="w-8 h-8 text-white" />
@@ -485,7 +779,6 @@ const InteractiveTimetableDemo = ({ onArrowClick }: InteractiveTimetableDemoProp
                     <p className="text-muted-foreground">How did your {activeSession.subject} session go?</p>
                   </div>
 
-                  {/* Confidence Rating */}
                   <div className="space-y-3">
                     <label className="text-sm font-medium">How confident do you feel?</label>
                     <div className="flex justify-center gap-2">
@@ -507,7 +800,6 @@ const InteractiveTimetableDemo = ({ onArrowClick }: InteractiveTimetableDemoProp
                     </div>
                   </div>
 
-                  {/* Difficulty */}
                   <div className="space-y-3">
                     <label className="text-sm font-medium">Was it challenging?</label>
                     <div className="grid grid-cols-3 gap-2">
@@ -534,7 +826,6 @@ const InteractiveTimetableDemo = ({ onArrowClick }: InteractiveTimetableDemoProp
                     </div>
                   </div>
 
-                  {/* Quick Notes */}
                   <div className="space-y-2">
                     <label className="text-sm font-medium">Quick notes (optional)</label>
                     <div className="grid grid-cols-2 gap-2">
@@ -556,7 +847,6 @@ const InteractiveTimetableDemo = ({ onArrowClick }: InteractiveTimetableDemoProp
                     </div>
                   </div>
 
-                  {/* Submit */}
                   <Button 
                     size="lg" 
                     onClick={submitReflection}
@@ -593,41 +883,27 @@ const InteractiveTimetableDemo = ({ onArrowClick }: InteractiveTimetableDemoProp
               </div>
               <CardContent className="p-8">
                 <div className="space-y-6">
-                  {/* Stats Grid */}
                   <div className="grid grid-cols-3 gap-4">
-                    <motion.div
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.1 }}
-                      className="text-center p-4 rounded-xl bg-primary/10"
-                    >
-                      <BarChart3 className="w-6 h-6 text-primary mx-auto mb-2" />
-                      <p className="text-2xl font-bold text-primary">{completedCount + 1}</p>
-                      <p className="text-xs text-muted-foreground">Sessions Done</p>
-                    </motion.div>
-                    <motion.div
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.2 }}
-                      className="text-center p-4 rounded-xl bg-secondary/10"
-                    >
-                      <Clock className="w-6 h-6 text-secondary mx-auto mb-2" />
-                      <p className="text-2xl font-bold text-secondary">2.5h</p>
-                      <p className="text-xs text-muted-foreground">Study Time</p>
-                    </motion.div>
-                    <motion.div
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.3 }}
-                      className="text-center p-4 rounded-xl bg-accent/10"
-                    >
-                      <Zap className="w-6 h-6 text-accent mx-auto mb-2" />
-                      <p className="text-2xl font-bold text-accent">8</p>
-                      <p className="text-xs text-muted-foreground">Day Streak</p>
-                    </motion.div>
+                    {[
+                      { icon: BarChart3, value: `${completedCount + 1}`, label: "Sessions Done", color: "primary" },
+                      { icon: Clock, value: "2.5h", label: "Study Time", color: "secondary" },
+                      { icon: Zap, value: "8", label: "Day Streak", color: "accent" },
+                    ].map((stat, i) => (
+                      <motion.div
+                        key={i}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.1 * (i + 1) }}
+                        className="text-center p-4 rounded-xl"
+                        style={{ backgroundColor: `hsl(var(--${stat.color}) / 0.1)` }}
+                      >
+                        <stat.icon className="w-6 h-6 mx-auto mb-2" style={{ color: `hsl(var(--${stat.color}))` }} />
+                        <p className="text-2xl font-bold" style={{ color: `hsl(var(--${stat.color}))` }}>{stat.value}</p>
+                        <p className="text-xs text-muted-foreground">{stat.label}</p>
+                      </motion.div>
+                    ))}
                   </div>
 
-                  {/* AI Insight */}
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -635,19 +911,22 @@ const InteractiveTimetableDemo = ({ onArrowClick }: InteractiveTimetableDemoProp
                     className="p-4 rounded-xl bg-gradient-to-r from-primary/5 to-secondary/5 border border-primary/20"
                   >
                     <div className="flex items-start gap-3">
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center shrink-0">
+                      <motion.div 
+                        animate={{ scale: [1, 1.1, 1] }}
+                        transition={{ duration: 2, repeat: Infinity }}
+                        className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center shrink-0"
+                      >
                         <Brain className="w-5 h-5 text-white" />
-                      </div>
+                      </motion.div>
                       <div>
                         <p className="font-medium mb-1">AI Recommendation</p>
                         <p className="text-sm text-muted-foreground">
-                          Great progress on Biology! Based on your reflection, I've added an extra 15-minute review session tomorrow to reinforce cell division concepts before your test next week.
+                          Great progress on Biology! I've added an extra 15-minute review session tomorrow to reinforce cell division concepts before your test.
                         </p>
                       </div>
                     </div>
                   </motion.div>
 
-                  {/* Subject Progress */}
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -678,13 +957,7 @@ const InteractiveTimetableDemo = ({ onArrowClick }: InteractiveTimetableDemoProp
                     ))}
                   </motion.div>
 
-                  {/* Back Button */}
-                  <Button 
-                    size="lg" 
-                    onClick={backToTimetable}
-                    className="w-full"
-                    variant="outline"
-                  >
+                  <Button size="lg" onClick={backToTimetable} className="w-full" variant="outline">
                     <ArrowRight className="mr-2 w-5 h-5 rotate-180" />
                     Back to Schedule
                   </Button>
