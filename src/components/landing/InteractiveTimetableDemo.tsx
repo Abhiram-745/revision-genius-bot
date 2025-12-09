@@ -24,7 +24,7 @@ interface Session {
   completed: boolean;
 }
 
-// Fixed realistic timings for a school day (mathematically correct)
+// Fixed realistic timings for a school day (mathematically correct with all breaks)
 const demoSessions: Session[] = [
   {
     id: "1",
@@ -51,6 +51,18 @@ const demoSessions: Session[] = [
     completed: true,
   },
   {
+    id: "school",
+    time: "07:45",
+    endTime: "15:15",
+    duration: "7h 30m",
+    subject: "School",
+    topic: "Regular school day",
+    type: "event",
+    icon: <BookOpen className="w-5 h-5" />,
+    color: "muted",
+    completed: true,
+  },
+  {
     id: "3",
     time: "15:30",
     endTime: "16:15",
@@ -60,6 +72,18 @@ const demoSessions: Session[] = [
     type: "study",
     icon: <FlaskConical className="w-5 h-5" />,
     color: "secondary",
+    completed: false,
+  },
+  {
+    id: "break2",
+    time: "16:15",
+    endTime: "16:30",
+    duration: "15 min",
+    subject: "Break",
+    topic: "Snack & prepare for practice",
+    type: "break",
+    icon: <Clock className="w-5 h-5" />,
+    color: "muted",
     completed: false,
   },
   {
@@ -75,6 +99,18 @@ const demoSessions: Session[] = [
     completed: false,
   },
   {
+    id: "break3",
+    time: "18:00",
+    endTime: "18:15",
+    duration: "15 min",
+    subject: "Break",
+    topic: "Shower & dinner",
+    type: "break",
+    icon: <Clock className="w-5 h-5" />,
+    color: "muted",
+    completed: false,
+  },
+  {
     id: "5",
     time: "18:15",
     endTime: "19:00",
@@ -84,6 +120,18 @@ const demoSessions: Session[] = [
     type: "study",
     icon: <Brain className="w-5 h-5" />,
     color: "primary",
+    completed: false,
+  },
+  {
+    id: "break4",
+    time: "19:00",
+    endTime: "19:15",
+    duration: "15 min",
+    subject: "Break",
+    topic: "Quick stretch & water",
+    type: "break",
+    icon: <Clock className="w-5 h-5" />,
+    color: "muted",
     completed: false,
   },
   {
