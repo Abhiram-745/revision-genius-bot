@@ -24,7 +24,7 @@ interface Session {
   completed: boolean;
 }
 
-// Fixed realistic timings for a school day
+// Fixed realistic timings for a school day (mathematically correct)
 const demoSessions: Session[] = [
   {
     id: "1",
@@ -76,8 +76,8 @@ const demoSessions: Session[] = [
   },
   {
     id: "5",
-    time: "18:30",
-    endTime: "19:15",
+    time: "18:15",
+    endTime: "19:00",
     duration: "45 min",
     subject: "Physics",
     topic: "Forces & Motion - Newton's Laws",
@@ -88,8 +88,8 @@ const demoSessions: Session[] = [
   },
   {
     id: "6",
-    time: "19:30",
-    endTime: "20:00",
+    time: "19:15",
+    endTime: "19:45",
     duration: "30 min",
     subject: "Chemistry",
     topic: "Atomic Structure Review",
