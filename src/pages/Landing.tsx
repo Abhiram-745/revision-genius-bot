@@ -358,7 +358,7 @@ const Landing = () => {
           </div>
         </section>
 
-        {/* Features Deep Dive Section */}
+        {/* Floating UI Showcase Section */}
         <section className="py-24 px-6 bg-gradient-to-b from-muted/30 to-background relative overflow-hidden">
           <div className="max-w-6xl mx-auto">
             <motion.div
@@ -378,66 +378,317 @@ const Landing = () => {
               </p>
             </motion.div>
 
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {/* Floating UI Cards with Connections */}
+            <div className="relative min-h-[700px] hidden lg:block">
+              {/* SVG Connection Lines */}
+              <svg className="absolute inset-0 w-full h-full pointer-events-none z-0" viewBox="0 0 1000 700">
+                <motion.path
+                  d="M 250 150 Q 400 100 500 180"
+                  fill="none"
+                  stroke="hsl(var(--primary) / 0.3)"
+                  strokeWidth="2"
+                  strokeDasharray="8 4"
+                  initial={{ pathLength: 0 }}
+                  whileInView={{ pathLength: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 1.5, delay: 0.5 }}
+                />
+                <motion.path
+                  d="M 750 150 Q 600 100 500 180"
+                  fill="none"
+                  stroke="hsl(var(--secondary) / 0.3)"
+                  strokeWidth="2"
+                  strokeDasharray="8 4"
+                  initial={{ pathLength: 0 }}
+                  whileInView={{ pathLength: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 1.5, delay: 0.7 }}
+                />
+                <motion.path
+                  d="M 500 280 Q 500 350 300 420"
+                  fill="none"
+                  stroke="hsl(var(--accent) / 0.3)"
+                  strokeWidth="2"
+                  strokeDasharray="8 4"
+                  initial={{ pathLength: 0 }}
+                  whileInView={{ pathLength: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 1.5, delay: 0.9 }}
+                />
+                <motion.path
+                  d="M 500 280 Q 500 350 700 420"
+                  fill="none"
+                  stroke="hsl(var(--primary) / 0.3)"
+                  strokeWidth="2"
+                  strokeDasharray="8 4"
+                  initial={{ pathLength: 0 }}
+                  whileInView={{ pathLength: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 1.5, delay: 1.1 }}
+                />
+                <motion.path
+                  d="M 300 520 Q 500 600 700 520"
+                  fill="none"
+                  stroke="hsl(var(--secondary) / 0.3)"
+                  strokeWidth="2"
+                  strokeDasharray="8 4"
+                  initial={{ pathLength: 0 }}
+                  whileInView={{ pathLength: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 1.5, delay: 1.3 }}
+                />
+              </svg>
+
+              {/* Welcome Dashboard Card - Top Left */}
+              <motion.div
+                initial={{ opacity: 0, x: -50 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.2 }}
+                className="absolute left-0 top-0 z-10"
+              >
+                <FloatingIcon delay={0} duration={5}>
+                  <Card className="w-72 bg-card shadow-xl border-t-4 border-t-primary">
+                    <CardContent className="p-5">
+                      <div className="flex items-center gap-3 mb-3">
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white font-bold">
+                          A
+                        </div>
+                        <div>
+                          <p className="text-xs text-muted-foreground">Welcome back</p>
+                          <p className="font-bold">Abhiram!</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-4 text-sm">
+                        <div className="flex items-center gap-1">
+                          <Zap className="w-4 h-4 text-primary" />
+                          <span className="font-medium">12 day streak</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Star className="w-4 h-4 text-accent" />
+                          <span>Level 5</span>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </FloatingIcon>
+              </motion.div>
+
+              {/* Streak Tracker Card - Top Right */}
+              <motion.div
+                initial={{ opacity: 0, x: 50 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.4 }}
+                className="absolute right-0 top-0 z-10"
+              >
+                <FloatingIcon delay={0.5} duration={4.5}>
+                  <Card className="w-64 bg-card shadow-xl border-t-4 border-t-secondary">
+                    <CardContent className="p-5">
+                      <div className="flex items-center gap-2 mb-3">
+                        <div className="w-8 h-8 rounded-lg bg-secondary/10 flex items-center justify-center">
+                          <TrendingUp className="w-4 h-4 text-secondary" />
+                        </div>
+                        <span className="font-bold text-sm">Weekly Progress</span>
+                      </div>
+                      <div className="flex gap-1 mb-2">
+                        {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((day, i) => (
+                          <div key={i} className="flex flex-col items-center gap-1">
+                            <div className={`w-6 h-6 rounded-md flex items-center justify-center text-xs ${i < 5 ? 'bg-secondary text-white' : 'bg-muted'}`}>
+                              {i < 5 ? '✓' : ''}
+                            </div>
+                            <span className="text-[10px] text-muted-foreground">{day}</span>
+                          </div>
+                        ))}
+                      </div>
+                      <p className="text-xs text-muted-foreground">5/7 days completed</p>
+                    </CardContent>
+                  </Card>
+                </FloatingIcon>
+              </motion.div>
+
+              {/* Central Timetable Preview - Center */}
+              <motion.div
+                initial={{ opacity: 0, y: 30, scale: 0.9 }}
+                whileInView={{ opacity: 1, y: 0, scale: 1 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.3 }}
+                className="absolute left-1/2 top-32 -translate-x-1/2 z-20"
+              >
+                <FloatingIcon delay={0.2} duration={6}>
+                  <Card className="w-80 bg-card shadow-2xl border-2 border-primary/30">
+                    <CardHeader className="pb-2">
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="text-base flex items-center gap-2">
+                          <Calendar className="w-4 h-4 text-primary" />
+                          Today's Schedule
+                        </CardTitle>
+                        <span className="text-xs text-muted-foreground">3 sessions</span>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="space-y-2">
+                      <div className="flex items-center gap-3 p-2 rounded-lg bg-primary/5 border-l-3 border-l-primary">
+                        <div className="text-center">
+                          <p className="text-xs font-bold">9:00</p>
+                          <p className="text-[10px] text-muted-foreground">AM</p>
+                        </div>
+                        <div>
+                          <p className="font-medium text-sm">Mathematics</p>
+                          <p className="text-xs text-muted-foreground">Calculus - Integration</p>
+                        </div>
+                        <CheckCircle2 className="w-4 h-4 text-primary ml-auto" />
+                      </div>
+                      <div className="flex items-center gap-3 p-2 rounded-lg bg-secondary/5 border-l-3 border-l-secondary">
+                        <div className="text-center">
+                          <p className="text-xs font-bold">2:00</p>
+                          <p className="text-[10px] text-muted-foreground">PM</p>
+                        </div>
+                        <div>
+                          <p className="font-medium text-sm">Physics</p>
+                          <p className="text-xs text-muted-foreground">Waves - Interference</p>
+                        </div>
+                        <Clock className="w-4 h-4 text-muted-foreground ml-auto" />
+                      </div>
+                      <div className="flex items-center gap-3 p-2 rounded-lg bg-accent/5 border-l-3 border-l-accent">
+                        <div className="text-center">
+                          <p className="text-xs font-bold">5:30</p>
+                          <p className="text-[10px] text-muted-foreground">PM</p>
+                        </div>
+                        <div>
+                          <p className="font-medium text-sm">Chemistry</p>
+                          <p className="text-xs text-muted-foreground">Organic - Alkenes</p>
+                        </div>
+                        <Clock className="w-4 h-4 text-muted-foreground ml-auto" />
+                      </div>
+                    </CardContent>
+                  </Card>
+                </FloatingIcon>
+              </motion.div>
+
+              {/* Session Timer Card - Bottom Left */}
+              <motion.div
+                initial={{ opacity: 0, x: -50 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.6 }}
+                className="absolute left-8 bottom-24 z-10"
+              >
+                <FloatingIcon delay={1} duration={5.5}>
+                  <Card className="w-56 bg-card shadow-xl border-l-4 border-l-accent">
+                    <CardContent className="p-4">
+                      <div className="flex items-center gap-2 mb-3">
+                        <div className="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center">
+                          <Clock className="w-4 h-4 text-accent" />
+                        </div>
+                        <span className="font-bold text-sm">Focus Timer</span>
+                      </div>
+                      <div className="text-center py-2">
+                        <p className="text-3xl font-mono font-bold text-primary">23:45</p>
+                        <p className="text-xs text-muted-foreground mt-1">Remaining</p>
+                      </div>
+                      <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
+                        <motion.div 
+                          className="h-full bg-gradient-to-r from-primary to-secondary"
+                          initial={{ width: '0%' }}
+                          whileInView={{ width: '65%' }}
+                          viewport={{ once: true }}
+                          transition={{ duration: 1.5, delay: 1 }}
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
+                </FloatingIcon>
+              </motion.div>
+
+              {/* Reflection Card - Bottom Right */}
+              <motion.div
+                initial={{ opacity: 0, x: 50 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.8 }}
+                className="absolute right-8 bottom-24 z-10"
+              >
+                <FloatingIcon delay={1.5} duration={4}>
+                  <Card className="w-60 bg-card shadow-xl border-l-4 border-l-primary">
+                    <CardContent className="p-4">
+                      <div className="flex items-center gap-2 mb-3">
+                        <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                          <MessageSquare className="w-4 h-4 text-primary" />
+                        </div>
+                        <span className="font-bold text-sm">Session Feedback</span>
+                      </div>
+                      <p className="text-xs text-muted-foreground mb-2">How did your session go?</p>
+                      <div className="flex gap-2">
+                        {['😊', '😐', '😓'].map((emoji, i) => (
+                          <motion.button
+                            key={i}
+                            whileHover={{ scale: 1.2 }}
+                            className={`w-10 h-10 rounded-lg flex items-center justify-center text-lg ${i === 0 ? 'bg-primary/20 ring-2 ring-primary' : 'bg-muted'}`}
+                          >
+                            {emoji}
+                          </motion.button>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </FloatingIcon>
+              </motion.div>
+
+              {/* Exam Countdown Card - Bottom Center */}
+              <motion.div
+                initial={{ opacity: 0, y: 50 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: 1 }}
+                className="absolute left-1/2 bottom-0 -translate-x-1/2 z-10"
+              >
+                <FloatingIcon delay={2} duration={5}>
+                  <Card className="w-64 bg-gradient-to-br from-card to-secondary/5 shadow-xl border-t-4 border-t-secondary">
+                    <CardContent className="p-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <div className="w-8 h-8 rounded-lg bg-secondary/10 flex items-center justify-center">
+                          <Target className="w-4 h-4 text-secondary" />
+                        </div>
+                        <span className="font-bold text-sm">Next Exam</span>
+                      </div>
+                      <p className="font-medium">Physics Paper 1</p>
+                      <div className="flex items-center gap-2 mt-2">
+                        <motion.span 
+                          className="text-2xl font-bold text-secondary"
+                          animate={{ scale: [1, 1.1, 1] }}
+                          transition={{ duration: 2, repeat: Infinity }}
+                        >
+                          5
+                        </motion.span>
+                        <span className="text-sm text-muted-foreground">days remaining</span>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </FloatingIcon>
+              </motion.div>
+            </div>
+
+            {/* Mobile Grid Fallback */}
+            <div className="grid md:grid-cols-2 gap-6 lg:hidden">
               {[
-                {
-                  icon: Brain,
-                  title: "AI-Powered Planning",
-                  desc: "Smart algorithms create optimal study schedules based on your learning patterns.",
-                  color: "primary",
-                },
-                {
-                  icon: RefreshCw,
-                  title: "Adaptive Rescheduling",
-                  desc: "Missed a session? The AI automatically adjusts your plan to keep you on track.",
-                  color: "secondary",
-                },
-                {
-                  icon: BarChart3,
-                  title: "Progress Analytics",
-                  desc: "Track your confidence levels and see your improvement over time.",
-                  color: "accent",
-                },
-                {
-                  icon: MessageSquare,
-                  title: "Session Reflections",
-                  desc: "Quick feedback after each session helps the AI understand your needs.",
-                  color: "primary",
-                },
-                {
-                  icon: Users,
-                  title: "Study Groups",
-                  desc: "Connect with friends, share timetables, and motivate each other.",
-                  color: "secondary",
-                },
-                {
-                  icon: Shield,
-                  title: "Exam Countdown",
-                  desc: "Never forget a test date with smart reminders and preparation tracking.",
-                  color: "accent",
-                },
+                { icon: Brain, title: "AI-Powered Planning", desc: "Smart algorithms create optimal study schedules.", color: "primary" },
+                { icon: RefreshCw, title: "Adaptive Rescheduling", desc: "Missed a session? AI adjusts your plan.", color: "secondary" },
+                { icon: BarChart3, title: "Progress Analytics", desc: "Track confidence and improvement.", color: "accent" },
+                { icon: MessageSquare, title: "Session Reflections", desc: "Quick feedback helps AI understand you.", color: "primary" },
               ].map((feature, i) => (
                 <motion.div
                   key={i}
-                  initial={{ opacity: 0, y: 20, scale: 0.95 }}
-                  whileInView={{ opacity: 1, y: 0, scale: 1 }}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ delay: i * 0.1 }}
-                  whileHover={{ y: -5, scale: 1.02 }}
                 >
-                  <Card className="h-full bg-card/60 backdrop-blur-sm hover:shadow-lg transition-all duration-300 border-l-4"
-                    style={{ borderLeftColor: `hsl(var(--${feature.color}))` }}
-                  >
-                    <CardContent className="p-6">
-                      <motion.div
-                        whileHover={{ rotate: [0, -10, 10, 0] }}
-                        transition={{ duration: 0.5 }}
-                        className="w-12 h-12 rounded-xl flex items-center justify-center mb-4"
-                        style={{ backgroundColor: `hsl(var(--${feature.color}) / 0.1)` }}
-                      >
-                        <feature.icon className="w-6 h-6" style={{ color: `hsl(var(--${feature.color}))` }} />
-                      </motion.div>
-                      <h3 className="text-lg font-bold mb-2">{feature.title}</h3>
+                  <Card className="h-full border-l-4" style={{ borderLeftColor: `hsl(var(--${feature.color}))` }}>
+                    <CardContent className="p-5">
+                      <div className="w-10 h-10 rounded-xl flex items-center justify-center mb-3" style={{ backgroundColor: `hsl(var(--${feature.color}) / 0.1)` }}>
+                        <feature.icon className="w-5 h-5" style={{ color: `hsl(var(--${feature.color}))` }} />
+                      </div>
+                      <h3 className="font-bold mb-1">{feature.title}</h3>
                       <p className="text-sm text-muted-foreground">{feature.desc}</p>
                     </CardContent>
                   </Card>
