@@ -1,9 +1,13 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { motion, useScroll, useTransform } from "framer-motion";
+import { motion, useScroll, useTransform, useInView } from "framer-motion";
 import { useRef, useEffect, useState } from "react";
-import { Calendar, Brain, Target, Users, Clock, Sparkles, ArrowRight, CheckCircle2, Star, Heart, Zap, Laptop } from "lucide-react";
+import { 
+  Calendar, Brain, Target, Users, Clock, Sparkles, ArrowRight, 
+  CheckCircle2, Star, Heart, Zap, Laptop, TrendingUp, Award,
+  BookOpen, RefreshCw, Shield, Rocket, BarChart3, MessageSquare
+} from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import PageTransition from "@/components/PageTransition";
 import TypewriterText from "@/components/landing/TypewriterText";
@@ -65,6 +69,50 @@ const Landing = () => {
           style={{ y: heroY, opacity: heroOpacity }}
           className="relative min-h-[85vh] flex items-center justify-center px-6 pt-20 pb-16"
         >
+          {/* Floating decorative cards in hero */}
+          <div className="hidden lg:block absolute left-10 top-32">
+            <FloatingIcon delay={0} duration={4}>
+              <div className="bg-card/80 backdrop-blur-sm border border-primary/20 rounded-2xl p-4 shadow-lg">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                    <Zap className="w-4 h-4 text-primary" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Current Streak</p>
+                    <p className="font-bold text-primary">12 days 🔥</p>
+                  </div>
+                </div>
+              </div>
+            </FloatingIcon>
+          </div>
+
+          <div className="hidden lg:block absolute right-16 top-40">
+            <FloatingIcon delay={1} duration={5}>
+              <div className="bg-card/80 backdrop-blur-sm border border-secondary/20 rounded-2xl p-4 shadow-lg">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-lg bg-secondary/10 flex items-center justify-center">
+                    <TrendingUp className="w-4 h-4 text-secondary" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Progress</p>
+                    <p className="font-bold text-secondary">+23% this week</p>
+                  </div>
+                </div>
+              </div>
+            </FloatingIcon>
+          </div>
+
+          <div className="hidden lg:block absolute left-20 bottom-40">
+            <FloatingIcon delay={0.5} duration={4.5}>
+              <div className="bg-gradient-to-br from-accent/20 to-accent/10 border border-accent/30 rounded-2xl p-4 shadow-lg">
+                <div className="flex items-center gap-2">
+                  <Award className="w-6 h-6 text-accent" />
+                  <span className="font-medium text-sm">Achievement Unlocked!</span>
+                </div>
+              </div>
+            </FloatingIcon>
+          </div>
+
           <div className="relative z-10 max-w-5xl mx-auto">
             <motion.div
               initial={{ opacity: 0, y: 30 }}
@@ -94,7 +142,7 @@ const Landing = () => {
                 </span>
               </h1>
 
-              {/* Subheadline - shorter */}
+              {/* Subheadline */}
               <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
                 AI-powered study timetables that work around your life.
               </p>
@@ -128,7 +176,7 @@ const Landing = () => {
                 </Button>
               </motion.div>
 
-              {/* Social proof - minimal */}
+              {/* Social proof */}
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -144,7 +192,7 @@ const Landing = () => {
         </motion.section>
 
         {/* Floating Features Strip */}
-        <section className="py-16 px-6 border-y border-border/50 bg-muted/30">
+        <section className="py-16 px-6 border-y border-border/50 bg-muted/30 relative overflow-hidden">
           <div className="max-w-6xl mx-auto">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
               {[
@@ -171,8 +219,27 @@ const Landing = () => {
           </div>
         </section>
 
-        {/* How It Works - Simplified */}
-        <section className="py-24 px-6">
+        {/* Problem/Solution Section with Floating Cards */}
+        <section className="py-24 px-6 relative">
+          {/* Floating cards */}
+          <div className="hidden lg:block absolute right-10 top-20">
+            <FloatingIcon delay={0.5} duration={5}>
+              <div className="bg-destructive/10 border border-destructive/20 rounded-2xl p-4 shadow-lg w-48">
+                <p className="text-sm font-medium text-destructive">❌ Old Way</p>
+                <p className="text-xs text-muted-foreground mt-1">Endless to-do lists, cramming, stress...</p>
+              </div>
+            </FloatingIcon>
+          </div>
+          
+          <div className="hidden lg:block absolute left-10 bottom-32">
+            <FloatingIcon delay={1} duration={5.5}>
+              <div className="bg-primary/10 border border-primary/20 rounded-2xl p-4 shadow-lg w-48">
+                <p className="text-sm font-medium text-primary">✨ Vistara Way</p>
+                <p className="text-xs text-muted-foreground mt-1">Smart planning, balanced life, confidence!</p>
+              </div>
+            </FloatingIcon>
+          </div>
+
           <div className="max-w-5xl mx-auto">
             <motion.div
               initial={{ opacity: 0, y: 30 }}
@@ -218,18 +285,20 @@ const Landing = () => {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ delay: i * 0.15 }}
+                  whileHover={{ y: -5, transition: { duration: 0.2 } }}
                   className="relative"
                 >
-                  <Card className="h-full bg-card/80 backdrop-blur-sm hover:shadow-lg transition-all duration-300 border-t-4"
+                  <Card className="h-full bg-card/80 backdrop-blur-sm hover:shadow-xl transition-all duration-300 border-t-4"
                     style={{ borderTopColor: `hsl(var(--${item.color}))` }}
                   >
                     <CardContent className="p-6">
-                      <div 
+                      <motion.div 
                         className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-lg mb-4"
                         style={{ background: `hsl(var(--${item.color}))` }}
+                        whileHover={{ scale: 1.1, rotate: 5 }}
                       >
                         {item.step}
-                      </div>
+                      </motion.div>
                       <h3 className="text-xl font-bold mb-2">{item.title}</h3>
                       <p className="text-muted-foreground">{item.desc}</p>
                     </CardContent>
@@ -240,8 +309,97 @@ const Landing = () => {
           </div>
         </section>
 
+        {/* Features Deep Dive Section */}
+        <section className="py-24 px-6 bg-gradient-to-b from-muted/30 to-background relative overflow-hidden">
+          <div className="max-w-6xl mx-auto">
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="text-center mb-16"
+            >
+              <h2 className="text-4xl md:text-5xl font-display font-bold mb-4">
+                Everything you need to{" "}
+                <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+                  succeed
+                </span>
+              </h2>
+              <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+                Powerful features designed specifically for students
+              </p>
+            </motion.div>
+
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[
+                {
+                  icon: Brain,
+                  title: "AI-Powered Planning",
+                  desc: "Smart algorithms create optimal study schedules based on your learning patterns.",
+                  color: "primary",
+                },
+                {
+                  icon: RefreshCw,
+                  title: "Adaptive Rescheduling",
+                  desc: "Missed a session? The AI automatically adjusts your plan to keep you on track.",
+                  color: "secondary",
+                },
+                {
+                  icon: BarChart3,
+                  title: "Progress Analytics",
+                  desc: "Track your confidence levels and see your improvement over time.",
+                  color: "accent",
+                },
+                {
+                  icon: MessageSquare,
+                  title: "Session Reflections",
+                  desc: "Quick feedback after each session helps the AI understand your needs.",
+                  color: "primary",
+                },
+                {
+                  icon: Users,
+                  title: "Study Groups",
+                  desc: "Connect with friends, share timetables, and motivate each other.",
+                  color: "secondary",
+                },
+                {
+                  icon: Shield,
+                  title: "Exam Countdown",
+                  desc: "Never forget a test date with smart reminders and preparation tracking.",
+                  color: "accent",
+                },
+              ].map((feature, i) => (
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                  whileInView={{ opacity: 1, y: 0, scale: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: i * 0.1 }}
+                  whileHover={{ y: -5, scale: 1.02 }}
+                >
+                  <Card className="h-full bg-card/60 backdrop-blur-sm hover:shadow-lg transition-all duration-300 border-l-4"
+                    style={{ borderLeftColor: `hsl(var(--${feature.color}))` }}
+                  >
+                    <CardContent className="p-6">
+                      <motion.div
+                        whileHover={{ rotate: [0, -10, 10, 0] }}
+                        transition={{ duration: 0.5 }}
+                        className="w-12 h-12 rounded-xl flex items-center justify-center mb-4"
+                        style={{ backgroundColor: `hsl(var(--${feature.color}) / 0.1)` }}
+                      >
+                        <feature.icon className="w-6 h-6" style={{ color: `hsl(var(--${feature.color}))` }} />
+                      </motion.div>
+                      <h3 className="text-lg font-bold mb-2">{feature.title}</h3>
+                      <p className="text-sm text-muted-foreground">{feature.desc}</p>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </section>
+
         {/* Interactive Demo Section */}
-        <section id="try-demo" className="py-24 px-6 bg-gradient-to-b from-muted/50 to-background">
+        <section id="try-demo" className="py-24 px-6 bg-gradient-to-b from-background to-muted/50">
           <div className="max-w-5xl mx-auto">
             <motion.div
               initial={{ opacity: 0, y: 30 }}
@@ -261,7 +419,46 @@ const Landing = () => {
           </div>
         </section>
 
-        {/* Testimonial - Single */}
+        {/* Stats Section */}
+        <section className="py-20 px-6 bg-gradient-to-r from-primary/10 via-secondary/10 to-accent/10">
+          <div className="max-w-5xl mx-auto">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+              {[
+                { value: "10K+", label: "Students", icon: Users },
+                { value: "50K+", label: "Sessions Completed", icon: CheckCircle2 },
+                { value: "95%", label: "Stick to Plans", icon: Target },
+                { value: "4.9★", label: "User Rating", icon: Star },
+              ].map((stat, i) => (
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  whileInView={{ opacity: 1, scale: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: i * 0.1, type: "spring" }}
+                  className="text-center"
+                >
+                  <motion.div
+                    whileHover={{ scale: 1.1 }}
+                    className="w-12 h-12 rounded-full bg-background/80 flex items-center justify-center mx-auto mb-3"
+                  >
+                    <stat.icon className="w-6 h-6 text-primary" />
+                  </motion.div>
+                  <motion.p 
+                    className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent"
+                    initial={{ opacity: 0 }}
+                    whileInView={{ opacity: 1 }}
+                    viewport={{ once: true }}
+                  >
+                    {stat.value}
+                  </motion.p>
+                  <p className="text-sm text-muted-foreground">{stat.label}</p>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Testimonial */}
         <section className="py-24 px-6">
           <div className="max-w-3xl mx-auto">
             <motion.div
@@ -274,7 +471,15 @@ const Landing = () => {
               <div className="relative z-10">
                 <div className="flex gap-1 mb-6">
                   {[...Array(5)].map((_, i) => (
-                    <Star key={i} className="w-5 h-5 fill-accent text-accent" />
+                    <motion.div
+                      key={i}
+                      initial={{ opacity: 0, scale: 0 }}
+                      whileInView={{ opacity: 1, scale: 1 }}
+                      viewport={{ once: true }}
+                      transition={{ delay: i * 0.1 }}
+                    >
+                      <Star className="w-5 h-5 fill-accent text-accent" />
+                    </motion.div>
                   ))}
                 </div>
                 <blockquote className="text-xl md:text-2xl font-display font-medium leading-relaxed mb-6">
@@ -297,7 +502,7 @@ const Landing = () => {
         {/* BlurtAI Integration Section */}
         <BlurtAIIntegration onTryClick={() => setShowComingSoon(true)} />
 
-        {/* Pricing Section - Simplified */}
+        {/* Pricing Section */}
         <section className="py-24 px-6">
           <div className="max-w-5xl mx-auto">
             <motion.div
@@ -317,10 +522,10 @@ const Landing = () => {
             <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
               {/* Free Plan */}
               <motion.div
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
+                initial={{ opacity: 0, x: -30 }}
+                whileInView={{ opacity: 1, x: 0 }}
                 viewport={{ once: true }}
-                transition={{ delay: 0.1 }}
+                whileHover={{ y: -5 }}
               >
                 <Card className="h-full bg-card/80 backdrop-blur-sm">
                   <CardHeader>
@@ -334,10 +539,17 @@ const Landing = () => {
                   <CardContent className="space-y-4">
                     <ul className="space-y-3">
                       {["1 timetable", "1 daily regeneration", "Basic insights", "Session tracking"].map((item, i) => (
-                        <li key={i} className="flex items-center gap-3">
+                        <motion.li 
+                          key={i} 
+                          className="flex items-center gap-3"
+                          initial={{ opacity: 0, x: -10 }}
+                          whileInView={{ opacity: 1, x: 0 }}
+                          viewport={{ once: true }}
+                          transition={{ delay: i * 0.1 }}
+                        >
                           <CheckCircle2 className="w-5 h-5 text-primary shrink-0" />
                           <span>{item}</span>
-                        </li>
+                        </motion.li>
                       ))}
                     </ul>
                     <Button
@@ -353,16 +565,20 @@ const Landing = () => {
 
               {/* Premium Plan */}
               <motion.div
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
+                initial={{ opacity: 0, x: 30 }}
+                whileInView={{ opacity: 1, x: 0 }}
                 viewport={{ once: true }}
-                transition={{ delay: 0.2 }}
+                whileHover={{ y: -8 }}
                 className="relative"
               >
                 <div className="absolute -top-4 left-1/2 -translate-x-1/2 z-10">
-                  <span className="bg-gradient-to-r from-primary to-secondary text-white text-sm font-bold px-4 py-1.5 rounded-full">
+                  <motion.span 
+                    className="bg-gradient-to-r from-primary to-secondary text-white text-sm font-bold px-4 py-1.5 rounded-full"
+                    animate={{ scale: [1, 1.05, 1] }}
+                    transition={{ duration: 2, repeat: Infinity }}
+                  >
                     Popular
-                  </span>
+                  </motion.span>
                 </div>
                 <Card className="h-full border-primary/50 bg-gradient-to-br from-card to-primary/5">
                   <CardHeader>
@@ -378,10 +594,17 @@ const Landing = () => {
                   <CardContent className="space-y-4">
                     <ul className="space-y-3">
                       {["Unlimited timetables", "Unlimited regenerations", "Advanced AI insights", "Priority support", "Early access"].map((item, i) => (
-                        <li key={i} className="flex items-center gap-3">
+                        <motion.li 
+                          key={i} 
+                          className="flex items-center gap-3"
+                          initial={{ opacity: 0, x: -10 }}
+                          whileInView={{ opacity: 1, x: 0 }}
+                          viewport={{ once: true }}
+                          transition={{ delay: i * 0.1 }}
+                        >
                           <Sparkles className="w-5 h-5 text-primary shrink-0" />
                           <span className="font-medium">{item}</span>
-                        </li>
+                        </motion.li>
                       ))}
                     </ul>
                     <Button
@@ -397,7 +620,7 @@ const Landing = () => {
           </div>
         </section>
 
-        {/* Final CTA - Simplified */}
+        {/* Final CTA */}
         <section className="py-24 px-6">
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
@@ -410,25 +633,43 @@ const Landing = () => {
             <div className="absolute bottom-0 left-0 w-72 h-72 bg-secondary/20 rounded-full blur-3xl" />
 
             <div className="relative z-10 space-y-6">
-              <h2 className="text-4xl md:text-5xl font-display font-bold">
-                Ready to study smarter?
-              </h2>
-              <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-                Join students who've stopped stressing and started succeeding.
-              </p>
-              <Button
-                size="lg"
-                onClick={() => navigate("/auth")}
-                className="text-lg px-10 py-7 bg-gradient-to-r from-primary to-secondary hover:opacity-90 hover:scale-105 transition-all duration-300 shadow-lg group rounded-full"
+              <motion.h2 
+                className="text-4xl md:text-5xl font-display font-bold"
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
               >
-                Create your plan — it's free
-                <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
-              </Button>
+                Ready to study smarter?
+              </motion.h2>
+              <motion.p 
+                className="text-xl text-muted-foreground max-w-2xl mx-auto"
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.1 }}
+              >
+                Join students who've stopped stressing and started succeeding.
+              </motion.p>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.2 }}
+              >
+                <Button
+                  size="lg"
+                  onClick={() => navigate("/auth")}
+                  className="text-lg px-10 py-7 bg-gradient-to-r from-primary to-secondary hover:opacity-90 hover:scale-105 transition-all duration-300 shadow-lg group rounded-full"
+                >
+                  Create your plan — it's free
+                  <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                </Button>
+              </motion.div>
             </div>
           </motion.div>
         </section>
 
-        {/* Footer - Minimal */}
+        {/* Footer */}
         <footer className="py-8 px-6 border-t bg-card/50">
           <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-2">
