@@ -1,8 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { Resend } from "https://esm.sh/resend@2.0.0";
+import { Resend } from "https://esm.sh/resend@4.0.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
-
-const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -34,6 +32,18 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     console.log("[send-verification-code] Processing request for:", email);
+
+    // Initialize Resend
+    const resendApiKey = Deno.env.get("RESEND_API_KEY");
+    if (!resendApiKey) {
+      console.error("[send-verification-code] RESEND_API_KEY not configured");
+      return new Response(
+        JSON.stringify({ error: "Email service not configured" }),
+        { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+    
+    const resend = new Resend(resendApiKey);
 
     // Create Supabase client
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
@@ -117,7 +127,7 @@ const handler = async (req: Request): Promise<Response> => {
     const { data, error: emailError } = await resend.emails.send({
       from: fromAddress,
       to: [email],
-      subject: "Your Vistari Verification Code",
+      subject: "Your Vistara Verification Code",
       html: `
         <!DOCTYPE html>
         <html>
@@ -127,13 +137,13 @@ const handler = async (req: Request): Promise<Response> => {
         </head>
         <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
           <div style="background: linear-gradient(135deg, #8B5CF6 0%, #6366F1 100%); padding: 30px; border-radius: 12px 12px 0 0; text-align: center;">
-            <h1 style="color: white; margin: 0; font-size: 28px;">Vistari</h1>
+            <h1 style="color: white; margin: 0; font-size: 28px;">Vistara</h1>
             <p style="color: rgba(255,255,255,0.9); margin: 10px 0 0 0;">Email Verification</p>
           </div>
           
           <div style="background: #f9fafb; padding: 30px; border-radius: 0 0 12px 12px; border: 1px solid #e5e7eb; border-top: none;">
             <p style="margin-top: 0;">Hi there! 👋</p>
-            <p>You're almost ready to start using Vistari. Enter this verification code to complete your sign-up:</p>
+            <p>You're almost ready to start using Vistara. Enter this verification code to complete your sign-up:</p>
             
             <div style="background: white; border: 2px solid #8B5CF6; border-radius: 8px; padding: 20px; text-align: center; margin: 25px 0;">
               <span style="font-size: 36px; font-weight: bold; letter-spacing: 8px; color: #8B5CF6;">${code}</span>
@@ -145,7 +155,7 @@ const handler = async (req: Request): Promise<Response> => {
             <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 25px 0;">
             
             <p style="color: #9ca3af; font-size: 12px; margin-bottom: 0; text-align: center;">
-              © ${new Date().getFullYear()} Vistari - AI-Powered Revision Timetables
+              © ${new Date().getFullYear()} Vistara - AI-Powered Revision Timetables
             </p>
           </div>
         </body>
