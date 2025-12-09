@@ -26,6 +26,13 @@ const Auth = () => {
   const [verificationEmail, setVerificationEmail] = useState("");
   const [showBanDialog, setShowBanDialog] = useState(false);
   const [banReason, setBanReason] = useState<string | null>(null);
+  
+  // Store pending signup credentials (user not created yet)
+  const [pendingSignup, setPendingSignup] = useState<{
+    email: string;
+    password: string;
+    fullName: string;
+  } | null>(null);
 
   useEffect(() => {
     // Show ban dialog if user was kicked out due to ban
@@ -36,16 +43,17 @@ const Auth = () => {
   }, [banInfo]);
 
   useEffect(() => {
-    if (user && !showVerification && emailVerified) {
+    if (user && !showVerification) {
       navigate("/dashboard");
     }
-  }, [user, navigate, showVerification, emailVerified]);
+  }, [user, navigate, showVerification]);
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
+      // Validate email first
       const { data: validationResult, error: validationError } = await supabase.functions.invoke('validate-email', {
         body: { email }
       });
@@ -96,22 +104,23 @@ const Auth = () => {
       console.error("[Auth] Ban check error:", err);
     }
 
+    // Store credentials but DON'T create user yet
+    setPendingSignup({
+      email: email.toLowerCase(),
+      password,
+      fullName
+    });
     setVerificationEmail(email.toLowerCase());
-    setShowVerification(true);
 
     try {
-      await signup(email, password, fullName);
-      
-      try {
-        await sendVerificationCode(email);
-        toast.success("Account created! Check your email for the verification code.");
-      } catch (err) {
-        toast.info("Account created! Verification email may take a moment.");
-      }
+      // Send verification code BEFORE creating the account
+      await sendVerificationCode(email);
+      setShowVerification(true);
+      toast.success("Verification code sent! Check your email.");
     } catch (error: any) {
-      setShowVerification(false);
+      setPendingSignup(null);
       setVerificationEmail("");
-      toast.error(error.message || "Failed to create account");
+      toast.error(error.message || "Failed to send verification code");
     } finally {
       setLoading(false);
     }
@@ -143,17 +152,30 @@ const Auth = () => {
       return;
     }
 
+    if (!pendingSignup) {
+      toast.error("Session expired. Please try signing up again.");
+      setShowVerification(false);
+      return;
+    }
+
     setLoading(true);
     try {
+      // First verify the code
       const isValid = await verifyEmailCode(verificationEmail, verificationCode);
-      if (isValid) {
-        toast.success("Email verified successfully!");
-        navigate("/dashboard");
-      } else {
+      if (!isValid) {
         toast.error("Invalid verification code");
+        setLoading(false);
+        return;
       }
+
+      // Code is valid - NOW create the account
+      await signup(pendingSignup.email, pendingSignup.password, pendingSignup.fullName);
+      
+      toast.success("Account created successfully!");
+      setPendingSignup(null);
+      navigate("/dashboard");
     } catch (error: any) {
-      toast.error(error.message || "Failed to verify code");
+      toast.error(error.message || "Failed to create account");
     } finally {
       setLoading(false);
     }
@@ -171,6 +193,13 @@ const Auth = () => {
     }
   };
 
+  const handleBackToSignup = () => {
+    setShowVerification(false);
+    setVerificationCode("");
+    setPendingSignup(null);
+    setVerificationEmail("");
+  };
+
   if (showVerification) {
     return (
       <PageTransition>
@@ -178,18 +207,11 @@ const Auth = () => {
           <div className="absolute top-4 left-4">
             <Button
               variant="ghost"
-              onClick={async () => {
-                try {
-                  await supabase.auth.signOut();
-                } catch (err) {
-                  console.error("[Auth] Error signing out:", err);
-                }
-                window.location.href = '/auth';
-              }}
+              onClick={handleBackToSignup}
               className="gap-2"
             >
               <ArrowLeft className="h-4 w-4" />
-              Back to Login
+              Back to Sign Up
             </Button>
           </div>
           
@@ -234,7 +256,7 @@ const Auth = () => {
                   disabled={loading || verificationCode.length !== 6}
                 >
                   {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Verify Email
+                  Verify & Create Account
                 </Button>
 
                 <div className="text-center">
@@ -478,10 +500,7 @@ const Auth = () => {
       </div>
 
       {/* Ban Dialog */}
-      <Dialog open={showBanDialog} onOpenChange={(open) => {
-        setShowBanDialog(open);
-        if (!open) clearBanInfo();
-      }}>
+      <Dialog open={showBanDialog} onOpenChange={setShowBanDialog}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <div className="flex justify-center mb-4">
@@ -491,23 +510,30 @@ const Auth = () => {
             </div>
             <DialogTitle className="text-center text-xl">Account Suspended</DialogTitle>
             <DialogDescription className="text-center">
-              Your account has been suspended and you cannot access Vistara.
+              This account has been suspended from Vistara.
             </DialogDescription>
           </DialogHeader>
           
-          {banReason && (
-            <div className="bg-muted/50 border border-border rounded-lg p-4 my-4">
-              <p className="text-sm font-medium text-muted-foreground mb-1">Reason:</p>
-              <p className="text-foreground">{banReason}</p>
-            </div>
-          )}
-          
+          <div className="space-y-4">
+            {banReason && (
+              <div className="bg-muted rounded-lg p-4">
+                <p className="text-sm font-medium text-muted-foreground mb-1">Reason:</p>
+                <p className="text-sm">{banReason}</p>
+              </div>
+            )}
+            
+            <p className="text-sm text-muted-foreground text-center">
+              If you believe this is a mistake, please contact support.
+            </p>
+          </div>
+
           <DialogFooter className="sm:justify-center">
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={() => {
                 setShowBanDialog(false);
                 clearBanInfo();
+                setBanReason(null);
               }}
             >
               I Understand
