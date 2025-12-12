@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Brain, Calendar, BarChart3, Sparkles, Zap } from "lucide-react";
+import { Brain, Calendar, BarChart3, Sparkles, Zap, Star, Rocket, Target, Heart, BookOpen, Trophy, Flame } from "lucide-react";
 
 const features = [
   {
@@ -64,6 +64,14 @@ const features = [
       ]
     }
   },
+];
+
+// Floating 3D icons per feature
+const floatingIconsPerFeature = [
+  [Brain, Star, Rocket, BookOpen],
+  [Calendar, Zap, Heart, Target],
+  [BarChart3, Trophy, Flame, Star],
+  [Sparkles, Brain, Rocket, Heart],
 ];
 
 const FeatureCard = ({ feature }: { feature: typeof features[0] }) => {
@@ -205,18 +213,31 @@ export const ColorChangeFeatures = () => {
   const [activeIndex, setActiveIndex] = useState(0);
   const [isLocked, setIsLocked] = useState(false);
   const sectionRef = useRef<HTMLElement>(null);
+  const hasExited = useRef(false);
   const lastScrollTime = useRef(0);
   const touchStartY = useRef(0);
 
   const lockScroll = useCallback(() => {
-    if (isLocked) return;
+    if (isLocked || hasExited.current) return;
     document.body.style.overflow = 'hidden';
     setIsLocked(true);
   }, [isLocked]);
 
-  const unlockScroll = useCallback(() => {
+  const unlockScroll = useCallback((direction: 'up' | 'down') => {
     document.body.style.overflow = '';
     setIsLocked(false);
+    hasExited.current = true;
+    
+    // Smooth scroll to exit the section
+    window.scrollBy({ 
+      top: direction === 'down' ? 200 : -200, 
+      behavior: 'smooth' 
+    });
+    
+    // Cooldown before re-locking
+    setTimeout(() => {
+      hasExited.current = false;
+    }, 1000);
   }, []);
 
   // Handle wheel events
@@ -227,19 +248,22 @@ export const ColorChangeFeatures = () => {
     const rect = section.getBoundingClientRect();
     const sectionInView = rect.top <= window.innerHeight * 0.3 && rect.bottom >= window.innerHeight * 0.7;
 
-    if (!sectionInView) {
-      if (isLocked) unlockScroll();
+    if (!sectionInView || hasExited.current) {
+      if (isLocked) {
+        document.body.style.overflow = '';
+        setIsLocked(false);
+      }
       return;
     }
 
-    if (!isLocked) {
+    if (!isLocked && !hasExited.current) {
       lockScroll();
     }
 
     e.preventDefault();
     
     const now = Date.now();
-      if (now - lastScrollTime.current < 700) return;
+    if (now - lastScrollTime.current < 700) return;
     lastScrollTime.current = now;
 
     if (e.deltaY > 0) {
@@ -247,14 +271,14 @@ export const ColorChangeFeatures = () => {
       if (activeIndex < features.length - 1) {
         setActiveIndex(prev => prev + 1);
       } else {
-        unlockScroll();
+        unlockScroll('down');
       }
     } else {
       // Scrolling up
       if (activeIndex > 0) {
         setActiveIndex(prev => prev - 1);
       } else {
-        unlockScroll();
+        unlockScroll('up');
       }
     }
   }, [isLocked, activeIndex, lockScroll, unlockScroll]);
@@ -271,12 +295,15 @@ export const ColorChangeFeatures = () => {
     const rect = section.getBoundingClientRect();
     const sectionInView = rect.top <= window.innerHeight * 0.3 && rect.bottom >= window.innerHeight * 0.7;
 
-    if (!sectionInView) {
-      if (isLocked) unlockScroll();
+    if (!sectionInView || hasExited.current) {
+      if (isLocked) {
+        document.body.style.overflow = '';
+        setIsLocked(false);
+      }
       return;
     }
 
-    if (!isLocked) {
+    if (!isLocked && !hasExited.current) {
       lockScroll();
     }
     
@@ -291,13 +318,13 @@ export const ColorChangeFeatures = () => {
       if (activeIndex < features.length - 1) {
         setActiveIndex(prev => prev + 1);
       } else {
-        unlockScroll();
+        unlockScroll('down');
       }
     } else {
       if (activeIndex > 0) {
         setActiveIndex(prev => prev - 1);
       } else {
-        unlockScroll();
+        unlockScroll('up');
       }
     }
   }, [isLocked, activeIndex, lockScroll, unlockScroll]);
@@ -324,6 +351,7 @@ export const ColorChangeFeatures = () => {
 
   const currentFeature = features[activeIndex];
   const Icon = currentFeature.icon;
+  const currentFloatingIcons = floatingIconsPerFeature[activeIndex];
 
   return (
     <section
@@ -341,6 +369,81 @@ export const ColorChangeFeatures = () => {
           transition={{ duration: 0.6 }}
         />
       </AnimatePresence>
+
+      {/* Floating 3D Icons */}
+      <AnimatePresence mode="wait">
+        {currentFloatingIcons.map((FloatingIcon, index) => {
+          const positions = [
+            { x: 8, y: 15 },
+            { x: 92, y: 20 },
+            { x: 5, y: 75 },
+            { x: 90, y: 80 },
+          ];
+          const pos = positions[index];
+          
+          return (
+            <motion.div
+              key={`${activeIndex}-${index}`}
+              className="absolute pointer-events-none z-10"
+              style={{ left: `${pos.x}%`, top: `${pos.y}%` }}
+              initial={{ opacity: 0, scale: 0, rotate: -45 }}
+              animate={{ 
+                opacity: 0.6, 
+                scale: 1, 
+                rotate: 0,
+                y: [0, -15, 0],
+              }}
+              exit={{ opacity: 0, scale: 0, rotate: 45 }}
+              transition={{ 
+                duration: 0.5,
+                y: { duration: 3 + index * 0.5, repeat: Infinity, ease: "easeInOut" }
+              }}
+            >
+              <motion.div
+                animate={{ rotateY: 360, rotateX: [0, 15, 0, -15, 0] }}
+                transition={{ 
+                  rotateY: { duration: 6 + index, repeat: Infinity, ease: "linear" },
+                  rotateX: { duration: 4, repeat: Infinity, ease: "easeInOut" }
+                }}
+                style={{ transformStyle: 'preserve-3d' }}
+              >
+                <FloatingIcon 
+                  size={32 + index * 4} 
+                  className="text-white/50"
+                  style={{ filter: 'drop-shadow(0 0 15px rgba(255,255,255,0.4))' }}
+                />
+              </motion.div>
+            </motion.div>
+          );
+        })}
+      </AnimatePresence>
+
+      {/* Glowing orbs background */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        {Array.from({ length: 6 }).map((_, i) => (
+          <motion.div
+            key={i}
+            className="absolute rounded-full bg-white/10 blur-3xl"
+            style={{
+              width: `${100 + i * 50}px`,
+              height: `${100 + i * 50}px`,
+              left: `${10 + (i * 15) % 80}%`,
+              top: `${20 + (i * 20) % 60}%`,
+            }}
+            animate={{
+              x: [0, 30, 0],
+              y: [0, -20, 0],
+              scale: [1, 1.2, 1],
+            }}
+            transition={{
+              duration: 5 + i,
+              repeat: Infinity,
+              ease: "easeInOut",
+              delay: i * 0.5,
+            }}
+          />
+        ))}
+      </div>
 
       {/* Content */}
       <div className="relative z-10 h-full flex items-center px-6 md:px-12 lg:px-20">
@@ -397,6 +500,7 @@ export const ColorChangeFeatures = () => {
             >
               <div 
                 className={`w-full max-w-sm p-1 rounded-2xl bg-gradient-to-br ${currentFeature.cardBg} shadow-2xl`}
+                style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.4)' }}
               >
                 <div className="p-4">
                   <FeatureCard feature={currentFeature} />

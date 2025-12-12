@@ -1,7 +1,7 @@
 import { useRef, useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
-import { Brain, Calendar, Clock, BarChart3, MessageSquare, Sparkles, TrendingUp, Zap } from "lucide-react";
+import { Brain, Calendar, Clock, BarChart3, MessageSquare, Sparkles, TrendingUp, Zap, Star, Rocket, Target, Heart } from "lucide-react";
 
 const features = [
   {
@@ -84,6 +84,16 @@ const features = [
       ]
     }
   },
+];
+
+// Floating 3D icons for decoration
+const decorativeIcons = [
+  { Icon: Star, x: 5, y: 20, size: 24, delay: 0 },
+  { Icon: Rocket, x: 95, y: 15, size: 28, delay: 0.1 },
+  { Icon: Target, x: 8, y: 80, size: 22, delay: 0.2 },
+  { Icon: Heart, x: 92, y: 75, size: 26, delay: 0.3 },
+  { Icon: Zap, x: 15, y: 50, size: 20, delay: 0.4 },
+  { Icon: Sparkles, x: 85, y: 45, size: 24, delay: 0.5 },
 ];
 
 const FeatureUI = ({ feature }: { feature: typeof features[0] }) => {
@@ -251,19 +261,32 @@ const HorizontalScrollFeatures = () => {
   const sectionRef = useRef<HTMLDivElement>(null);
   const [activeIndex, setActiveIndex] = useState(0);
   const [isLocked, setIsLocked] = useState(false);
+  const hasExited = useRef(false);
   const lastScrollTime = useRef(0);
   const touchStartY = useRef(0);
   const lastTouchY = useRef(0);
 
   const lockScroll = useCallback(() => {
-    if (isLocked) return;
+    if (isLocked || hasExited.current) return;
     document.body.style.overflow = 'hidden';
     setIsLocked(true);
   }, [isLocked]);
 
-  const unlockScroll = useCallback(() => {
+  const unlockScroll = useCallback((direction: 'up' | 'down') => {
     document.body.style.overflow = '';
     setIsLocked(false);
+    hasExited.current = true;
+    
+    // Smooth scroll to exit the section
+    window.scrollBy({ 
+      top: direction === 'down' ? 200 : -200, 
+      behavior: 'smooth' 
+    });
+    
+    // Cooldown before re-locking
+    setTimeout(() => {
+      hasExited.current = false;
+    }, 1000);
   }, []);
 
   // Handle wheel events - smooth continuous
@@ -274,12 +297,15 @@ const HorizontalScrollFeatures = () => {
     const rect = section.getBoundingClientRect();
     const sectionInView = rect.top <= window.innerHeight * 0.3 && rect.bottom >= window.innerHeight * 0.7;
 
-    if (!sectionInView) {
-      if (isLocked) unlockScroll();
+    if (!sectionInView || hasExited.current) {
+      if (isLocked) {
+        document.body.style.overflow = '';
+        setIsLocked(false);
+      }
       return;
     }
 
-    if (!isLocked) {
+    if (!isLocked && !hasExited.current) {
       lockScroll();
     }
 
@@ -287,7 +313,7 @@ const HorizontalScrollFeatures = () => {
     
     // Debounce for step-based navigation
     const now = Date.now();
-      if (now - lastScrollTime.current < 600) return;
+    if (now - lastScrollTime.current < 600) return;
     lastScrollTime.current = now;
     
     if (e.deltaY > 0) {
@@ -295,14 +321,14 @@ const HorizontalScrollFeatures = () => {
       if (activeIndex < features.length - 1) {
         setActiveIndex(prev => prev + 1);
       } else {
-        unlockScroll();
+        unlockScroll('down');
       }
     } else {
       // Scrolling up
       if (activeIndex > 0) {
         setActiveIndex(prev => prev - 1);
       } else {
-        unlockScroll();
+        unlockScroll('up');
       }
     }
   }, [isLocked, activeIndex, lockScroll, unlockScroll]);
@@ -320,12 +346,15 @@ const HorizontalScrollFeatures = () => {
     const rect = section.getBoundingClientRect();
     const sectionInView = rect.top <= window.innerHeight * 0.3 && rect.bottom >= window.innerHeight * 0.7;
 
-    if (!sectionInView) {
-      if (isLocked) unlockScroll();
+    if (!sectionInView || hasExited.current) {
+      if (isLocked) {
+        document.body.style.overflow = '';
+        setIsLocked(false);
+      }
       return;
     }
 
-    if (!isLocked) {
+    if (!isLocked && !hasExited.current) {
       lockScroll();
     }
     
@@ -343,13 +372,13 @@ const HorizontalScrollFeatures = () => {
       if (activeIndex < features.length - 1) {
         setActiveIndex(prev => prev + 1);
       } else {
-        unlockScroll();
+        unlockScroll('down');
       }
     } else {
       if (activeIndex > 0) {
         setActiveIndex(prev => prev - 1);
       } else {
-        unlockScroll();
+        unlockScroll('up');
       }
     }
   }, [isLocked, activeIndex, lockScroll, unlockScroll]);
@@ -376,16 +405,16 @@ const HorizontalScrollFeatures = () => {
         if (activeIndex < features.length - 1) {
           setActiveIndex(prev => prev + 1);
         } else {
-          unlockScroll();
+          unlockScroll('down');
         }
       } else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
         if (activeIndex > 0) {
           setActiveIndex(prev => prev - 1);
         } else {
-          unlockScroll();
+          unlockScroll('up');
         }
       } else if (e.key === 'Escape') {
-        unlockScroll();
+        unlockScroll('down');
       }
     };
     
@@ -408,6 +437,38 @@ const HorizontalScrollFeatures = () => {
       ref={sectionRef}
       className="h-screen relative bg-gradient-to-b from-background via-muted/10 to-background overflow-hidden"
     >
+      {/* Floating 3D Icons */}
+      {decorativeIcons.map(({ Icon, x, y, size, delay }, index) => (
+        <motion.div
+          key={index}
+          className="absolute pointer-events-none"
+          style={{ left: `${x}%`, top: `${y}%` }}
+          initial={{ opacity: 0, scale: 0, rotate: -30 }}
+          animate={{ 
+            opacity: 0.4, 
+            scale: 1, 
+            rotate: 0,
+            y: [0, -10, 0],
+          }}
+          transition={{ 
+            delay,
+            y: { duration: 3 + index * 0.5, repeat: Infinity, ease: "easeInOut" }
+          }}
+        >
+          <motion.div
+            animate={{ rotateY: 360 }}
+            transition={{ duration: 8 + index, repeat: Infinity, ease: "linear" }}
+            style={{ transformStyle: 'preserve-3d' }}
+          >
+            <Icon 
+              size={size} 
+              className="text-primary/40"
+              style={{ filter: 'drop-shadow(0 0 8px hsl(var(--primary) / 0.3))' }}
+            />
+          </motion.div>
+        </motion.div>
+      ))}
+
       <div className="h-full flex flex-col items-center justify-center px-4 py-8">
         {/* Header */}
         <motion.div
@@ -501,12 +562,12 @@ const HorizontalScrollFeatures = () => {
               <motion.button
                 key={index}
                 onClick={() => setActiveIndex(index)}
-                className="w-2 h-2 rounded-full transition-colors"
+                className="w-2.5 h-2.5 rounded-full transition-colors"
                 animate={{
                   backgroundColor: index === activeIndex 
                     ? 'hsl(var(--primary))' 
                     : 'hsl(var(--muted-foreground) / 0.3)',
-                  scale: index === activeIndex ? 1.5 : 1,
+                  scale: index === activeIndex ? 1.3 : 1,
                 }}
                 transition={{ duration: 0.2 }}
               />
@@ -525,7 +586,7 @@ const HorizontalScrollFeatures = () => {
               >
                 ↕
               </motion.span>
-              Scroll to navigate
+              Scroll to explore
             </motion.p>
           )}
         </div>
