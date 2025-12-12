@@ -31,6 +31,7 @@ import Card3DCarousel from "@/components/landing/Card3DCarousel";
 import TimetableCreationSection from "@/components/landing/TimetableCreationSection";
 import SuccessStoriesSection from "@/components/landing/SuccessStoriesSection";
 import HorizontalScrollFeatures from "@/components/landing/HorizontalScrollFeatures";
+import ZoomTunnelSection from "@/components/landing/ZoomTunnelSection";
 
 const Landing = () => {
   const navigate = useNavigate();
@@ -250,6 +251,9 @@ const Landing = () => {
 
         {/* Trusted By Section */}
         <TrustedBySection />
+
+        {/* Zoom Tunnel Section */}
+        <ZoomTunnelSection />
 
         {/* Floating Features Strip with Enhanced Mouse Parallax */}
         <section 
