@@ -252,11 +252,13 @@ const HorizontalScrollFeatures = () => {
   const [activeIndex, setActiveIndex] = useState(0);
   const [isLocked, setIsLocked] = useState(false);
   const [savedScrollY, setSavedScrollY] = useState(0);
+  const [hasExited, setHasExited] = useState(false);
   const lastScrollTime = useRef(0);
   const touchStartY = useRef(0);
+  const exitDirection = useRef<'up' | 'down' | null>(null);
 
   const lockScroll = useCallback(() => {
-    if (isLocked) return;
+    if (isLocked || hasExited) return;
     
     const scrollY = window.scrollY;
     setSavedScrollY(scrollY);
@@ -268,10 +270,13 @@ const HorizontalScrollFeatures = () => {
     document.body.style.touchAction = 'none';
     
     setIsLocked(true);
-  }, [isLocked]);
+  }, [isLocked, hasExited]);
 
-  const unlockScroll = useCallback(() => {
+  const unlockScroll = useCallback((direction: 'up' | 'down') => {
     if (!isLocked) return;
+    
+    exitDirection.current = direction;
+    setHasExited(true);
     
     document.body.style.overflow = '';
     document.body.style.position = '';
@@ -279,9 +284,45 @@ const HorizontalScrollFeatures = () => {
     document.body.style.width = '';
     document.body.style.touchAction = '';
     
-    window.scrollTo(0, savedScrollY);
     setIsLocked(false);
+    
+    // Get section bounds to scroll past it
+    const section = sectionRef.current;
+    if (section) {
+      const rect = section.getBoundingClientRect();
+      const sectionTop = savedScrollY;
+      const sectionBottom = sectionTop + rect.height;
+      
+      if (direction === 'down') {
+        // Scroll to just past the section
+        window.scrollTo({ top: sectionBottom + 50, behavior: 'instant' });
+      } else {
+        // Scroll to just before the section
+        window.scrollTo({ top: Math.max(0, sectionTop - 100), behavior: 'instant' });
+      }
+    }
   }, [isLocked, savedScrollY]);
+
+  // Reset hasExited when user scrolls away from section
+  useEffect(() => {
+    if (!hasExited) return;
+    
+    const handleScroll = () => {
+      const section = sectionRef.current;
+      if (!section) return;
+      
+      const rect = section.getBoundingClientRect();
+      // If section is completely out of view, reset
+      if (rect.bottom < -100 || rect.top > window.innerHeight + 100) {
+        setHasExited(false);
+        setActiveIndex(0);
+        exitDirection.current = null;
+      }
+    };
+    
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [hasExited]);
 
   // Handle wheel events when locked
   const handleWheel = useCallback((e: WheelEvent) => {
@@ -300,11 +341,8 @@ const HorizontalScrollFeatures = () => {
       if (activeIndex < features.length - 1) {
         setActiveIndex(prev => prev + 1);
       } else {
-        // Last card - unlock and continue scrolling
-        unlockScroll();
-        setTimeout(() => {
-          window.scrollTo(0, savedScrollY + 100);
-        }, 50);
+        // Last card - unlock and continue scrolling down
+        unlockScroll('down');
       }
     } else {
       // Scrolling up
@@ -312,13 +350,10 @@ const HorizontalScrollFeatures = () => {
         setActiveIndex(prev => prev - 1);
       } else {
         // First card - unlock and scroll up
-        unlockScroll();
-        setTimeout(() => {
-          window.scrollTo(0, savedScrollY - 100);
-        }, 50);
+        unlockScroll('up');
       }
     }
-  }, [isLocked, activeIndex, unlockScroll, savedScrollY]);
+  }, [isLocked, activeIndex, unlockScroll]);
 
   // Handle touch events
   const handleTouchStart = useCallback((e: TouchEvent) => {
@@ -343,14 +378,14 @@ const HorizontalScrollFeatures = () => {
       if (activeIndex < features.length - 1) {
         setActiveIndex(prev => prev + 1);
       } else {
-        unlockScroll();
+        unlockScroll('down');
       }
     } else {
       // Swipe down (prev)
       if (activeIndex > 0) {
         setActiveIndex(prev => prev - 1);
       } else {
-        unlockScroll();
+        unlockScroll('up');
       }
     }
   }, [isLocked, activeIndex, unlockScroll]);
@@ -363,7 +398,7 @@ const HorizontalScrollFeatures = () => {
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
-          if (entry.isIntersecting && entry.intersectionRatio >= 0.5) {
+          if (entry.isIntersecting && entry.intersectionRatio >= 0.5 && !hasExited) {
             // Section is at least 50% visible - lock and snap
             section.scrollIntoView({ behavior: 'instant', block: 'start' });
             setTimeout(() => {
@@ -377,7 +412,7 @@ const HorizontalScrollFeatures = () => {
 
     observer.observe(section);
     return () => observer.disconnect();
-  }, [lockScroll]);
+  }, [lockScroll, hasExited]);
 
   // Add/remove wheel and touch listeners
   useEffect(() => {
@@ -403,16 +438,16 @@ const HorizontalScrollFeatures = () => {
         if (activeIndex < features.length - 1) {
           setActiveIndex(prev => prev + 1);
         } else {
-          unlockScroll();
+          unlockScroll('down');
         }
       } else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
         if (activeIndex > 0) {
           setActiveIndex(prev => prev - 1);
         } else {
-          unlockScroll();
+          unlockScroll('up');
         }
       } else if (e.key === 'Escape') {
-        unlockScroll();
+        unlockScroll('down');
       }
     };
     
