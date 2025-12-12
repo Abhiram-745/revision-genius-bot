@@ -31,8 +31,6 @@ import Card3DCarousel from "@/components/landing/Card3DCarousel";
 import TimetableCreationSection from "@/components/landing/TimetableCreationSection";
 import SuccessStoriesSection from "@/components/landing/SuccessStoriesSection";
 import HorizontalScrollFeatures from "@/components/landing/HorizontalScrollFeatures";
-import ZoomTunnelSection from "@/components/landing/ZoomTunnelSection";
-import StickyFeatureShowcase from "@/components/landing/StickyFeatureShowcase";
 
 const Landing = () => {
   const navigate = useNavigate();
@@ -437,14 +435,8 @@ const Landing = () => {
         {/* Detailed Timetable Creation Section */}
         <TimetableCreationSection />
 
-        {/* Zoom Tunnel Transition */}
-        <ZoomTunnelSection />
-
         {/* Horizontal Scroll Features Section */}
         <HorizontalScrollFeatures />
-
-        {/* Sticky Feature Showcase with Animated Cursor */}
-        <StickyFeatureShowcase />
 
         {/* Interactive Demo Section */}
         <section id="try-demo" className="py-24 px-6 bg-gradient-to-b from-background to-muted/50">
