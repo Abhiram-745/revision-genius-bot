@@ -315,7 +315,12 @@ const HorizontalScrollFeatures = () => {
       // If section is completely out of view, reset
       if (rect.bottom < -100 || rect.top > window.innerHeight + 100) {
         setHasExited(false);
-        setActiveIndex(0);
+        // Reset to appropriate index based on exit direction
+        if (exitDirection.current === 'up') {
+          setActiveIndex(features.length - 1); // Start from last when coming back from top
+        } else {
+          setActiveIndex(0); // Start from first when coming back from bottom
+        }
         exitDirection.current = null;
       }
     };

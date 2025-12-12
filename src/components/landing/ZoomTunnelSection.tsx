@@ -1,11 +1,22 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { Brain, Rocket, Target, Lightbulb, Clock, BarChart3, Sparkles, Zap } from "lucide-react";
 
 const tunnelContent = [
-  { title: "AI-Powered Schedules", subtitle: "Let AI plan your perfect study sessions", icon: "🧠" },
-  { title: "Adapt to Your Life", subtitle: "Around football, family & fun", icon: "⚡" },
-  { title: "Track Your Progress", subtitle: "Watch your confidence grow daily", icon: "📈" },
-  { title: "Achieve Your Goals", subtitle: "Ace your exams with confidence", icon: "✨" },
+  { title: "AI-Powered Schedules", subtitle: "Let AI plan your perfect study sessions", icon: Brain, color: "from-pink-500 to-rose-400" },
+  { title: "Adapt to Your Life", subtitle: "Around football, family & fun", icon: Zap, color: "from-yellow-500 to-orange-400" },
+  { title: "Track Your Progress", subtitle: "Watch your confidence grow daily", icon: BarChart3, color: "from-green-500 to-emerald-400" },
+  { title: "Achieve Your Goals", subtitle: "Ace your exams with confidence", icon: Target, color: "from-blue-500 to-cyan-400" },
+];
+
+// Floating icons positioned around the spiral
+const floatingIcons = [
+  { Icon: Rocket, x: 15, y: 20, delay: 0, size: 32 },
+  { Icon: Lightbulb, x: 85, y: 25, delay: 0.2, size: 28 },
+  { Icon: Clock, x: 10, y: 75, delay: 0.4, size: 24 },
+  { Icon: Sparkles, x: 88, y: 70, delay: 0.6, size: 30 },
+  { Icon: Target, x: 25, y: 45, delay: 0.3, size: 26 },
+  { Icon: BarChart3, x: 78, y: 50, delay: 0.5, size: 28 },
 ];
 
 export const ZoomTunnelSection = () => {
@@ -232,28 +243,45 @@ export const ZoomTunnelSection = () => {
     };
   }, []);
 
-  const lineCount = 32;
-  const rectCount = 6;
+  // Generate 3D spiral points
+  const spiralPoints = Array.from({ length: 60 }).map((_, i) => {
+    const t = i / 60;
+    const angle = t * Math.PI * 6; // 3 full rotations
+    const radius = 50 + t * 400; // Expanding radius
+    const x = 500 + Math.cos(angle) * radius;
+    const y = 500 + Math.sin(angle) * radius;
+    return { x, y, angle, t };
+  });
 
   return (
     <section
       ref={sectionRef}
-      className="relative h-screen w-full overflow-hidden bg-gradient-to-b from-background via-muted/5 to-background"
+      className="relative h-screen w-full overflow-hidden"
+      style={{
+        background: `linear-gradient(135deg, 
+          hsl(var(--background)) 0%, 
+          hsl(var(--muted) / 0.1) 50%, 
+          hsl(var(--background)) 100%)`
+      }}
     >
-      {/* Tunnel Lines */}
+      {/* 3D Spiral Lines */}
       <div className="absolute inset-0 flex items-center justify-center">
         <svg
           className="absolute w-full h-full"
           viewBox="0 0 1000 1000"
           preserveAspectRatio="xMidYMid slice"
         >
-          {Array.from({ length: lineCount }).map((_, i) => {
-            const angle = (i / lineCount) * 360;
+          {/* Radiating spiral lines from center */}
+          {Array.from({ length: 48 }).map((_, i) => {
+            const angle = (i / 48) * 360;
             const radians = (angle * Math.PI) / 180;
-            const length = 800;
-            const x2 = 500 + Math.cos(radians) * length;
-            const y2 = 500 + Math.sin(radians) * length;
-            const scale = 1 + zoomProgress * 3;
+            const spiralOffset = zoomProgress * 30; // Spiral rotation with zoom
+            const adjustedAngle = radians + spiralOffset;
+            const length = 600;
+            const x2 = 500 + Math.cos(adjustedAngle) * length;
+            const y2 = 500 + Math.sin(adjustedAngle) * length;
+            const scale = 1 + zoomProgress * 2;
+            const opacity = 0.1 + (i % 4 === 0 ? 0.15 : 0);
             
             return (
               <motion.line
@@ -263,11 +291,38 @@ export const ZoomTunnelSection = () => {
                 x2={x2}
                 y2={y2}
                 stroke="hsl(var(--primary))"
-                strokeWidth="1"
-                strokeOpacity={0.15 + zoomProgress * 0.1}
+                strokeWidth={i % 6 === 0 ? "1.5" : "0.5"}
+                strokeOpacity={opacity}
                 style={{
                   transformOrigin: '500px 500px',
-                  transform: `scale(${scale})`,
+                  transform: `scale(${scale}) rotate(${zoomProgress * 20}deg)`,
+                }}
+              />
+            );
+          })}
+
+          {/* Concentric 3D spiral rectangles */}
+          {Array.from({ length: 8 }).map((_, i) => {
+            const baseScale = 0.1 + (i / 8) * 0.6;
+            const zoomScale = baseScale + zoomProgress * (1.5 - baseScale) * 3;
+            const rotateAmount = i * 8 + zoomProgress * 45;
+            const opacity = Math.max(0, 0.6 - zoomProgress * 0.15 * (8 - i));
+            
+            return (
+              <motion.rect
+                key={i}
+                x="250"
+                y="300"
+                width="500"
+                height="400"
+                rx="20"
+                fill="none"
+                stroke="hsl(var(--primary))"
+                strokeWidth="1"
+                strokeOpacity={opacity}
+                style={{
+                  transformOrigin: '500px 500px',
+                  transform: `scale(${zoomScale}) rotate(${rotateAmount}deg)`,
                 }}
               />
             );
@@ -275,57 +330,71 @@ export const ZoomTunnelSection = () => {
         </svg>
       </div>
 
-      {/* Nested Rectangles (Tunnel Depth) */}
-      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-        {Array.from({ length: rectCount }).map((_, i) => {
-          const baseScale = 0.15 + (i / rectCount) * 0.7;
-          const zoomScale = baseScale + zoomProgress * (1 - baseScale) * 4;
-          const opacity = Math.max(0, 1 - zoomProgress * 0.4 * (rectCount - i));
-          
-          return (
-            <motion.div
-              key={i}
-              className="absolute border border-primary/20 rounded-lg"
+      {/* Floating Icons around the spiral */}
+      {floatingIcons.map(({ Icon, x, y, delay, size }, index) => {
+        const iconScale = 1 + zoomProgress * 3;
+        const iconOpacity = Math.max(0, 0.6 - zoomProgress * 0.8);
+        
+        return (
+          <motion.div
+            key={index}
+            className="absolute pointer-events-none"
+            style={{
+              left: `${x}%`,
+              top: `${y}%`,
+              transform: `scale(${iconScale}) translate(-50%, -50%)`,
+              opacity: iconOpacity,
+            }}
+            initial={{ opacity: 0, scale: 0.5 }}
+            animate={{ 
+              opacity: iconOpacity,
+              scale: iconScale,
+              rotate: zoomProgress * 30,
+            }}
+            transition={{ 
+              duration: 0.5, 
+              delay,
+              ease: "easeOut" 
+            }}
+          >
+            <Icon 
+              size={size} 
+              className="text-primary/40"
               style={{
-                width: '70%',
-                height: '70%',
-                transform: `scale(${zoomScale})`,
-                opacity: opacity,
+                filter: `blur(${zoomProgress * 2}px)`,
               }}
-              animate={{
-                scale: zoomScale,
-                opacity: opacity,
-              }}
-              transition={{ duration: 0.4, ease: 'easeOut' }}
             />
-          );
-        })}
-      </div>
+          </motion.div>
+        );
+      })}
 
-      {/* Center Glow */}
+      {/* Center Glow that expands with zoom */}
       <motion.div
         className="absolute inset-0 flex items-center justify-center pointer-events-none"
         style={{
-          opacity: 0.3 + zoomProgress * 0.3,
+          opacity: 0.2 + zoomProgress * 0.4,
         }}
       >
         <div 
-          className="w-32 h-32 rounded-full bg-gradient-to-r from-primary/40 to-secondary/40 blur-3xl"
+          className="rounded-full bg-gradient-to-r from-primary/30 via-secondary/30 to-accent/30 blur-3xl"
           style={{
-            transform: `scale(${1 + zoomProgress * 5})`,
+            width: `${8 + zoomProgress * 60}rem`,
+            height: `${8 + zoomProgress * 60}rem`,
+            transform: `scale(${1 + zoomProgress * 2})`,
           }}
         />
       </motion.div>
 
-      {/* Content Cards */}
+      {/* Content Cards - zoom in/out based on scroll direction */}
       <div className="absolute inset-0 flex items-center justify-center">
         <AnimatePresence mode="wait">
           {tunnelContent.map((content, index) => {
             const isActive = index === activeCardIndex;
             const isPast = index < activeCardIndex;
-            const isFuture = index > activeCardIndex;
             
             if (!isActive && !isPast) return null;
+
+            const Icon = content.icon;
 
             return (
               <motion.div
@@ -334,26 +403,27 @@ export const ZoomTunnelSection = () => {
                 initial={{ scale: 0.3, opacity: 0 }}
                 animate={{
                   scale: isActive ? 1 : isPast ? 2.5 : 0.3,
-                  opacity: isActive ? 1 : isPast ? 0 : 0,
+                  opacity: isActive ? 1 : 0,
                   y: isActive ? 0 : isPast ? -100 : 100,
                 }}
                 exit={{ scale: 2.5, opacity: 0, y: -100 }}
                 transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
               >
                 <motion.div
-                  className="text-6xl md:text-7xl mb-6"
+                  className={`w-20 h-20 md:w-24 md:h-24 rounded-2xl bg-gradient-to-br ${content.color} flex items-center justify-center mb-6 shadow-lg`}
                   animate={{ 
-                    scale: isActive ? [1, 1.1, 1] : 1,
+                    scale: isActive ? [1, 1.05, 1] : 1,
+                    rotate: isActive ? [0, 3, -3, 0] : 0,
                   }}
                   transition={{ 
-                    duration: 0.6, 
+                    duration: 2, 
                     repeat: isActive ? Infinity : 0,
-                    repeatDelay: 1.5 
+                    repeatDelay: 0.5 
                   }}
                 >
-                  {content.icon}
+                  <Icon className="w-10 h-10 md:w-12 md:h-12 text-white" />
                 </motion.div>
-                <h3 className="text-3xl md:text-5xl font-bold bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent mb-4">
+                <h3 className={`text-3xl md:text-5xl font-bold bg-gradient-to-r ${content.color} bg-clip-text text-transparent mb-4`}>
                   {content.title}
                 </h3>
                 <p className="text-lg md:text-xl text-muted-foreground max-w-md">
