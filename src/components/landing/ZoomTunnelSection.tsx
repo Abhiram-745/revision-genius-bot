@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Brain, Rocket, Target, Lightbulb, Clock, BarChart3, Sparkles, Zap } from "lucide-react";
+import { Brain, Rocket, Target, Lightbulb, Clock, BarChart3, Sparkles, Zap, Star, Heart } from "lucide-react";
 
 const tunnelContent = [
   { title: "AI-Powered Schedules", subtitle: "Let AI plan your perfect study sessions", icon: Brain, color: "from-pink-500 to-rose-400" },
@@ -9,331 +9,320 @@ const tunnelContent = [
   { title: "Achieve Your Goals", subtitle: "Ace your exams with confidence", icon: Target, color: "from-blue-500 to-cyan-400" },
 ];
 
-// Floating icons positioned around the spiral
+// 3D Floating shapes that orbit the spiral
+const floatingShapes = [
+  { type: "cube", x: 15, y: 20, size: 40, orbitRadius: 200, orbitSpeed: 0.5, delay: 0 },
+  { type: "sphere", x: 85, y: 25, size: 32, orbitRadius: 180, orbitSpeed: 0.7, delay: 0.2 },
+  { type: "pyramid", x: 10, y: 75, size: 36, orbitRadius: 220, orbitSpeed: 0.4, delay: 0.4 },
+  { type: "cube", x: 88, y: 70, size: 28, orbitRadius: 190, orbitSpeed: 0.6, delay: 0.6 },
+  { type: "sphere", x: 25, y: 45, size: 44, orbitRadius: 240, orbitSpeed: 0.3, delay: 0.3 },
+  { type: "pyramid", x: 78, y: 50, size: 38, orbitRadius: 210, orbitSpeed: 0.55, delay: 0.5 },
+];
+
 const floatingIcons = [
-  { Icon: Rocket, x: 15, y: 20, delay: 0, size: 32 },
-  { Icon: Lightbulb, x: 85, y: 25, delay: 0.2, size: 28 },
-  { Icon: Clock, x: 10, y: 75, delay: 0.4, size: 24 },
-  { Icon: Sparkles, x: 88, y: 70, delay: 0.6, size: 30 },
-  { Icon: Target, x: 25, y: 45, delay: 0.3, size: 26 },
-  { Icon: BarChart3, x: 78, y: 50, delay: 0.5, size: 28 },
+  { Icon: Rocket, x: 12, y: 18, delay: 0, size: 32 },
+  { Icon: Lightbulb, x: 88, y: 22, delay: 0.2, size: 28 },
+  { Icon: Clock, x: 8, y: 78, delay: 0.4, size: 24 },
+  { Icon: Sparkles, x: 92, y: 72, delay: 0.6, size: 30 },
+  { Icon: Star, x: 20, y: 40, delay: 0.3, size: 26 },
+  { Icon: Heart, x: 80, y: 55, delay: 0.5, size: 28 },
 ];
 
 export const ZoomTunnelSection = () => {
   const [zoomProgress, setZoomProgress] = useState(0);
   const [isLocked, setIsLocked] = useState(false);
-  const [hasExited, setHasExited] = useState(false);
   const sectionRef = useRef<HTMLElement>(null);
-  const savedScrollY = useRef(0);
   const lastScrollTime = useRef(0);
-  const exitDirection = useRef<'up' | 'down' | null>(null);
+  const accumulatedDelta = useRef(0);
 
   const activeCardIndex = Math.min(
     Math.floor(zoomProgress * tunnelContent.length),
     tunnelContent.length - 1
   );
 
+  // Lock scroll using only overflow hidden (no position fixed)
   const lockScroll = useCallback(() => {
     if (isLocked) return;
-    savedScrollY.current = window.scrollY;
     document.body.style.overflow = 'hidden';
-    document.body.style.position = 'fixed';
-    document.body.style.top = `-${savedScrollY.current}px`;
-    document.body.style.width = '100%';
     setIsLocked(true);
   }, [isLocked]);
 
-  const unlockScroll = useCallback((direction: 'up' | 'down') => {
-    if (!isLocked) return;
-    
-    exitDirection.current = direction;
+  const unlockScroll = useCallback(() => {
     document.body.style.overflow = '';
-    document.body.style.position = '';
-    document.body.style.top = '';
-    document.body.style.width = '';
-    
-    const section = sectionRef.current;
-    if (section) {
-      const rect = section.getBoundingClientRect();
-      const sectionTop = savedScrollY.current + rect.top;
-      const sectionBottom = sectionTop + rect.height;
-      
-      if (direction === 'down') {
-        window.scrollTo({ top: sectionBottom + 50, behavior: 'instant' });
-      } else {
-        window.scrollTo({ top: Math.max(0, sectionTop - 100), behavior: 'instant' });
-      }
-    }
-    
     setIsLocked(false);
-    setHasExited(true);
-  }, [isLocked]);
+  }, []);
 
-  // IntersectionObserver to detect section visibility
-  useEffect(() => {
+  // Handle wheel events for smooth continuous zoom
+  const handleWheel = useCallback((e: WheelEvent) => {
     const section = sectionRef.current;
     if (!section) return;
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting && entry.intersectionRatio >= 0.5 && !hasExited) {
-            const rect = section.getBoundingClientRect();
-            const sectionTop = window.scrollY + rect.top;
-            window.scrollTo({ top: sectionTop, behavior: 'instant' });
-            lockScroll();
-          }
-        });
-      },
-      { threshold: 0.5 }
-    );
+    const rect = section.getBoundingClientRect();
+    const sectionInView = rect.top <= window.innerHeight * 0.3 && rect.bottom >= window.innerHeight * 0.7;
 
-    observer.observe(section);
-    return () => observer.disconnect();
-  }, [lockScroll, hasExited]);
+    if (!sectionInView) {
+      if (isLocked) unlockScroll();
+      return;
+    }
 
-  // Reset hasExited when section leaves viewport
-  useEffect(() => {
-    const handleScroll = () => {
-      if (!hasExited) return;
-      const section = sectionRef.current;
-      if (!section) return;
-      
-      const rect = section.getBoundingClientRect();
-      if (rect.bottom < -100 || rect.top > window.innerHeight + 100) {
-        setHasExited(false);
-        if (exitDirection.current === 'up') {
-          setZoomProgress(1);
-        } else {
-          setZoomProgress(0);
-        }
-        exitDirection.current = null;
-      }
-    };
+    // Lock when section is in view
+    if (!isLocked) {
+      lockScroll();
+    }
 
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [hasExited]);
-
-  // Handle wheel events
-  const handleWheel = useCallback((e: WheelEvent) => {
-    if (!isLocked) return;
     e.preventDefault();
+
+    // Smooth delta accumulation for continuous scrolling feel
+    const sensitivity = 0.0015;
+    const delta = e.deltaY * sensitivity;
     
-    const now = Date.now();
-    if (now - lastScrollTime.current < 300) return;
-    lastScrollTime.current = now;
-
-    const delta = e.deltaY > 0 ? 1 : -1;
-    const step = 0.25;
-
     setZoomProgress((prev) => {
-      const next = prev + delta * step;
+      const next = Math.max(0, Math.min(1, prev + delta));
       
+      // Unlock at boundaries
       if (next >= 1 && delta > 0) {
-        setTimeout(() => unlockScroll('down'), 50);
+        setTimeout(() => unlockScroll(), 10);
         return 1;
       }
       if (next <= 0 && delta < 0) {
-        setTimeout(() => unlockScroll('up'), 50);
+        setTimeout(() => unlockScroll(), 10);
         return 0;
       }
-      return Math.max(0, Math.min(1, next));
+      
+      return next;
     });
-  }, [isLocked, unlockScroll]);
+  }, [isLocked, lockScroll, unlockScroll]);
 
-  // Touch handling
+  // Touch handling for smooth zoom
   const touchStartY = useRef(0);
+  const lastTouchY = useRef(0);
   
   const handleTouchStart = useCallback((e: TouchEvent) => {
-    if (!isLocked) return;
     touchStartY.current = e.touches[0].clientY;
-  }, [isLocked]);
+    lastTouchY.current = e.touches[0].clientY;
+  }, []);
 
-  const handleTouchEnd = useCallback((e: TouchEvent) => {
-    if (!isLocked) return;
+  const handleTouchMove = useCallback((e: TouchEvent) => {
+    const section = sectionRef.current;
+    if (!section) return;
+
+    const rect = section.getBoundingClientRect();
+    const sectionInView = rect.top <= window.innerHeight * 0.3 && rect.bottom >= window.innerHeight * 0.7;
+
+    if (!sectionInView) {
+      if (isLocked) unlockScroll();
+      return;
+    }
+
+    if (!isLocked) {
+      lockScroll();
+    }
+
     e.preventDefault();
-    
-    const now = Date.now();
-    if (now - lastScrollTime.current < 300) return;
-    lastScrollTime.current = now;
 
-    const deltaY = touchStartY.current - e.changedTouches[0].clientY;
-    if (Math.abs(deltaY) < 30) return;
-
-    const delta = deltaY > 0 ? 1 : -1;
-    const step = 0.25;
+    const currentY = e.touches[0].clientY;
+    const delta = (lastTouchY.current - currentY) * 0.003;
+    lastTouchY.current = currentY;
 
     setZoomProgress((prev) => {
-      const next = prev + delta * step;
+      const next = Math.max(0, Math.min(1, prev + delta));
       
       if (next >= 1 && delta > 0) {
-        setTimeout(() => unlockScroll('down'), 50);
+        setTimeout(() => unlockScroll(), 10);
         return 1;
       }
       if (next <= 0 && delta < 0) {
-        setTimeout(() => unlockScroll('up'), 50);
+        setTimeout(() => unlockScroll(), 10);
         return 0;
       }
-      return Math.max(0, Math.min(1, next));
+      
+      return next;
     });
-  }, [isLocked, unlockScroll]);
+  }, [isLocked, lockScroll, unlockScroll]);
 
-  // Keyboard handling
-  const handleKeyDown = useCallback((e: KeyboardEvent) => {
-    if (!isLocked) return;
-    
-    if (e.key === 'ArrowDown' || e.key === 'ArrowRight') {
-      e.preventDefault();
-      const now = Date.now();
-      if (now - lastScrollTime.current < 300) return;
-      lastScrollTime.current = now;
-
-      setZoomProgress((prev) => {
-        const next = prev + 0.25;
-        if (next >= 1) {
-          setTimeout(() => unlockScroll('down'), 50);
-          return 1;
-        }
-        return next;
-      });
-    } else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
-      e.preventDefault();
-      const now = Date.now();
-      if (now - lastScrollTime.current < 300) return;
-      lastScrollTime.current = now;
-
-      setZoomProgress((prev) => {
-        const next = prev - 0.25;
-        if (next <= 0) {
-          setTimeout(() => unlockScroll('up'), 50);
-          return 0;
-        }
-        return next;
-      });
-    } else if (e.key === 'Escape') {
-      unlockScroll('down');
-    }
-  }, [isLocked, unlockScroll]);
+  const handleTouchEnd = useCallback(() => {
+    // Let momentum continue naturally
+  }, []);
 
   // Add event listeners
   useEffect(() => {
-    if (isLocked) {
-      window.addEventListener('wheel', handleWheel, { passive: false });
-      window.addEventListener('touchstart', handleTouchStart, { passive: true });
-      window.addEventListener('touchend', handleTouchEnd, { passive: false });
-      window.addEventListener('keydown', handleKeyDown);
-    }
+    window.addEventListener('wheel', handleWheel, { passive: false });
+    window.addEventListener('touchstart', handleTouchStart, { passive: true });
+    window.addEventListener('touchmove', handleTouchMove, { passive: false });
+    window.addEventListener('touchend', handleTouchEnd, { passive: true });
     
     return () => {
       window.removeEventListener('wheel', handleWheel);
       window.removeEventListener('touchstart', handleTouchStart);
+      window.removeEventListener('touchmove', handleTouchMove);
       window.removeEventListener('touchend', handleTouchEnd);
-      window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [isLocked, handleWheel, handleTouchStart, handleTouchEnd, handleKeyDown]);
+  }, [handleWheel, handleTouchStart, handleTouchMove, handleTouchEnd]);
 
   // Cleanup on unmount
   useEffect(() => {
     return () => {
       document.body.style.overflow = '';
-      document.body.style.position = '';
-      document.body.style.top = '';
-      document.body.style.width = '';
     };
   }, []);
 
-  // Generate 3D spiral points
-  const spiralPoints = Array.from({ length: 60 }).map((_, i) => {
-    const t = i / 60;
-    const angle = t * Math.PI * 6; // 3 full rotations
-    const radius = 50 + t * 400; // Expanding radius
-    const x = 500 + Math.cos(angle) * radius;
-    const y = 500 + Math.sin(angle) * radius;
-    return { x, y, angle, t };
-  });
+  // 3D Spiral rotation based on zoom
+  const spiralRotationZ = zoomProgress * 360;
+  const spiralRotationY = zoomProgress * 45;
+  const spiralScale = 1 + zoomProgress * 4;
 
   return (
     <section
       ref={sectionRef}
       className="relative h-screen w-full overflow-hidden"
       style={{
+        perspective: '1500px',
         background: `linear-gradient(135deg, 
           hsl(var(--background)) 0%, 
-          hsl(var(--muted) / 0.1) 50%, 
+          hsl(var(--muted) / 0.15) 50%, 
           hsl(var(--background)) 100%)`
       }}
     >
-      {/* 3D Spiral Lines */}
-      <div className="absolute inset-0 flex items-center justify-center">
-        <svg
-          className="absolute w-full h-full"
-          viewBox="0 0 1000 1000"
-          preserveAspectRatio="xMidYMid slice"
+      {/* 3D Rotating Spiral Container */}
+      <div 
+        className="absolute inset-0 flex items-center justify-center"
+        style={{
+          perspective: '1200px',
+          perspectiveOrigin: '50% 50%',
+        }}
+      >
+        {/* Main 3D Spiral */}
+        <div
+          className="relative w-full h-full"
+          style={{
+            transformStyle: 'preserve-3d',
+            transform: `
+              rotateZ(${spiralRotationZ}deg) 
+              rotateY(${spiralRotationY}deg) 
+              scale(${spiralScale})
+            `,
+            transition: 'transform 0.1s ease-out',
+          }}
         >
-          {/* Radiating spiral lines from center */}
-          {Array.from({ length: 48 }).map((_, i) => {
-            const angle = (i / 48) * 360;
-            const radians = (angle * Math.PI) / 180;
-            const spiralOffset = zoomProgress * 30; // Spiral rotation with zoom
-            const adjustedAngle = radians + spiralOffset;
-            const length = 600;
-            const x2 = 500 + Math.cos(adjustedAngle) * length;
-            const y2 = 500 + Math.sin(adjustedAngle) * length;
-            const scale = 1 + zoomProgress * 2;
-            const opacity = 0.1 + (i % 4 === 0 ? 0.15 : 0);
+          {/* Spiral Arms - 6 rotating arms */}
+          {Array.from({ length: 6 }).map((_, armIndex) => {
+            const armAngle = (armIndex / 6) * 360;
+            const armDepth = 100 + armIndex * 50;
             
             return (
-              <motion.line
-                key={i}
-                x1="500"
-                y1="500"
-                x2={x2}
-                y2={y2}
-                stroke="hsl(var(--primary))"
-                strokeWidth={i % 6 === 0 ? "1.5" : "0.5"}
-                strokeOpacity={opacity}
+              <div
+                key={`arm-${armIndex}`}
+                className="absolute left-1/2 top-1/2 w-[600px] h-[2px]"
                 style={{
-                  transformOrigin: '500px 500px',
-                  transform: `scale(${scale}) rotate(${zoomProgress * 20}deg)`,
+                  transformStyle: 'preserve-3d',
+                  transform: `
+                    translate(-50%, -50%)
+                    rotateZ(${armAngle}deg)
+                    translateZ(${armDepth - zoomProgress * 200}px)
+                  `,
+                  background: `linear-gradient(90deg, 
+                    transparent 0%, 
+                    hsl(var(--primary) / ${0.3 - zoomProgress * 0.2}) 30%,
+                    hsl(var(--primary) / ${0.6 - zoomProgress * 0.3}) 50%,
+                    hsl(var(--primary) / ${0.3 - zoomProgress * 0.2}) 70%,
+                    transparent 100%
+                  )`,
                 }}
               />
             );
           })}
 
-          {/* Concentric 3D spiral rectangles */}
-          {Array.from({ length: 8 }).map((_, i) => {
-            const baseScale = 0.1 + (i / 8) * 0.6;
-            const zoomScale = baseScale + zoomProgress * (1.5 - baseScale) * 3;
-            const rotateAmount = i * 8 + zoomProgress * 45;
-            const opacity = Math.max(0, 0.6 - zoomProgress * 0.15 * (8 - i));
+          {/* Concentric 3D Rings */}
+          {Array.from({ length: 12 }).map((_, i) => {
+            const ringDepth = -200 + i * 100;
+            const ringSize = 80 + i * 60;
+            const ringOpacity = Math.max(0, 0.5 - zoomProgress * 0.4 + (i * 0.02));
+            const ringRotation = zoomProgress * 30 * (i % 2 === 0 ? 1 : -1);
             
             return (
-              <motion.rect
-                key={i}
-                x="250"
-                y="300"
-                width="500"
-                height="400"
-                rx="20"
-                fill="none"
-                stroke="hsl(var(--primary))"
-                strokeWidth="1"
-                strokeOpacity={opacity}
+              <div
+                key={`ring-${i}`}
+                className="absolute left-1/2 top-1/2 rounded-full border"
                 style={{
-                  transformOrigin: '500px 500px',
-                  transform: `scale(${zoomScale}) rotate(${rotateAmount}deg)`,
+                  width: `${ringSize}px`,
+                  height: `${ringSize}px`,
+                  transformStyle: 'preserve-3d',
+                  transform: `
+                    translate(-50%, -50%)
+                    translateZ(${ringDepth + zoomProgress * 600}px)
+                    rotateX(${20 + ringRotation}deg)
+                    rotateY(${ringRotation}deg)
+                  `,
+                  borderColor: `hsl(var(--primary) / ${ringOpacity})`,
+                  boxShadow: `0 0 ${20 + i * 5}px hsl(var(--primary) / ${ringOpacity * 0.3})`,
                 }}
               />
             );
           })}
-        </svg>
+
+          {/* 3D Floating Cubes and Spheres */}
+          {floatingShapes.map((shape, index) => {
+            const orbitAngle = (zoomProgress * 360 * shape.orbitSpeed) + (index * 60);
+            const radians = (orbitAngle * Math.PI) / 180;
+            const x = Math.cos(radians) * shape.orbitRadius * (1 - zoomProgress * 0.5);
+            const y = Math.sin(radians) * shape.orbitRadius * (1 - zoomProgress * 0.5);
+            const z = Math.sin(radians * 2) * 100;
+            const opacity = Math.max(0, 0.7 - zoomProgress * 0.9);
+            
+            return (
+              <motion.div
+                key={`shape-${index}`}
+                className="absolute left-1/2 top-1/2 pointer-events-none"
+                style={{
+                  transformStyle: 'preserve-3d',
+                  transform: `
+                    translate(-50%, -50%)
+                    translate3d(${x}px, ${y}px, ${z}px)
+                    rotateX(${zoomProgress * 180}deg)
+                    rotateY(${zoomProgress * 180}deg)
+                  `,
+                  opacity,
+                }}
+              >
+                {shape.type === 'cube' && (
+                  <div
+                    className="bg-gradient-to-br from-primary/30 to-secondary/30 border border-primary/40"
+                    style={{
+                      width: shape.size,
+                      height: shape.size,
+                      transform: 'rotateX(45deg) rotateZ(45deg)',
+                    }}
+                  />
+                )}
+                {shape.type === 'sphere' && (
+                  <div
+                    className="rounded-full bg-gradient-to-br from-accent/40 to-primary/30"
+                    style={{
+                      width: shape.size,
+                      height: shape.size,
+                      boxShadow: `inset -${shape.size/4}px -${shape.size/4}px ${shape.size/2}px rgba(0,0,0,0.2)`,
+                    }}
+                  />
+                )}
+                {shape.type === 'pyramid' && (
+                  <div
+                    className="border-l-[20px] border-r-[20px] border-b-[35px] border-l-transparent border-r-transparent border-b-secondary/40"
+                    style={{
+                      filter: 'drop-shadow(0 0 10px hsl(var(--secondary) / 0.3))',
+                    }}
+                  />
+                )}
+              </motion.div>
+            );
+          })}
+        </div>
       </div>
 
-      {/* Floating Icons around the spiral */}
+      {/* Floating Icons that zoom past */}
       {floatingIcons.map(({ Icon, x, y, delay, size }, index) => {
-        const iconScale = 1 + zoomProgress * 3;
-        const iconOpacity = Math.max(0, 0.6 - zoomProgress * 0.8);
+        const iconScale = 1 + zoomProgress * 5;
+        const iconOpacity = Math.max(0, 0.6 - zoomProgress);
+        const iconBlur = zoomProgress * 4;
         
         return (
           <motion.div
@@ -342,28 +331,18 @@ export const ZoomTunnelSection = () => {
             style={{
               left: `${x}%`,
               top: `${y}%`,
-              transform: `scale(${iconScale}) translate(-50%, -50%)`,
+              transform: `translate(-50%, -50%) scale(${iconScale})`,
               opacity: iconOpacity,
+              filter: `blur(${iconBlur}px)`,
             }}
             initial={{ opacity: 0, scale: 0.5 }}
             animate={{ 
               opacity: iconOpacity,
               scale: iconScale,
-              rotate: zoomProgress * 30,
             }}
-            transition={{ 
-              duration: 0.5, 
-              delay,
-              ease: "easeOut" 
-            }}
+            transition={{ duration: 0.1 }}
           >
-            <Icon 
-              size={size} 
-              className="text-primary/40"
-              style={{
-                filter: `blur(${zoomProgress * 2}px)`,
-              }}
-            />
+            <Icon size={size} className="text-primary/50" />
           </motion.div>
         );
       })}
@@ -371,28 +350,23 @@ export const ZoomTunnelSection = () => {
       {/* Center Glow that expands with zoom */}
       <motion.div
         className="absolute inset-0 flex items-center justify-center pointer-events-none"
-        style={{
-          opacity: 0.2 + zoomProgress * 0.4,
-        }}
+        style={{ opacity: 0.15 + zoomProgress * 0.5 }}
       >
         <div 
-          className="rounded-full bg-gradient-to-r from-primary/30 via-secondary/30 to-accent/30 blur-3xl"
+          className="rounded-full bg-gradient-to-r from-primary/40 via-secondary/40 to-accent/40 blur-3xl"
           style={{
-            width: `${8 + zoomProgress * 60}rem`,
-            height: `${8 + zoomProgress * 60}rem`,
-            transform: `scale(${1 + zoomProgress * 2})`,
+            width: `${10 + zoomProgress * 80}rem`,
+            height: `${10 + zoomProgress * 80}rem`,
           }}
         />
       </motion.div>
 
-      {/* Content Cards - zoom in/out based on scroll direction */}
-      <div className="absolute inset-0 flex items-center justify-center">
+      {/* Content Cards - zoom in/out based on progress */}
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
         <AnimatePresence mode="wait">
           {tunnelContent.map((content, index) => {
             const isActive = index === activeCardIndex;
-            const isPast = index < activeCardIndex;
-            
-            if (!isActive && !isPast) return null;
+            if (!isActive) return null;
 
             const Icon = content.icon;
 
@@ -401,23 +375,19 @@ export const ZoomTunnelSection = () => {
                 key={content.title}
                 className="absolute flex flex-col items-center text-center px-6"
                 initial={{ scale: 0.3, opacity: 0 }}
-                animate={{
-                  scale: isActive ? 1 : isPast ? 2.5 : 0.3,
-                  opacity: isActive ? 1 : 0,
-                  y: isActive ? 0 : isPast ? -100 : 100,
-                }}
-                exit={{ scale: 2.5, opacity: 0, y: -100 }}
-                transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 2.5, opacity: 0 }}
+                transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
               >
                 <motion.div
                   className={`w-20 h-20 md:w-24 md:h-24 rounded-2xl bg-gradient-to-br ${content.color} flex items-center justify-center mb-6 shadow-lg`}
                   animate={{ 
-                    scale: isActive ? [1, 1.05, 1] : 1,
-                    rotate: isActive ? [0, 3, -3, 0] : 0,
+                    scale: [1, 1.05, 1],
+                    rotate: [0, 3, -3, 0],
                   }}
                   transition={{ 
                     duration: 2, 
-                    repeat: isActive ? Infinity : 0,
+                    repeat: Infinity,
                     repeatDelay: 0.5 
                   }}
                 >
@@ -437,6 +407,14 @@ export const ZoomTunnelSection = () => {
 
       {/* Progress Indicator */}
       <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-4">
+        {/* Progress bar */}
+        <div className="w-32 h-1 bg-muted/30 rounded-full overflow-hidden">
+          <motion.div 
+            className="h-full bg-primary rounded-full"
+            style={{ width: `${zoomProgress * 100}%` }}
+          />
+        </div>
+        
         <div className="flex gap-2">
           {tunnelContent.map((_, index) => (
             <motion.div
@@ -448,7 +426,7 @@ export const ZoomTunnelSection = () => {
                   : 'hsl(var(--muted-foreground) / 0.3)',
                 scale: index === activeCardIndex ? 1.3 : 1,
               }}
-              transition={{ duration: 0.3 }}
+              transition={{ duration: 0.2 }}
             />
           ))}
         </div>
@@ -458,15 +436,14 @@ export const ZoomTunnelSection = () => {
             className="text-sm text-muted-foreground flex items-center gap-2"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 0.5 }}
           >
             <motion.span
               animate={{ y: [0, 4, 0] }}
               transition={{ duration: 1.5, repeat: Infinity }}
             >
-              ↓
+              {zoomProgress > 0.5 ? '↓' : '↑↓'}
             </motion.span>
-            Scroll to explore
+            Scroll to zoom
           </motion.p>
         )}
       </div>

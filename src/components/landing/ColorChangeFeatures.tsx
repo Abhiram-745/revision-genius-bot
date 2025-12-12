@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Brain, Calendar, BarChart3, Sparkles, Target, Zap } from "lucide-react";
+import { Brain, Calendar, BarChart3, Sparkles, Zap } from "lucide-react";
 
 const features = [
   {
@@ -204,97 +204,38 @@ const FeatureCard = ({ feature }: { feature: typeof features[0] }) => {
 export const ColorChangeFeatures = () => {
   const [activeIndex, setActiveIndex] = useState(0);
   const [isLocked, setIsLocked] = useState(false);
-  const [hasExited, setHasExited] = useState(false);
   const sectionRef = useRef<HTMLElement>(null);
-  const savedScrollY = useRef(0);
   const lastScrollTime = useRef(0);
-  const exitDirection = useRef<'up' | 'down' | null>(null);
+  const touchStartY = useRef(0);
 
   const lockScroll = useCallback(() => {
     if (isLocked) return;
-    savedScrollY.current = window.scrollY;
     document.body.style.overflow = 'hidden';
-    document.body.style.position = 'fixed';
-    document.body.style.top = `-${savedScrollY.current}px`;
-    document.body.style.width = '100%';
     setIsLocked(true);
   }, [isLocked]);
 
-  const unlockScroll = useCallback((direction: 'up' | 'down') => {
-    if (!isLocked) return;
-    
-    exitDirection.current = direction;
+  const unlockScroll = useCallback(() => {
     document.body.style.overflow = '';
-    document.body.style.position = '';
-    document.body.style.top = '';
-    document.body.style.width = '';
-    
-    const section = sectionRef.current;
-    if (section) {
-      const rect = section.getBoundingClientRect();
-      const sectionTop = savedScrollY.current + rect.top;
-      const sectionBottom = sectionTop + rect.height;
-      
-      if (direction === 'down') {
-        window.scrollTo({ top: sectionBottom + 50, behavior: 'instant' });
-      } else {
-        window.scrollTo({ top: Math.max(0, sectionTop - 100), behavior: 'instant' });
-      }
-    }
-    
     setIsLocked(false);
-    setHasExited(true);
-  }, [isLocked]);
-
-  // IntersectionObserver to detect section visibility
-  useEffect(() => {
-    const section = sectionRef.current;
-    if (!section) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting && entry.intersectionRatio >= 0.5 && !hasExited) {
-            const rect = section.getBoundingClientRect();
-            const sectionTop = window.scrollY + rect.top;
-            window.scrollTo({ top: sectionTop, behavior: 'instant' });
-            lockScroll();
-          }
-        });
-      },
-      { threshold: 0.5 }
-    );
-
-    observer.observe(section);
-    return () => observer.disconnect();
-  }, [lockScroll, hasExited]);
-
-  // Reset hasExited when section leaves viewport
-  useEffect(() => {
-    const handleScroll = () => {
-      if (!hasExited) return;
-      const section = sectionRef.current;
-      if (!section) return;
-      
-      const rect = section.getBoundingClientRect();
-      if (rect.bottom < -100 || rect.top > window.innerHeight + 100) {
-        setHasExited(false);
-        if (exitDirection.current === 'up') {
-          setActiveIndex(features.length - 1);
-        } else {
-          setActiveIndex(0);
-        }
-        exitDirection.current = null;
-      }
-    };
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [hasExited]);
+  }, []);
 
   // Handle wheel events
   const handleWheel = useCallback((e: WheelEvent) => {
-    if (!isLocked) return;
+    const section = sectionRef.current;
+    if (!section) return;
+
+    const rect = section.getBoundingClientRect();
+    const sectionInView = rect.top <= window.innerHeight * 0.3 && rect.bottom >= window.innerHeight * 0.7;
+
+    if (!sectionInView) {
+      if (isLocked) unlockScroll();
+      return;
+    }
+
+    if (!isLocked) {
+      lockScroll();
+    }
+
     e.preventDefault();
     
     const now = Date.now();
@@ -306,29 +247,38 @@ export const ColorChangeFeatures = () => {
       if (activeIndex < features.length - 1) {
         setActiveIndex(prev => prev + 1);
       } else {
-        unlockScroll('down');
+        unlockScroll();
       }
     } else {
       // Scrolling up
       if (activeIndex > 0) {
         setActiveIndex(prev => prev - 1);
       } else {
-        unlockScroll('up');
+        unlockScroll();
       }
     }
-  }, [isLocked, activeIndex, unlockScroll]);
+  }, [isLocked, activeIndex, lockScroll, unlockScroll]);
 
   // Touch handling
-  const touchStartY = useRef(0);
-  
   const handleTouchStart = useCallback((e: TouchEvent) => {
-    if (!isLocked) return;
     touchStartY.current = e.touches[0].clientY;
-  }, [isLocked]);
+  }, []);
 
   const handleTouchEnd = useCallback((e: TouchEvent) => {
-    if (!isLocked) return;
-    e.preventDefault();
+    const section = sectionRef.current;
+    if (!section) return;
+
+    const rect = section.getBoundingClientRect();
+    const sectionInView = rect.top <= window.innerHeight * 0.3 && rect.bottom >= window.innerHeight * 0.7;
+
+    if (!sectionInView) {
+      if (isLocked) unlockScroll();
+      return;
+    }
+
+    if (!isLocked) {
+      lockScroll();
+    }
     
     const now = Date.now();
     if (now - lastScrollTime.current < 400) return;
@@ -341,39 +291,34 @@ export const ColorChangeFeatures = () => {
       if (activeIndex < features.length - 1) {
         setActiveIndex(prev => prev + 1);
       } else {
-        unlockScroll('down');
+        unlockScroll();
       }
     } else {
       if (activeIndex > 0) {
         setActiveIndex(prev => prev - 1);
       } else {
-        unlockScroll('up');
+        unlockScroll();
       }
     }
-  }, [isLocked, activeIndex, unlockScroll]);
+  }, [isLocked, activeIndex, lockScroll, unlockScroll]);
 
   // Add event listeners
   useEffect(() => {
-    if (isLocked) {
-      window.addEventListener('wheel', handleWheel, { passive: false });
-      window.addEventListener('touchstart', handleTouchStart, { passive: true });
-      window.addEventListener('touchend', handleTouchEnd, { passive: false });
-    }
+    window.addEventListener('wheel', handleWheel, { passive: false });
+    window.addEventListener('touchstart', handleTouchStart, { passive: true });
+    window.addEventListener('touchend', handleTouchEnd, { passive: false });
     
     return () => {
       window.removeEventListener('wheel', handleWheel);
       window.removeEventListener('touchstart', handleTouchStart);
       window.removeEventListener('touchend', handleTouchEnd);
     };
-  }, [isLocked, handleWheel, handleTouchStart, handleTouchEnd]);
+  }, [handleWheel, handleTouchStart, handleTouchEnd]);
 
   // Cleanup on unmount
   useEffect(() => {
     return () => {
       document.body.style.overflow = '';
-      document.body.style.position = '';
-      document.body.style.top = '';
-      document.body.style.width = '';
     };
   }, []);
 
@@ -492,7 +437,7 @@ export const ColorChangeFeatures = () => {
               animate={{ y: [0, 4, 0] }}
               transition={{ duration: 1.5, repeat: Infinity }}
             >
-              ↓
+              ↕
             </motion.span>
             Scroll to explore features
           </motion.p>
