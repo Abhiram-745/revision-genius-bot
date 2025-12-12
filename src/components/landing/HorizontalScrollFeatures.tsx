@@ -251,94 +251,43 @@ const HorizontalScrollFeatures = () => {
   const sectionRef = useRef<HTMLDivElement>(null);
   const [activeIndex, setActiveIndex] = useState(0);
   const [isLocked, setIsLocked] = useState(false);
-  const [savedScrollY, setSavedScrollY] = useState(0);
-  const [hasExited, setHasExited] = useState(false);
   const lastScrollTime = useRef(0);
   const touchStartY = useRef(0);
-  const exitDirection = useRef<'up' | 'down' | null>(null);
+  const lastTouchY = useRef(0);
 
   const lockScroll = useCallback(() => {
-    if (isLocked || hasExited) return;
-    
-    const scrollY = window.scrollY;
-    setSavedScrollY(scrollY);
-    
+    if (isLocked) return;
     document.body.style.overflow = 'hidden';
-    document.body.style.position = 'fixed';
-    document.body.style.top = `-${scrollY}px`;
-    document.body.style.width = '100%';
-    document.body.style.touchAction = 'none';
-    
     setIsLocked(true);
-  }, [isLocked, hasExited]);
+  }, [isLocked]);
 
-  const unlockScroll = useCallback((direction: 'up' | 'down') => {
-    if (!isLocked) return;
-    
-    exitDirection.current = direction;
-    setHasExited(true);
-    
+  const unlockScroll = useCallback(() => {
     document.body.style.overflow = '';
-    document.body.style.position = '';
-    document.body.style.top = '';
-    document.body.style.width = '';
-    document.body.style.touchAction = '';
-    
     setIsLocked(false);
-    
-    // Get section bounds to scroll past it
-    const section = sectionRef.current;
-    if (section) {
-      const rect = section.getBoundingClientRect();
-      const sectionTop = savedScrollY;
-      const sectionBottom = sectionTop + rect.height;
-      
-      if (direction === 'down') {
-        // Scroll to just past the section
-        window.scrollTo({ top: sectionBottom + 50, behavior: 'instant' });
-      } else {
-        // Scroll to just before the section
-        window.scrollTo({ top: Math.max(0, sectionTop - 100), behavior: 'instant' });
-      }
-    }
-  }, [isLocked, savedScrollY]);
+  }, []);
 
-  // Reset hasExited when user scrolls away from section
-  useEffect(() => {
-    if (!hasExited) return;
-    
-    const handleScroll = () => {
-      const section = sectionRef.current;
-      if (!section) return;
-      
-      const rect = section.getBoundingClientRect();
-      // If section is completely out of view, reset
-      if (rect.bottom < -100 || rect.top > window.innerHeight + 100) {
-        setHasExited(false);
-        // Reset to appropriate index based on exit direction
-        if (exitDirection.current === 'up') {
-          setActiveIndex(features.length - 1); // Start from last when coming back from top
-        } else {
-          setActiveIndex(0); // Start from first when coming back from bottom
-        }
-        exitDirection.current = null;
-      }
-    };
-    
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [hasExited]);
-
-  // Handle wheel events when locked
+  // Handle wheel events - smooth continuous
   const handleWheel = useCallback((e: WheelEvent) => {
-    if (!isLocked) return;
-    
+    const section = sectionRef.current;
+    if (!section) return;
+
+    const rect = section.getBoundingClientRect();
+    const sectionInView = rect.top <= window.innerHeight * 0.3 && rect.bottom >= window.innerHeight * 0.7;
+
+    if (!sectionInView) {
+      if (isLocked) unlockScroll();
+      return;
+    }
+
+    if (!isLocked) {
+      lockScroll();
+    }
+
     e.preventDefault();
-    e.stopPropagation();
     
-    // Debounce to prevent rapid scrolling
+    // Debounce for step-based navigation
     const now = Date.now();
-    if (now - lastScrollTime.current < 400) return;
+    if (now - lastScrollTime.current < 350) return;
     lastScrollTime.current = now;
     
     if (e.deltaY > 0) {
@@ -346,93 +295,77 @@ const HorizontalScrollFeatures = () => {
       if (activeIndex < features.length - 1) {
         setActiveIndex(prev => prev + 1);
       } else {
-        // Last card - unlock and continue scrolling down
-        unlockScroll('down');
+        unlockScroll();
       }
     } else {
       // Scrolling up
       if (activeIndex > 0) {
         setActiveIndex(prev => prev - 1);
       } else {
-        // First card - unlock and scroll up
-        unlockScroll('up');
+        unlockScroll();
       }
     }
-  }, [isLocked, activeIndex, unlockScroll]);
+  }, [isLocked, activeIndex, lockScroll, unlockScroll]);
 
   // Handle touch events
   const handleTouchStart = useCallback((e: TouchEvent) => {
     touchStartY.current = e.touches[0].clientY;
+    lastTouchY.current = e.touches[0].clientY;
   }, []);
 
   const handleTouchEnd = useCallback((e: TouchEvent) => {
-    if (!isLocked) return;
+    const section = sectionRef.current;
+    if (!section) return;
+
+    const rect = section.getBoundingClientRect();
+    const sectionInView = rect.top <= window.innerHeight * 0.3 && rect.bottom >= window.innerHeight * 0.7;
+
+    if (!sectionInView) {
+      if (isLocked) unlockScroll();
+      return;
+    }
+
+    if (!isLocked) {
+      lockScroll();
+    }
     
     const touchEndY = e.changedTouches[0].clientY;
     const deltaY = touchStartY.current - touchEndY;
     
+    if (Math.abs(deltaY) < 50) return;
+    
     // Debounce
     const now = Date.now();
-    if (now - lastScrollTime.current < 400) return;
+    if (now - lastScrollTime.current < 350) return;
     lastScrollTime.current = now;
     
-    if (Math.abs(deltaY) < 50) return; // Ignore small swipes
-    
     if (deltaY > 0) {
-      // Swipe up (next)
       if (activeIndex < features.length - 1) {
         setActiveIndex(prev => prev + 1);
       } else {
-        unlockScroll('down');
+        unlockScroll();
       }
     } else {
-      // Swipe down (prev)
       if (activeIndex > 0) {
         setActiveIndex(prev => prev - 1);
       } else {
-        unlockScroll('up');
+        unlockScroll();
       }
     }
-  }, [isLocked, activeIndex, unlockScroll]);
+  }, [isLocked, activeIndex, lockScroll, unlockScroll]);
 
-  // Intersection observer to detect when section enters viewport
+  // Add/remove listeners
   useEffect(() => {
-    const section = sectionRef.current;
-    if (!section) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting && entry.intersectionRatio >= 0.5 && !hasExited) {
-            // Section is at least 50% visible - lock and snap
-            section.scrollIntoView({ behavior: 'instant', block: 'start' });
-            setTimeout(() => {
-              lockScroll();
-            }, 100);
-          }
-        });
-      },
-      { threshold: 0.5 }
-    );
-
-    observer.observe(section);
-    return () => observer.disconnect();
-  }, [lockScroll, hasExited]);
-
-  // Add/remove wheel and touch listeners
-  useEffect(() => {
-    if (isLocked) {
-      window.addEventListener('wheel', handleWheel, { passive: false });
-      window.addEventListener('touchstart', handleTouchStart, { passive: true });
-      window.addEventListener('touchend', handleTouchEnd, { passive: true });
-    }
+    window.addEventListener('wheel', handleWheel, { passive: false });
+    window.addEventListener('touchstart', handleTouchStart, { passive: true });
+    window.addEventListener('touchend', handleTouchEnd, { passive: true });
     
     return () => {
       window.removeEventListener('wheel', handleWheel);
       window.removeEventListener('touchstart', handleTouchStart);
       window.removeEventListener('touchend', handleTouchEnd);
     };
-  }, [isLocked, handleWheel, handleTouchStart, handleTouchEnd]);
+  }, [handleWheel, handleTouchStart, handleTouchEnd]);
 
   // Keyboard support
   useEffect(() => {
@@ -443,22 +376,29 @@ const HorizontalScrollFeatures = () => {
         if (activeIndex < features.length - 1) {
           setActiveIndex(prev => prev + 1);
         } else {
-          unlockScroll('down');
+          unlockScroll();
         }
       } else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
         if (activeIndex > 0) {
           setActiveIndex(prev => prev - 1);
         } else {
-          unlockScroll('up');
+          unlockScroll();
         }
       } else if (e.key === 'Escape') {
-        unlockScroll('down');
+        unlockScroll();
       }
     };
     
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isLocked, activeIndex, unlockScroll]);
+
+  // Cleanup
+  useEffect(() => {
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, []);
 
   const currentFeature = features[activeIndex];
   const Icon = currentFeature.icon;
@@ -498,49 +438,54 @@ const HorizontalScrollFeatures = () => {
                 type: "spring", 
                 stiffness: 300, 
                 damping: 30,
-                duration: 0.4 
+                duration: 0.4
               }}
               className="w-full"
             >
-              <Card className="bg-card/95 backdrop-blur-sm border-border/50 shadow-2xl overflow-hidden">
+              <Card className="max-w-2xl mx-auto overflow-hidden border-0 shadow-2xl bg-card/80 backdrop-blur-sm">
                 <CardContent className="p-0">
-                  <div className="grid md:grid-cols-2 gap-0">
-                    {/* Left side - Text content */}
-                    <div className="p-6 md:p-8 flex flex-col justify-center space-y-4">
-                      <motion.div 
-                        initial={{ scale: 0 }}
-                        animate={{ scale: 1 }}
-                        transition={{ delay: 0.1, type: "spring" }}
-                        className="w-14 h-14 rounded-xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center shadow-lg"
+                  <div className="grid grid-cols-1 md:grid-cols-2">
+                    {/* Left: Text content */}
+                    <div className="p-6 md:p-8 flex flex-col justify-center">
+                      <motion.div
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.1 }}
+                        className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary w-fit mb-4"
                       >
-                        <Icon className="w-7 h-7 text-primary-foreground" />
+                        <Icon className="w-4 h-4" />
+                        <span className="text-xs font-medium">Feature {activeIndex + 1}</span>
                       </motion.div>
                       
-                      <div>
-                        <motion.h3 
-                          initial={{ opacity: 0, x: -20 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{ delay: 0.15 }}
-                          className="text-xl md:text-2xl font-display font-bold mb-2"
-                        >
-                          {currentFeature.title}
-                        </motion.h3>
-                        <motion.p 
-                          initial={{ opacity: 0, x: -20 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{ delay: 0.2 }}
-                          className="text-muted-foreground text-sm md:text-base leading-relaxed"
-                        >
-                          {currentFeature.description}
-                        </motion.p>
-                      </div>
+                      <motion.h3
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.15 }}
+                        className="text-2xl md:text-3xl font-bold mb-4"
+                      >
+                        {currentFeature.title}
+                      </motion.h3>
+                      
+                      <motion.p
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.2 }}
+                        className="text-muted-foreground"
+                      >
+                        {currentFeature.description}
+                      </motion.p>
                     </div>
                     
-                    {/* Right side - UI preview */}
-                    <div className="p-6 md:p-8 bg-muted/30 border-l border-border/50 flex items-center justify-center min-h-[280px]">
-                      <div className="w-full max-w-xs">
+                    {/* Right: UI Preview */}
+                    <div className="p-6 md:p-8 bg-muted/30 flex items-center justify-center">
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ delay: 0.25 }}
+                        className="w-full max-w-xs"
+                      >
                         <FeatureUI feature={currentFeature} />
-                      </div>
+                      </motion.div>
                     </div>
                   </div>
                 </CardContent>
@@ -549,46 +494,41 @@ const HorizontalScrollFeatures = () => {
           </AnimatePresence>
         </div>
 
-        {/* Progress Indicators */}
-        <div className="flex items-center gap-3 mt-6">
-          {features.map((_, i) => (
-            <button
-              key={i}
-              onClick={() => setActiveIndex(i)}
-              className={`transition-all duration-300 rounded-full ${
-                i === activeIndex 
-                  ? "w-8 h-2 bg-primary" 
-                  : "w-2 h-2 bg-muted hover:bg-muted-foreground/50"
-              }`}
-              aria-label={`Go to feature ${i + 1}`}
-            />
-          ))}
-        </div>
-
-        {/* Scroll hint */}
-        {isLocked && (
-          <motion.div 
-            className="absolute bottom-6 left-1/2 -translate-x-1/2 text-muted-foreground text-sm flex flex-col items-center gap-2"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.5 }}
-          >
-            <span className="text-xs">
-              {activeIndex === features.length - 1 
-                ? "Scroll to continue" 
-                : `${activeIndex + 1} / ${features.length} • Scroll to explore`
-              }
-            </span>
-            <motion.div
-              animate={{ y: [0, 5, 0] }}
-              transition={{ duration: 1.5, repeat: Infinity }}
+        {/* Progress Indicator */}
+        <div className="flex flex-col items-center gap-4 mt-8">
+          <div className="flex gap-2">
+            {features.map((_, index) => (
+              <motion.button
+                key={index}
+                onClick={() => setActiveIndex(index)}
+                className="w-2 h-2 rounded-full transition-colors"
+                animate={{
+                  backgroundColor: index === activeIndex 
+                    ? 'hsl(var(--primary))' 
+                    : 'hsl(var(--muted-foreground) / 0.3)',
+                  scale: index === activeIndex ? 1.5 : 1,
+                }}
+                transition={{ duration: 0.2 }}
+              />
+            ))}
+          </div>
+          
+          {isLocked && (
+            <motion.p
+              className="text-sm text-muted-foreground flex items-center gap-2"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
             >
-              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" className="text-muted-foreground">
-                <path d="M10 3v14m0 0l-5-5m5 5l5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-            </motion.div>
-          </motion.div>
-        )}
+              <motion.span
+                animate={{ y: [0, 4, 0] }}
+                transition={{ duration: 1.5, repeat: Infinity }}
+              >
+                ↕
+              </motion.span>
+              Scroll to navigate
+            </motion.p>
+          )}
+        </div>
       </div>
     </section>
   );
