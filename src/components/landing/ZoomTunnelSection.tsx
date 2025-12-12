@@ -4,6 +4,7 @@ import {
   Brain, Rocket, Target, Lightbulb, Clock, BarChart3, Sparkles, Zap, Star, Heart,
   Trophy, GraduationCap, BookOpen, PenTool, Flame, Compass, Gem, Orbit
 } from "lucide-react";
+import { Cube3D, Sphere3D, Diamond3D, Pyramid3D, Hexagon3D, Torus3D, GlowingParticle } from "./3DObjects";
 
 const tunnelContent = [
   { title: "AI-Powered Schedules", subtitle: "Let AI plan your perfect study sessions", icon: Brain, color: "from-pink-500 to-rose-400" },
@@ -112,8 +113,8 @@ export const ZoomTunnelSection = () => {
 
     e.preventDefault();
 
-    // Smooth delta accumulation for continuous scrolling feel
-    const sensitivity = 0.0004;
+    // Reduced sensitivity - requires much more scrolling
+    const sensitivity = 0.00012;
     const delta = e.deltaY * sensitivity;
     
     setZoomProgress((prev) => {
@@ -164,7 +165,7 @@ export const ZoomTunnelSection = () => {
     e.preventDefault();
 
     const currentY = e.touches[0].clientY;
-    const delta = (lastTouchY.current - currentY) * 0.0008;
+    const delta = (lastTouchY.current - currentY) * 0.00025;
     lastTouchY.current = currentY;
 
     setZoomProgress((prev) => {
@@ -507,6 +508,130 @@ export const ZoomTunnelSection = () => {
           />
         );
       })}
+
+      {/* Real 3D Objects - CSS 3D Cubes, Spheres, Diamonds */}
+      <div className="absolute inset-0 pointer-events-none" style={{ perspective: '1000px' }}>
+        {/* Top left Cube */}
+        <div 
+          className="absolute"
+          style={{ 
+            left: '10%', 
+            top: '15%',
+            opacity: Math.max(0, 0.8 - zoomProgress * 0.9),
+            transform: `scale(${1 - zoomProgress * 0.5})`
+          }}
+        >
+          <Cube3D size={50} rotationDuration={10} />
+        </div>
+        
+        {/* Top right Sphere */}
+        <div 
+          className="absolute"
+          style={{ 
+            right: '12%', 
+            top: '20%',
+            opacity: Math.max(0, 0.8 - zoomProgress * 0.9),
+            transform: `scale(${1 - zoomProgress * 0.5})`
+          }}
+        >
+          <Sphere3D size={45} colors={["hsl(var(--secondary))", "hsl(var(--accent))"]} floatDuration={5} />
+        </div>
+        
+        {/* Left Diamond */}
+        <div 
+          className="absolute"
+          style={{ 
+            left: '8%', 
+            top: '50%',
+            opacity: Math.max(0, 0.8 - zoomProgress * 0.9),
+            transform: `translateY(-50%) scale(${1 - zoomProgress * 0.5})`
+          }}
+        >
+          <Diamond3D size={40} color="hsl(var(--accent))" rotationDuration={8} />
+        </div>
+        
+        {/* Right Hexagon */}
+        <div 
+          className="absolute"
+          style={{ 
+            right: '10%', 
+            top: '55%',
+            opacity: Math.max(0, 0.8 - zoomProgress * 0.9),
+            transform: `scale(${1 - zoomProgress * 0.5})`
+          }}
+        >
+          <Hexagon3D size={48} color="hsl(var(--primary))" rotationDuration={12} />
+        </div>
+        
+        {/* Bottom left Torus */}
+        <div 
+          className="absolute"
+          style={{ 
+            left: '15%', 
+            bottom: '20%',
+            opacity: Math.max(0, 0.8 - zoomProgress * 0.9),
+            transform: `scale(${1 - zoomProgress * 0.5})`
+          }}
+        >
+          <Torus3D size={55} color="hsl(var(--secondary))" rotationDuration={9} />
+        </div>
+        
+        {/* Bottom right Pyramid */}
+        <div 
+          className="absolute"
+          style={{ 
+            right: '15%', 
+            bottom: '18%',
+            opacity: Math.max(0, 0.8 - zoomProgress * 0.9),
+            transform: `scale(${1 - zoomProgress * 0.5})`
+          }}
+        >
+          <Pyramid3D size={45} color="hsl(var(--primary))" rotationDuration={11} />
+        </div>
+        
+        {/* Additional floating cubes */}
+        <div 
+          className="absolute"
+          style={{ 
+            left: '30%', 
+            top: '25%',
+            opacity: Math.max(0, 0.6 - zoomProgress * 0.7),
+            transform: `scale(${1 - zoomProgress * 0.5})`
+          }}
+        >
+          <Cube3D 
+            size={35} 
+            colors={["hsl(var(--accent))", "hsl(var(--primary))", "hsl(var(--secondary))"]} 
+            rotationDuration={14} 
+          />
+        </div>
+        
+        <div 
+          className="absolute"
+          style={{ 
+            right: '28%', 
+            bottom: '30%',
+            opacity: Math.max(0, 0.6 - zoomProgress * 0.7),
+            transform: `scale(${1 - zoomProgress * 0.5})`
+          }}
+        >
+          <Sphere3D size={38} colors={["hsl(var(--primary))", "hsl(var(--accent))"]} floatDuration={6} />
+        </div>
+      </div>
+
+      {/* Glowing Particles */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        {[...Array(12)].map((_, i) => (
+          <GlowingParticle
+            key={`glow-${i}`}
+            size={4 + Math.random() * 6}
+            x={5 + (i * 8) % 90}
+            y={10 + (i * 12) % 80}
+            color={i % 3 === 0 ? "hsl(var(--primary))" : i % 3 === 1 ? "hsl(var(--secondary))" : "hsl(var(--accent))"}
+            delay={i * 0.3}
+          />
+        ))}
+      </div>
 
       {/* Center Glow that expands with zoom */}
       <motion.div

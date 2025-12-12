@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Brain, Calendar, BarChart3, Sparkles, Zap, Star, Rocket, Target, Heart, BookOpen, Trophy, Flame } from "lucide-react";
+import { Cube3D, Sphere3D, Diamond3D, GlowingParticle } from "./3DObjects";
 
 const features = [
   {
@@ -262,8 +263,9 @@ export const ColorChangeFeatures = () => {
 
     e.preventDefault();
     
+    // Increased debounce - requires more scrolling per step
     const now = Date.now();
-    if (now - lastScrollTime.current < 700) return;
+    if (now - lastScrollTime.current < 1200) return;
     lastScrollTime.current = now;
 
     if (e.deltaY > 0) {

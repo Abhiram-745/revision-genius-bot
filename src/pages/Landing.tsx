@@ -33,6 +33,7 @@ import SuccessStoriesSection from "@/components/landing/SuccessStoriesSection";
 import HorizontalScrollFeatures from "@/components/landing/HorizontalScrollFeatures";
 import ZoomTunnelSection from "@/components/landing/ZoomTunnelSection";
 import ColorChangeFeatures from "@/components/landing/ColorChangeFeatures";
+import PersonalTutorSection from "@/components/landing/PersonalTutorSection";
 
 const Landing = () => {
   const navigate = useNavigate();
@@ -560,8 +561,8 @@ const Landing = () => {
         {/* Before/After Section */}
         <BeforeAfterSection />
 
-        {/* BlurtAI Integration Section */}
-        <BlurtAIIntegration onTryClick={() => setShowComingSoon(true)} />
+        {/* Personal Tutor / BlurtAI Integration Section */}
+        <PersonalTutorSection onTryClick={() => setShowComingSoon(true)} />
 
         {/* Pricing Section with Enhanced Hover */}
         <section className="py-24 px-6">
