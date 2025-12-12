@@ -2,7 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { motion, useScroll, useTransform, useInView, useSpring } from "framer-motion";
-import { useRef, useEffect, useState } from "react";
+import { useRef, useEffect, useState, Suspense, lazy } from "react";
 import { 
   Calendar, Brain, Target, Users, Clock, Sparkles, ArrowRight, 
   CheckCircle2, Star, Heart, Zap, Laptop, TrendingUp, Award,
@@ -33,6 +33,9 @@ import SuccessStoriesSection from "@/components/landing/SuccessStoriesSection";
 import HorizontalScrollFeatures from "@/components/landing/HorizontalScrollFeatures";
 import ZoomTunnelSection from "@/components/landing/ZoomTunnelSection";
 import ColorChangeFeatures from "@/components/landing/ColorChangeFeatures";
+
+// Lazy load the 3D scene for performance
+const Hero3DScene = lazy(() => import("@/components/landing/Hero3DScene"));
 
 const Landing = () => {
   const navigate = useNavigate();
@@ -103,127 +106,158 @@ const Landing = () => {
         {/* Particle Background */}
         <ParticleBackground />
 
-        {/* Hero Section */}
+        {/* Hero Section - Dark Dramatic Style */}
         <motion.section
           ref={heroRef}
           style={{ y: heroY, opacity: heroOpacity }}
-          className="relative min-h-[85vh] flex items-center justify-center px-6 pt-20 pb-16"
+          className="relative min-h-screen flex items-center justify-center px-6 overflow-hidden"
+          id="hero"
         >
-          <div className="relative z-10 max-w-5xl mx-auto">
+          {/* Dark gradient overlay */}
+          <div className="absolute inset-0 bg-gradient-to-b from-background via-background/95 to-background z-[1]" />
+          
+          {/* Ghost text background */}
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none overflow-hidden z-[2]">
+            <motion.span
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 0.03 }}
+              transition={{ delay: 0.5, duration: 1 }}
+              className="text-[15vw] font-display font-black tracking-wider text-foreground whitespace-nowrap"
+              style={{
+                WebkitTextStroke: '1px rgba(255,255,255,0.05)',
+              }}
+            >
+              VISTARA
+            </motion.span>
+          </div>
+
+          {/* 3D Scene */}
+          <div className="absolute inset-0 z-[3]">
+            <Suspense fallback={<div className="absolute inset-0 bg-background" />}>
+              <Hero3DScene />
+            </Suspense>
+          </div>
+
+          {/* Content */}
+          <div className="relative z-10 max-w-5xl mx-auto text-center">
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] }}
-              className="space-y-8 text-center"
+              className="space-y-8"
             >
-              {/* Badge with bounce */}
+              {/* Badge */}
               <motion.div
                 initial={{ opacity: 0, scale: 0.9, y: 20 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.2, type: "spring", stiffness: 150 }}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-secondary/20 border border-secondary/30"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 backdrop-blur-sm"
               >
                 <motion.div
                   animate={{ rotate: [0, 15, -15, 0] }}
                   transition={{ duration: 2, repeat: Infinity }}
                 >
-                  <Zap className="w-4 h-4 text-secondary" />
+                  <Zap className="w-4 h-4 text-primary" />
                 </motion.div>
-                <span className="text-sm font-medium text-secondary-foreground">
+                <span className="text-sm font-medium text-foreground/80">
                   Built by students, for students
                 </span>
               </motion.div>
 
-              {/* Main headline with character animation */}
-              <motion.h1 
-                className="text-5xl sm:text-6xl lg:text-7xl font-display font-bold tracking-tight leading-[1.1]"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.8 }}
-              >
-                <motion.span
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.3 }}
+              {/* Main headline with handwritten accent */}
+              <div className="space-y-2">
+                <motion.h1 
+                  className="text-4xl sm:text-5xl lg:text-6xl font-display font-bold tracking-tight leading-[1.1]"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.8 }}
                 >
-                  Stop stressing about
-                </motion.span>
-                <br />
-                <motion.span 
-                  className="bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent inline-block"
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: 0.5, type: "spring", stiffness: 100 }}
+                  <motion.span
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.3 }}
+                    className="text-foreground/60"
+                  >
+                    Great Results Start
+                  </motion.span>
+                  <br />
+                  <motion.span
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.4 }}
+                    className="text-foreground/60"
+                  >
+                    Before You Study
+                  </motion.span>
+                </motion.h1>
+                
+                {/* Handwritten accent text */}
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9, rotate: -2 }}
+                  animate={{ opacity: 1, scale: 1, rotate: 0 }}
+                  transition={{ delay: 0.6, type: "spring", stiffness: 100 }}
+                  className="text-4xl sm:text-5xl lg:text-6xl font-display font-bold italic"
+                  style={{
+                    background: "linear-gradient(135deg, #ffb347 0%, #ff6b35 50%, #ff4757 100%)",
+                    WebkitBackgroundClip: "text",
+                    WebkitTextFillColor: "transparent",
+                    backgroundClip: "text",
+                    filter: "drop-shadow(0 0 30px rgba(255, 107, 53, 0.4))",
+                  }}
                 >
                   <TypewriterText phrases={typewriterPhrases} />
-                </motion.span>
-              </motion.h1>
+                </motion.div>
+              </div>
 
-              {/* Subheadline with fade */}
+              {/* Subheadline */}
               <motion.p 
-                className="text-xl text-muted-foreground max-w-2xl mx-auto"
+                className="text-lg text-muted-foreground max-w-2xl mx-auto"
                 initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.7 }}
+                transition={{ delay: 0.8 }}
               >
-                AI-powered study timetables that work around your life.
+                Most students just start studying. The best ones start with Vistara—
+                <br className="hidden sm:block" />
+                AI-powered timetables that set you up for success.
               </motion.p>
 
-              {/* CTA Buttons with enhanced animations */}
+              {/* CTA Button */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, delay: 0.9 }}
-                className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4"
+                transition={{ duration: 0.8, delay: 1 }}
+                className="pt-4"
               >
                 <motion.div
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.98 }}
-                  className="relative"
+                  className="inline-block"
                 >
-                  {/* Glow effect behind button */}
-                  <motion.div
-                    className="absolute inset-0 bg-gradient-to-r from-primary to-secondary rounded-full blur-xl opacity-50"
-                    animate={{ scale: [1, 1.1, 1], opacity: [0.5, 0.7, 0.5] }}
-                    transition={{ duration: 2, repeat: Infinity }}
-                  />
                   <RippleButton
                     size="lg"
                     onClick={() => navigate("/auth")}
-                    className="relative text-lg px-10 py-7 bg-gradient-to-r from-primary to-secondary hover:opacity-90 transition-all duration-300 shadow-lg group rounded-full"
+                    className="text-lg px-12 py-7 bg-gradient-to-r from-[#c45c3a] to-[#a04830] hover:from-[#d46a48] hover:to-[#b05840] text-white transition-all duration-300 shadow-lg shadow-[#c45c3a]/30 group rounded-xl border border-white/10"
                   >
-                    Get Started Free
+                    Get Started
                     <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
                   </RippleButton>
                 </motion.div>
-                <RippleButton
-                  size="lg"
-                  variant="outline"
-                  onClick={() => {
-                    const demoSection = document.getElementById('try-demo');
-                    demoSection?.scrollIntoView({ behavior: 'smooth' });
-                  }}
-                  className="text-lg px-10 py-7 hover:scale-105 transition-all duration-300 rounded-full"
-                  rippleColor="rgba(0, 0, 0, 0.2)"
-                >
-                  <Laptop className="mr-2 w-5 h-5" />
-                  Try Demo
-                </RippleButton>
               </motion.div>
 
-              {/* Social proof with stagger */}
+              {/* Social proof */}
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                transition={{ delay: 1.2 }}
-                className="flex items-center justify-center gap-8 pt-8 text-sm text-muted-foreground"
+                transition={{ delay: 1.3 }}
+                className="flex items-center justify-center gap-8 pt-6 text-sm text-muted-foreground"
               >
                 {["✓ No credit card", "✓ 2 min setup", "✓ Cancel anytime"].map((item, i) => (
                   <motion.span
                     key={i}
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 1.2 + i * 0.15 }}
+                    transition={{ delay: 1.3 + i * 0.15 }}
+                    className="text-foreground/50"
                   >
                     {item}
                   </motion.span>
@@ -234,13 +268,13 @@ const Landing = () => {
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                transition={{ delay: 1.5 }}
-                className="pt-8"
+                transition={{ delay: 1.6 }}
+                className="pt-12"
               >
                 <motion.div
                   animate={{ y: [0, 8, 0] }}
                   transition={{ duration: 2, repeat: Infinity }}
-                  className="flex flex-col items-center gap-2 text-muted-foreground"
+                  className="flex flex-col items-center gap-2 text-muted-foreground/50"
                 >
                   <MousePointer className="w-5 h-5" />
                   <span className="text-xs">Scroll to explore</span>
