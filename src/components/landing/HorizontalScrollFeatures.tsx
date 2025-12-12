@@ -257,11 +257,11 @@ const HorizontalScrollFeatures = () => {
     offset: ["start start", "end end"]
   });
 
-  // Calculate active index based on scroll progress
+  // Calculate active index based on scroll progress - evenly distributed
   const activeIndexValue = useTransform(
     scrollYProgress,
-    [0, 0.12, 0.28, 0.44, 0.60, 0.76, 0.92, 1],
-    [0, 0, 1, 2, 3, 4, 5, 5]
+    [0, 0.15, 0.32, 0.49, 0.66, 0.83, 1],
+    [0, 1, 2, 3, 4, 5, 5]
   );
 
   useMotionValueEvent(activeIndexValue, "change", (latest) => {
@@ -275,7 +275,7 @@ const HorizontalScrollFeatures = () => {
     <section
       ref={sectionRef}
       className="relative bg-gradient-to-b from-background via-muted/10 to-background"
-      style={{ height: `${(features.length + 1) * 100}vh` }}
+      style={{ height: `${features.length * 100}vh` }}
     >
       {/* Sticky container that stays pinned while scrolling */}
       <div className="sticky top-0 h-screen flex flex-col items-center justify-center px-4 py-8 overflow-hidden">

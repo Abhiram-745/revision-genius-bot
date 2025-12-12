@@ -1,5 +1,5 @@
-import { useRef } from "react";
-import { motion, useScroll, useTransform } from "framer-motion";
+import { useRef, useState } from "react";
+import { motion, useScroll, useTransform, useMotionValueEvent, AnimatePresence } from "framer-motion";
 import { Calendar, Brain, BarChart3, Clock, Sparkles, Target } from "lucide-react";
 import { Card } from "@/components/ui/card";
 
@@ -159,11 +159,28 @@ const AnimatedCursorDemo = () => {
 
 const StickyFeatureShowcase = () => {
   const containerRef = useRef<HTMLDivElement>(null);
+  const [activeIndex, setActiveIndex] = useState(0);
   
   const { scrollYProgress } = useScroll({
     target: containerRef,
     offset: ["start start", "end end"]
   });
+
+  // Convert scroll progress to active index
+  const activeIndexMotion = useTransform(
+    scrollYProgress,
+    [0, 0.15, 0.32, 0.49, 0.66, 0.83, 1],
+    [0, 1, 2, 3, 4, 5, 5]
+  );
+
+  useMotionValueEvent(activeIndexMotion, "change", (latest) => {
+    setActiveIndex(Math.round(latest));
+  });
+
+  // Progress bar width
+  const progressWidth = useTransform(scrollYProgress, [0, 1], ["0%", "100%"]);
+
+  const activeFeature = features[activeIndex];
 
   return (
     <section
@@ -175,74 +192,53 @@ const StickyFeatureShowcase = () => {
         <div className="w-full max-w-7xl mx-auto px-6 grid lg:grid-cols-2 gap-12 items-center">
           {/* Left side - Text content that changes */}
           <div className="relative h-[400px]">
-            {features.map((feature, index) => {
-              const start = index / features.length;
-              const end = (index + 1) / features.length;
-              const mid = start + (end - start) / 2;
-              
-              return (
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={activeIndex}
+                className="absolute inset-0 flex flex-col justify-center"
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -30 }}
+                transition={{ duration: 0.4 }}
+              >
                 <motion.div
-                  key={feature.id}
-                  className="absolute inset-0 flex flex-col justify-center"
-                  style={{
-                    opacity: useTransform(
-                      scrollYProgress,
-                      [start, mid - 0.05, mid, mid + 0.05, end],
-                      [0, 1, 1, 1, 0]
-                    ),
-                    y: useTransform(
-                      scrollYProgress,
-                      [start, mid, end],
-                      [50, 0, -50]
-                    ),
-                  }}
+                  className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center mb-6 shadow-xl"
                 >
-                  <motion.div
-                    className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center mb-6 shadow-xl"
-                  >
-                    <feature.icon className="w-8 h-8 text-primary-foreground" />
-                  </motion.div>
-                  
-                  <span className="text-sm font-medium text-primary mb-2">
-                    Step {index + 1} of {features.length}
-                  </span>
-                  
-                  <h3 className="text-3xl md:text-4xl font-display font-bold mb-4">
-                    {feature.title}
-                  </h3>
-                  
-                  <p className="text-lg text-muted-foreground leading-relaxed max-w-md">
-                    {feature.description}
-                  </p>
+                  <activeFeature.icon className="w-8 h-8 text-primary-foreground" />
                 </motion.div>
-              );
-            })}
+                
+                <span className="text-sm font-medium text-primary mb-2">
+                  Step {activeIndex + 1} of {features.length}
+                </span>
+                
+                <h3 className="text-3xl md:text-4xl font-display font-bold mb-4">
+                  {activeFeature.title}
+                </h3>
+                
+                <p className="text-lg text-muted-foreground leading-relaxed max-w-md">
+                  {activeFeature.description}
+                </p>
+              </motion.div>
+            </AnimatePresence>
             
             {/* Progress indicator */}
             <div className="absolute bottom-0 left-0 flex gap-2">
-              {features.map((_, index) => {
-                const start = index / features.length;
-                const end = (index + 1) / features.length;
-                
-                return (
+              {features.map((_, index) => (
+                <div
+                  key={index}
+                  className="w-8 h-1 rounded-full overflow-hidden bg-muted"
+                >
                   <motion.div
-                    key={index}
-                    className="w-8 h-1 rounded-full overflow-hidden bg-muted"
-                  >
-                    <motion.div
-                      className="h-full bg-primary"
-                      style={{
-                        scaleX: useTransform(
-                          scrollYProgress,
-                          [start, end],
-                          [0, 1]
-                        ),
-                        transformOrigin: "left",
-                      }}
-                    />
-                  </motion.div>
-                );
-              })}
+                    className="h-full bg-primary"
+                    initial={{ scaleX: 0 }}
+                    animate={{ 
+                      scaleX: index < activeIndex ? 1 : index === activeIndex ? 0.5 : 0 
+                    }}
+                    style={{ transformOrigin: "left" }}
+                    transition={{ duration: 0.3 }}
+                  />
+                </div>
+              ))}
             </div>
           </div>
 

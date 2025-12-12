@@ -7,34 +7,34 @@ const ZoomTunnelSection = () => {
   
   const { scrollYProgress } = useScroll({
     target: sectionRef,
-    offset: ["start end", "end start"]
+    offset: ["start start", "end end"]
   });
 
-  // Pre-calculate all transforms outside of render
-  const frame1Scale = useTransform(scrollYProgress, [0, 0.4], [0.1, 5]);
-  const frame2Scale = useTransform(scrollYProgress, [0.03, 0.43], [0.1, 5]);
-  const frame3Scale = useTransform(scrollYProgress, [0.06, 0.46], [0.1, 5]);
-  const frame4Scale = useTransform(scrollYProgress, [0.09, 0.49], [0.1, 5]);
-  const frame5Scale = useTransform(scrollYProgress, [0.12, 0.52], [0.1, 5]);
-  const frame6Scale = useTransform(scrollYProgress, [0.15, 0.55], [0.1, 5]);
-  const frame7Scale = useTransform(scrollYProgress, [0.18, 0.58], [0.1, 5]);
-  const frame8Scale = useTransform(scrollYProgress, [0.21, 0.61], [0.1, 5]);
+  // Pre-calculate all transforms - extended ranges to fill full scroll
+  const frame1Scale = useTransform(scrollYProgress, [0, 0.5], [0.1, 6]);
+  const frame2Scale = useTransform(scrollYProgress, [0.05, 0.55], [0.1, 6]);
+  const frame3Scale = useTransform(scrollYProgress, [0.1, 0.6], [0.1, 6]);
+  const frame4Scale = useTransform(scrollYProgress, [0.15, 0.65], [0.1, 6]);
+  const frame5Scale = useTransform(scrollYProgress, [0.2, 0.7], [0.1, 6]);
+  const frame6Scale = useTransform(scrollYProgress, [0.25, 0.75], [0.1, 6]);
+  const frame7Scale = useTransform(scrollYProgress, [0.3, 0.8], [0.1, 6]);
+  const frame8Scale = useTransform(scrollYProgress, [0.35, 0.85], [0.1, 6]);
 
-  const frame1Opacity = useTransform(scrollYProgress, [0, 0.25, 0.4], [1, 1, 0]);
-  const frame2Opacity = useTransform(scrollYProgress, [0.03, 0.28, 0.43], [1, 1, 0]);
-  const frame3Opacity = useTransform(scrollYProgress, [0.06, 0.31, 0.46], [1, 1, 0]);
-  const frame4Opacity = useTransform(scrollYProgress, [0.09, 0.34, 0.49], [1, 1, 0]);
-  const frame5Opacity = useTransform(scrollYProgress, [0.12, 0.37, 0.52], [1, 1, 0]);
-  const frame6Opacity = useTransform(scrollYProgress, [0.15, 0.40, 0.55], [1, 1, 0]);
-  const frame7Opacity = useTransform(scrollYProgress, [0.18, 0.43, 0.58], [1, 1, 0]);
-  const frame8Opacity = useTransform(scrollYProgress, [0.21, 0.46, 0.61], [1, 1, 0]);
+  const frame1Opacity = useTransform(scrollYProgress, [0, 0.3, 0.5], [1, 1, 0]);
+  const frame2Opacity = useTransform(scrollYProgress, [0.05, 0.35, 0.55], [1, 1, 0]);
+  const frame3Opacity = useTransform(scrollYProgress, [0.1, 0.4, 0.6], [1, 1, 0]);
+  const frame4Opacity = useTransform(scrollYProgress, [0.15, 0.45, 0.65], [1, 1, 0]);
+  const frame5Opacity = useTransform(scrollYProgress, [0.2, 0.5, 0.7], [1, 1, 0]);
+  const frame6Opacity = useTransform(scrollYProgress, [0.25, 0.55, 0.75], [1, 1, 0]);
+  const frame7Opacity = useTransform(scrollYProgress, [0.3, 0.6, 0.8], [1, 1, 0]);
+  const frame8Opacity = useTransform(scrollYProgress, [0.35, 0.65, 0.85], [1, 1, 0]);
 
-  // Center text appears mid-scroll
-  const textOpacity = useTransform(scrollYProgress, [0.35, 0.5, 0.7, 0.85], [0, 1, 1, 0]);
-  const textScale = useTransform(scrollYProgress, [0.35, 0.5], [0.8, 1]);
+  // Center text appears mid-scroll and stays until near end
+  const textOpacity = useTransform(scrollYProgress, [0.4, 0.55, 0.85, 0.95], [0, 1, 1, 0]);
+  const textScale = useTransform(scrollYProgress, [0.4, 0.55], [0.8, 1]);
   
   // Line opacity - computed once
-  const lineOpacity = useTransform(scrollYProgress, [0, 0.3], [0.1, 0.4]);
+  const lineOpacity = useTransform(scrollYProgress, [0, 0.4], [0.1, 0.5]);
 
   const frames = useMemo(() => [
     { scale: frame1Scale, opacity: frame1Opacity, colorClass: "border-primary/40" },
@@ -55,16 +55,16 @@ const ZoomTunnelSection = () => {
   // Generate radiating lines
   const lines = useMemo(() => Array.from({ length: 24 }, (_, i) => i * 15), []);
 
-  // Angled frames with their own transforms
-  const angledFrame1Scale = useTransform(scrollYProgress, [0.05, 0.45], [0.1, 4]);
-  const angledFrame2Scale = useTransform(scrollYProgress, [0.08, 0.48], [0.1, 4]);
-  const angledFrame3Scale = useTransform(scrollYProgress, [0.11, 0.51], [0.1, 4]);
-  const angledFrame4Scale = useTransform(scrollYProgress, [0.14, 0.54], [0.1, 4]);
+  // Angled frames with their own transforms - also extended
+  const angledFrame1Scale = useTransform(scrollYProgress, [0.08, 0.58], [0.1, 5]);
+  const angledFrame2Scale = useTransform(scrollYProgress, [0.13, 0.63], [0.1, 5]);
+  const angledFrame3Scale = useTransform(scrollYProgress, [0.18, 0.68], [0.1, 5]);
+  const angledFrame4Scale = useTransform(scrollYProgress, [0.23, 0.73], [0.1, 5]);
 
-  const angledFrame1Opacity = useTransform(scrollYProgress, [0.05, 0.3, 0.45], [0.6, 0.6, 0]);
-  const angledFrame2Opacity = useTransform(scrollYProgress, [0.08, 0.33, 0.48], [0.6, 0.6, 0]);
-  const angledFrame3Opacity = useTransform(scrollYProgress, [0.11, 0.36, 0.51], [0.6, 0.6, 0]);
-  const angledFrame4Opacity = useTransform(scrollYProgress, [0.14, 0.39, 0.54], [0.6, 0.6, 0]);
+  const angledFrame1Opacity = useTransform(scrollYProgress, [0.08, 0.38, 0.58], [0.6, 0.6, 0]);
+  const angledFrame2Opacity = useTransform(scrollYProgress, [0.13, 0.43, 0.63], [0.6, 0.6, 0]);
+  const angledFrame3Opacity = useTransform(scrollYProgress, [0.18, 0.48, 0.68], [0.6, 0.6, 0]);
+  const angledFrame4Opacity = useTransform(scrollYProgress, [0.23, 0.53, 0.73], [0.6, 0.6, 0]);
 
   const angledFrames = useMemo(() => [
     { scale: angledFrame1Scale, opacity: angledFrame1Opacity, angle: 15 },
@@ -82,7 +82,7 @@ const ZoomTunnelSection = () => {
     <section
       ref={sectionRef}
       className="relative bg-background"
-      style={{ height: "300vh" }}
+      style={{ height: "250vh" }}
     >
       <div className="sticky top-0 h-screen flex items-center justify-center overflow-hidden">
         {/* Radiating lines from center */}
