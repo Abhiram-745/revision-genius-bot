@@ -113,8 +113,8 @@ export const ZoomTunnelSection = () => {
 
     e.preventDefault();
 
-    // Reduced sensitivity - requires much more scrolling
-    const sensitivity = 0.00012;
+    // Much lower sensitivity - requires significantly more scrolling
+    const sensitivity = 0.00006;
     const delta = e.deltaY * sensitivity;
     
     setZoomProgress((prev) => {
@@ -165,7 +165,7 @@ export const ZoomTunnelSection = () => {
     e.preventDefault();
 
     const currentY = e.touches[0].clientY;
-    const delta = (lastTouchY.current - currentY) * 0.00025;
+    const delta = (lastTouchY.current - currentY) * 0.00012;
     lastTouchY.current = currentY;
 
     setZoomProgress((prev) => {
