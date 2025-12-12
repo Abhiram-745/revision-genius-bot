@@ -2,6 +2,7 @@ import { useRef, useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { Brain, Calendar, Clock, BarChart3, MessageSquare, Sparkles, TrendingUp, Zap, Star, Rocket, Target, Heart } from "lucide-react";
+import { Cube3D, Sphere3D, Diamond3D, Hexagon3D, GlowingParticle } from "./3DObjects";
 
 const features = [
   {
@@ -311,9 +312,9 @@ const HorizontalScrollFeatures = () => {
 
     e.preventDefault();
     
-    // Debounce for step-based navigation
+    // Increased debounce - requires more scrolling per step
     const now = Date.now();
-    if (now - lastScrollTime.current < 600) return;
+    if (now - lastScrollTime.current < 1200) return;
     lastScrollTime.current = now;
     
     if (e.deltaY > 0) {
