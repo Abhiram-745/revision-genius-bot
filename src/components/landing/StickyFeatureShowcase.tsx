@@ -1,7 +1,8 @@
 import { useRef, useState } from "react";
-import { motion, useScroll, useTransform, useMotionValueEvent, AnimatePresence } from "framer-motion";
+import { motion, useTransform, useMotionValueEvent, AnimatePresence } from "framer-motion";
 import { Calendar, Brain, BarChart3, Clock, Sparkles, Target } from "lucide-react";
 import { Card } from "@/components/ui/card";
+import { useScrollLockSection } from "@/hooks/useScrollLockSection";
 
 const features = [
   {
