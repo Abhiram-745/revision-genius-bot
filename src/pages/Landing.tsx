@@ -32,6 +32,7 @@ import TimetableCreationSection from "@/components/landing/TimetableCreationSect
 import SuccessStoriesSection from "@/components/landing/SuccessStoriesSection";
 import HorizontalScrollFeatures from "@/components/landing/HorizontalScrollFeatures";
 import ZoomTunnelSection from "@/components/landing/ZoomTunnelSection";
+import ColorChangeFeatures from "@/components/landing/ColorChangeFeatures";
 
 const Landing = () => {
   const navigate = useNavigate();
@@ -441,6 +442,9 @@ const Landing = () => {
 
         {/* Horizontal Scroll Features Section */}
         <HorizontalScrollFeatures />
+
+        {/* Color Changing Features Section - Study Smarter Not Harder */}
+        <ColorChangeFeatures />
 
         {/* Interactive Demo Section */}
         <section id="try-demo" className="py-24 px-6 bg-gradient-to-b from-background to-muted/50">
