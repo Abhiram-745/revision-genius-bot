@@ -1,7 +1,7 @@
-import { useRef, useState } from "react";
-import { motion, useScroll, useTransform, useMotionValueEvent } from "framer-motion";
+import { useRef, useState, useEffect, useCallback } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
-import { Brain, Calendar, Target, BarChart3, MessageSquare, Sparkles, Clock, TrendingUp, Zap } from "lucide-react";
+import { Brain, Calendar, Clock, BarChart3, MessageSquare, Sparkles, TrendingUp, Zap, ChevronDown } from "lucide-react";
 
 const features = [
   {
@@ -13,11 +13,11 @@ const features = [
     ui: {
       type: "timetable",
       sessions: [
-        { time: "16:00", subject: "Biology", topic: "Photosynthesis", duration: "45 min", color: "bg-green-500/20" },
-        { time: "16:50", subject: "Break", duration: "10 min", color: "bg-muted", isBreak: true },
-        { time: "17:00", subject: "Chemistry", topic: "Organic Reactions", duration: "40 min", color: "bg-purple-500/20" },
-        { time: "17:45", subject: "Break", duration: "15 min", color: "bg-muted", isBreak: true },
-        { time: "18:00", subject: "Maths", topic: "Integration", duration: "45 min", color: "bg-blue-500/20" },
+        { time: "16:00", subject: "Biology", topic: "Photosynthesis", duration: "45 min", color: "bg-green-500/20 border-green-500/30" },
+        { time: "16:50", subject: "Break", duration: "10 min", color: "bg-muted/50 border-muted", isBreak: true },
+        { time: "17:00", subject: "Chemistry", topic: "Organic Reactions", duration: "40 min", color: "bg-purple-500/20 border-purple-500/30" },
+        { time: "17:45", subject: "Break", duration: "15 min", color: "bg-muted/50 border-muted", isBreak: true },
+        { time: "18:00", subject: "Maths", topic: "Integration", duration: "45 min", color: "bg-blue-500/20 border-blue-500/30" },
       ]
     }
   },
@@ -106,7 +106,7 @@ const FeatureUI = ({ feature, isActive }: { feature: typeof features[0]; isActiv
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: isActive ? 1 : 0.5, x: isActive ? 0 : 20 }}
             transition={{ delay: i * 0.1 }}
-            className={`flex items-center gap-3 p-3 rounded-lg ${session.color}`}
+            className={`flex items-center gap-3 p-3 rounded-lg border ${session.color}`}
           >
             <span className="text-xs font-mono text-muted-foreground w-12">{session.time}</span>
             <div className="flex-1">
@@ -223,7 +223,7 @@ const FeatureUI = ({ feature, isActive }: { feature: typeof features[0]; isActiv
                   animate={{ scale: isActive ? 1 : 0.8 }}
                   transition={{ delay: i * 0.1 + star * 0.05 }}
                   className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                    star <= rating.value ? "bg-primary text-white" : "bg-muted"
+                    star <= rating.value ? "bg-primary text-primary-foreground" : "bg-muted"
                   }`}
                 >
                   {star}
@@ -259,158 +259,283 @@ const FeatureUI = ({ feature, isActive }: { feature: typeof features[0]; isActiv
 };
 
 const HorizontalScrollFeatures = () => {
-  const containerRef = useRef<HTMLDivElement>(null);
+  const sectionRef = useRef<HTMLDivElement>(null);
   const [activeIndex, setActiveIndex] = useState(0);
-  
-  const { scrollYProgress } = useScroll({
-    target: containerRef,
-    offset: ["start start", "end end"]
-  });
+  const [isLocked, setIsLocked] = useState(false);
+  const lastScrollTime = useRef(0);
+  const touchStartY = useRef(0);
+  const scrollCooldown = 500;
 
-  // Map scroll progress to feature index
-  useMotionValueEvent(scrollYProgress, "change", (latest) => {
-    const newIndex = Math.min(
-      Math.floor(latest * features.length),
-      features.length - 1
-    );
-    if (newIndex !== activeIndex) {
-      setActiveIndex(newIndex);
+  const handleFeatureChange = useCallback((direction: "up" | "down") => {
+    const now = Date.now();
+    if (now - lastScrollTime.current < scrollCooldown) return;
+    lastScrollTime.current = now;
+
+    if (direction === "down") {
+      if (activeIndex < features.length - 1) {
+        setActiveIndex(prev => prev + 1);
+      } else {
+        // Last feature, scroll down - release lock
+        setIsLocked(false);
+        document.body.style.overflow = "";
+        // Scroll past the section
+        setTimeout(() => {
+          if (sectionRef.current) {
+            const rect = sectionRef.current.getBoundingClientRect();
+            window.scrollBy({ top: rect.height - window.innerHeight + 100, behavior: "smooth" });
+          }
+        }, 50);
+      }
+    } else {
+      if (activeIndex > 0) {
+        setActiveIndex(prev => prev - 1);
+      } else {
+        // First feature, scroll up - release lock
+        setIsLocked(false);
+        document.body.style.overflow = "";
+        // Scroll to top of section
+        setTimeout(() => {
+          if (sectionRef.current) {
+            const rect = sectionRef.current.getBoundingClientRect();
+            window.scrollBy({ top: rect.top - 100, behavior: "smooth" });
+          }
+        }, 50);
+      }
     }
-  });
+  }, [activeIndex]);
 
-  // Calculate x translation based on active index
-  const x = useTransform(
-    scrollYProgress, 
-    [0, 1], 
-    ["0%", `-${(features.length - 1) * 100}%`]
-  );
+  // Intersection observer to detect when section is in view
+  useEffect(() => {
+    const section = sectionRef.current;
+    if (!section) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting && entry.intersectionRatio >= 0.6) {
+            const rect = section.getBoundingClientRect();
+            // Only lock if section is centered in viewport
+            if (rect.top <= 50 && rect.top >= -50) {
+              setIsLocked(true);
+            }
+          }
+        });
+      },
+      { threshold: [0.6] }
+    );
+
+    observer.observe(section);
+    return () => observer.disconnect();
+  }, []);
+
+  // Handle scroll locking
+  useEffect(() => {
+    if (!isLocked) {
+      document.body.style.overflow = "";
+      return;
+    }
+
+    document.body.style.overflow = "hidden";
+
+    const handleWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const direction = e.deltaY > 0 ? "down" : "up";
+      handleFeatureChange(direction);
+    };
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "ArrowDown" || e.key === " ") {
+        e.preventDefault();
+        handleFeatureChange("down");
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        handleFeatureChange("up");
+      } else if (e.key === "Escape") {
+        setIsLocked(false);
+        document.body.style.overflow = "";
+      }
+    };
+
+    const handleTouchStart = (e: TouchEvent) => {
+      touchStartY.current = e.touches[0].clientY;
+    };
+
+    const handleTouchMove = (e: TouchEvent) => {
+      e.preventDefault();
+    };
+
+    const handleTouchEnd = (e: TouchEvent) => {
+      const touchEndY = e.changedTouches[0].clientY;
+      const diff = touchStartY.current - touchEndY;
+      
+      if (Math.abs(diff) > 50) {
+        const direction = diff > 0 ? "down" : "up";
+        handleFeatureChange(direction);
+      }
+    };
+
+    window.addEventListener("wheel", handleWheel, { passive: false });
+    window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("touchstart", handleTouchStart, { passive: true });
+    window.addEventListener("touchmove", handleTouchMove, { passive: false });
+    window.addEventListener("touchend", handleTouchEnd, { passive: true });
+
+    return () => {
+      document.body.style.overflow = "";
+      window.removeEventListener("wheel", handleWheel);
+      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("touchstart", handleTouchStart);
+      window.removeEventListener("touchmove", handleTouchMove);
+      window.removeEventListener("touchend", handleTouchEnd);
+    };
+  }, [isLocked, handleFeatureChange]);
+
+  // Re-lock when scrolling back to section
+  useEffect(() => {
+    const handleScroll = () => {
+      if (isLocked) return;
+      
+      const section = sectionRef.current;
+      if (!section) return;
+      
+      const rect = section.getBoundingClientRect();
+      // Lock when section is centered
+      if (rect.top <= 50 && rect.top >= -50 && rect.bottom > window.innerHeight) {
+        setIsLocked(true);
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [isLocked]);
+
+  const currentFeature = features[activeIndex];
 
   return (
-    <section 
-      ref={containerRef} 
-      className="relative bg-gradient-to-b from-background via-muted/20 to-background"
-      style={{ height: `${(features.length + 1) * 100}vh` }}
+    <section
+      ref={sectionRef}
+      className="min-h-screen bg-gradient-to-b from-background via-muted/20 to-background relative"
     >
-      <div className="sticky top-0 h-screen overflow-hidden flex flex-col">
+      <div className="h-screen flex flex-col items-center justify-center px-4">
         {/* Header */}
-        <div className="pt-16 pb-8 px-6 text-center">
-          <motion.h2 
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-4xl md:text-5xl font-display font-bold mb-4"
-          >
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="text-center mb-6"
+        >
+          <h2 className="text-3xl md:text-5xl font-display font-bold mb-4">
             Everything You Need to{" "}
             <span className="bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
               Succeed
             </span>
-          </motion.h2>
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+          </h2>
+          <p className="text-muted-foreground max-w-2xl mx-auto">
             A complete study ecosystem designed around how your brain actually works
           </p>
+        </motion.div>
+
+        {/* Progress Bar */}
+        <div className="w-full max-w-xs mb-6">
+          <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+            <motion.div
+              className="h-full bg-gradient-to-r from-primary to-secondary"
+              animate={{ width: `${((activeIndex + 1) / features.length) * 100}%` }}
+              transition={{ duration: 0.4, ease: "easeOut" }}
+            />
+          </div>
+          <div className="flex justify-between mt-2 text-xs text-muted-foreground">
+            <span>{activeIndex + 1} of {features.length}</span>
+            <span className={isLocked ? "text-primary" : ""}>
+              {isLocked ? "Scroll to navigate" : "Entering feature view..."}
+            </span>
+          </div>
         </div>
 
-        {/* Progress indicators */}
-        <div className="flex justify-center gap-2 pb-8">
-          {features.map((_, index) => (
+        {/* Feature Content */}
+        <div className="w-full max-w-6xl flex-1 flex items-center">
+          <AnimatePresence mode="wait">
             <motion.div
-              key={index}
-              className="h-1.5 rounded-full transition-all duration-500"
-              animate={{
-                width: index === activeIndex ? 32 : 8,
-                backgroundColor: index === activeIndex 
-                  ? "hsl(var(--primary))" 
-                  : "hsl(var(--muted-foreground) / 0.3)"
-              }}
+              key={activeIndex}
+              initial={{ opacity: 0, x: 100 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -100 }}
+              transition={{ duration: 0.4, ease: "easeOut" }}
+              className="w-full grid md:grid-cols-2 gap-8 md:gap-16 items-center"
+            >
+              {/* Text Content */}
+              <div className="space-y-6 order-2 md:order-1">
+                <motion.div 
+                  initial={{ scale: 0, rotate: -10 }}
+                  animate={{ scale: 1, rotate: 0 }}
+                  transition={{ delay: 0.1, type: "spring" }}
+                  className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${currentFeature.color} flex items-center justify-center shadow-lg`}
+                >
+                  <currentFeature.icon className="w-8 h-8 text-white" />
+                </motion.div>
+                <motion.h3
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.15 }}
+                  className="text-2xl md:text-4xl font-bold"
+                >
+                  {currentFeature.title}
+                </motion.h3>
+                <motion.p
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2 }}
+                  className="text-lg text-muted-foreground leading-relaxed"
+                >
+                  {currentFeature.description}
+                </motion.p>
+              </div>
+
+              {/* UI Preview */}
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9, rotateY: -5 }}
+                animate={{ opacity: 1, scale: 1, rotateY: 0 }}
+                transition={{ delay: 0.1, duration: 0.5 }}
+                className="order-1 md:order-2"
+                style={{ perspective: 1000 }}
+              >
+                <Card className="bg-card/90 backdrop-blur-sm border-2 shadow-2xl overflow-hidden">
+                  <div className={`h-2 bg-gradient-to-r ${currentFeature.color}`} />
+                  <CardContent className="p-6 min-h-[320px]">
+                    <FeatureUI feature={currentFeature} isActive={true} />
+                  </CardContent>
+                </Card>
+              </motion.div>
+            </motion.div>
+          </AnimatePresence>
+        </div>
+
+        {/* Feature Dots */}
+        <div className="flex gap-2 mt-4 mb-2">
+          {features.map((_, i) => (
+            <button
+              key={i}
+              onClick={() => setActiveIndex(i)}
+              className={`h-2 rounded-full transition-all duration-300 ${
+                i === activeIndex 
+                  ? "w-8 bg-primary" 
+                  : "w-2 bg-muted-foreground/30 hover:bg-muted-foreground/50"
+              }`}
             />
           ))}
         </div>
 
-        {/* Horizontal scroll container */}
-        <div className="flex-1 flex items-center overflow-hidden">
-          <motion.div 
-            className="flex h-full"
-            style={{ x }}
-          >
-            {features.map((feature, index) => {
-              const isActive = index === activeIndex;
-              
-              return (
-                <div
-                  key={feature.id}
-                  className="min-w-full h-full px-6 md:px-12 flex items-center"
-                >
-                  <div className="grid md:grid-cols-2 gap-8 md:gap-16 items-center max-w-6xl mx-auto w-full">
-                    {/* Text content */}
-                    <motion.div
-                      animate={{ 
-                        opacity: isActive ? 1 : 0.3,
-                        x: isActive ? 0 : -30,
-                        scale: isActive ? 1 : 0.95
-                      }}
-                      transition={{ duration: 0.5, ease: "easeOut" }}
-                      className="space-y-6"
-                    >
-                      <motion.div 
-                        className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${feature.color} flex items-center justify-center shadow-lg`}
-                        animate={{ rotate: isActive ? 0 : -10 }}
-                        transition={{ duration: 0.5 }}
-                      >
-                        <feature.icon className="w-8 h-8 text-white" />
-                      </motion.div>
-                      <h3 className="text-3xl md:text-4xl font-bold">{feature.title}</h3>
-                      <p className="text-lg text-muted-foreground leading-relaxed">
-                        {feature.description}
-                      </p>
-                      <div className="text-sm text-muted-foreground">
-                        {index + 1} of {features.length}
-                      </div>
-                    </motion.div>
-
-                    {/* UI Preview */}
-                    <motion.div
-                      animate={{ 
-                        opacity: isActive ? 1 : 0.3,
-                        x: isActive ? 0 : 30,
-                        scale: isActive ? 1 : 0.9,
-                        rotateY: isActive ? 0 : -5
-                      }}
-                      transition={{ duration: 0.5, ease: "easeOut" }}
-                      style={{ perspective: 1000 }}
-                    >
-                      <Card className="bg-card/90 backdrop-blur-sm border-2 shadow-2xl overflow-hidden">
-                        <div className={`h-2 bg-gradient-to-r ${feature.color}`} />
-                        <CardContent className="p-6 min-h-[320px]">
-                          <FeatureUI feature={feature} isActive={isActive} />
-                        </CardContent>
-                      </Card>
-                    </motion.div>
-                  </div>
-                </div>
-              );
-            })}
-          </motion.div>
-        </div>
-
-        {/* Scroll hint */}
+        {/* Scroll Hint */}
         <motion.div
-          animate={{ opacity: activeIndex === features.length - 1 ? 0 : 1 }}
-          className="pb-8 text-center"
+          animate={{ y: [0, 8, 0], opacity: 1 }}
+          transition={{ duration: 1.5, repeat: Infinity }}
+          className="flex flex-col items-center gap-2 text-muted-foreground pb-4"
         >
-          <motion.div
-            animate={{ y: [0, 8, 0] }}
-            transition={{ duration: 2, repeat: Infinity }}
-            className="text-muted-foreground text-sm flex flex-col items-center gap-2"
-          >
-            <span>Scroll to explore features</span>
-            <div className="w-6 h-10 rounded-full border-2 border-muted-foreground/30 flex items-start justify-center p-2">
-              <motion.div
-                animate={{ y: [0, 12, 0] }}
-                transition={{ duration: 1.5, repeat: Infinity }}
-                className="w-1.5 h-1.5 rounded-full bg-primary"
-              />
-            </div>
-          </motion.div>
+          <span className="text-sm">
+            {activeIndex === features.length - 1 ? "Scroll down to continue" : "Scroll to explore"}
+          </span>
+          <ChevronDown className="w-5 h-5" />
         </motion.div>
       </div>
     </section>
