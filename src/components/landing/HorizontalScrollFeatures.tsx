@@ -1,5 +1,5 @@
-import { useRef } from "react";
-import { motion, useScroll, useTransform } from "framer-motion";
+import { useRef, useState, useEffect, useCallback } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { Brain, Calendar, Clock, BarChart3, MessageSquare, Sparkles, TrendingUp, Zap } from "lucide-react";
 
@@ -96,7 +96,7 @@ const FeatureUI = ({ feature }: { feature: typeof features[0] }) => {
           <motion.div
             key={i}
             initial={{ opacity: 0, x: 20 }}
-            whileInView={{ opacity: 1, x: 0 }}
+            animate={{ opacity: 1, x: 0 }}
             transition={{ delay: i * 0.1 }}
             className={`flex items-center gap-3 p-3 rounded-lg border ${session.color}`}
           >
@@ -152,7 +152,7 @@ const FeatureUI = ({ feature }: { feature: typeof features[0] }) => {
               strokeWidth="8"
               strokeDasharray={352}
               initial={{ strokeDashoffset: 352 }}
-              whileInView={{ strokeDashoffset: 352 * (1 - ui.progress / 100) }}
+              animate={{ strokeDashoffset: 352 * (1 - ui.progress / 100) }}
               transition={{ duration: 1.5 }}
             />
           </svg>
@@ -209,7 +209,7 @@ const FeatureUI = ({ feature }: { feature: typeof features[0] }) => {
                 <motion.div
                   key={star}
                   initial={{ scale: 0 }}
-                  whileInView={{ scale: 1 }}
+                  animate={{ scale: 1 }}
                   transition={{ delay: i * 0.1 + star * 0.05 }}
                   className={`w-8 h-8 rounded-full flex items-center justify-center ${
                     star <= rating.value ? "bg-primary text-primary-foreground" : "bg-muted"
@@ -232,7 +232,7 @@ const FeatureUI = ({ feature }: { feature: typeof features[0] }) => {
           <motion.div
             key={i}
             initial={{ opacity: 0, x: -20 }}
-            whileInView={{ opacity: 1, x: 0 }}
+            animate={{ opacity: 1, x: 0 }}
             transition={{ delay: i * 0.2 }}
             className="flex items-start gap-3 p-3 rounded-lg bg-primary/5"
           >
@@ -247,122 +247,193 @@ const FeatureUI = ({ feature }: { feature: typeof features[0] }) => {
   return null;
 };
 
-const FeatureCard = ({ 
-  feature, 
-  index, 
-  progress 
-}: { 
-  feature: typeof features[0]; 
-  index: number;
-  progress: any;
-}) => {
-  const Icon = feature.icon;
-  
-  // Each card takes 1/6 of the scroll progress
-  const cardStart = index / features.length;
-  const cardEnd = (index + 1) / features.length;
-  
-  // Scale: 0.8 -> 1 -> 0.95 (grows to full then shrinks slightly as it leaves)
-  const scale = useTransform(
-    progress,
-    [cardStart - 0.1, cardStart, cardEnd, cardEnd + 0.1],
-    [0.85, 1, 1, 0.95]
-  );
-  
-  // Y position: starts below, comes to center, moves up
-  const y = useTransform(
-    progress,
-    [cardStart - 0.15, cardStart, cardEnd, cardEnd + 0.1],
-    [100, 0, 0, -50]
-  );
-  
-  // Opacity: fade in and out
-  const opacity = useTransform(
-    progress,
-    [cardStart - 0.1, cardStart, cardEnd - 0.05, cardEnd + 0.05],
-    [0, 1, 1, 0]
-  );
-  
-  // Z-index based on position (active cards on top)
-  const zIndex = useTransform(
-    progress,
-    [cardStart - 0.1, cardStart, cardEnd],
-    [0, 10, 5]
-  );
-
-  return (
-    <motion.div
-      style={{ scale, y, opacity, zIndex }}
-      className="absolute inset-0 flex items-center justify-center px-4"
-    >
-      <Card className="w-full max-w-4xl bg-card/95 backdrop-blur-sm border-border/50 shadow-2xl overflow-hidden">
-        <CardContent className="p-0">
-          <div className="grid md:grid-cols-2 gap-0">
-            {/* Left side - Text content */}
-            <div className="p-6 md:p-8 flex flex-col justify-center space-y-4">
-              <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center shadow-lg">
-                <Icon className="w-7 h-7 text-primary-foreground" />
-              </div>
-              
-              <div>
-                <h3 className="text-xl md:text-2xl font-display font-bold mb-2">
-                  {feature.title}
-                </h3>
-                <p className="text-muted-foreground text-sm md:text-base leading-relaxed">
-                  {feature.description}
-                </p>
-              </div>
-              
-              {/* Progress indicator */}
-              <div className="flex items-center gap-2 pt-4">
-                {features.map((_, i) => (
-                  <div
-                    key={i}
-                    className={`h-1.5 rounded-full transition-all duration-300 ${
-                      i === index 
-                        ? "w-8 bg-primary" 
-                        : "w-2 bg-muted"
-                    }`}
-                  />
-                ))}
-              </div>
-            </div>
-            
-            {/* Right side - UI preview */}
-            <div className="p-6 md:p-8 bg-muted/30 border-l border-border/50 flex items-center justify-center">
-              <div className="w-full max-w-xs">
-                <FeatureUI feature={feature} />
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    </motion.div>
-  );
-};
-
 const HorizontalScrollFeatures = () => {
-  const containerRef = useRef<HTMLDivElement>(null);
-  
-  const { scrollYProgress } = useScroll({
-    target: containerRef,
-    offset: ["start start", "end end"]
-  });
+  const sectionRef = useRef<HTMLDivElement>(null);
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [isLocked, setIsLocked] = useState(false);
+  const [savedScrollY, setSavedScrollY] = useState(0);
+  const lastScrollTime = useRef(0);
+  const touchStartY = useRef(0);
+
+  const lockScroll = useCallback(() => {
+    if (isLocked) return;
+    
+    const scrollY = window.scrollY;
+    setSavedScrollY(scrollY);
+    
+    document.body.style.overflow = 'hidden';
+    document.body.style.position = 'fixed';
+    document.body.style.top = `-${scrollY}px`;
+    document.body.style.width = '100%';
+    document.body.style.touchAction = 'none';
+    
+    setIsLocked(true);
+  }, [isLocked]);
+
+  const unlockScroll = useCallback(() => {
+    if (!isLocked) return;
+    
+    document.body.style.overflow = '';
+    document.body.style.position = '';
+    document.body.style.top = '';
+    document.body.style.width = '';
+    document.body.style.touchAction = '';
+    
+    window.scrollTo(0, savedScrollY);
+    setIsLocked(false);
+  }, [isLocked, savedScrollY]);
+
+  // Handle wheel events when locked
+  const handleWheel = useCallback((e: WheelEvent) => {
+    if (!isLocked) return;
+    
+    e.preventDefault();
+    e.stopPropagation();
+    
+    // Debounce to prevent rapid scrolling
+    const now = Date.now();
+    if (now - lastScrollTime.current < 400) return;
+    lastScrollTime.current = now;
+    
+    if (e.deltaY > 0) {
+      // Scrolling down
+      if (activeIndex < features.length - 1) {
+        setActiveIndex(prev => prev + 1);
+      } else {
+        // Last card - unlock and continue scrolling
+        unlockScroll();
+        setTimeout(() => {
+          window.scrollTo(0, savedScrollY + 100);
+        }, 50);
+      }
+    } else {
+      // Scrolling up
+      if (activeIndex > 0) {
+        setActiveIndex(prev => prev - 1);
+      } else {
+        // First card - unlock and scroll up
+        unlockScroll();
+        setTimeout(() => {
+          window.scrollTo(0, savedScrollY - 100);
+        }, 50);
+      }
+    }
+  }, [isLocked, activeIndex, unlockScroll, savedScrollY]);
+
+  // Handle touch events
+  const handleTouchStart = useCallback((e: TouchEvent) => {
+    touchStartY.current = e.touches[0].clientY;
+  }, []);
+
+  const handleTouchEnd = useCallback((e: TouchEvent) => {
+    if (!isLocked) return;
+    
+    const touchEndY = e.changedTouches[0].clientY;
+    const deltaY = touchStartY.current - touchEndY;
+    
+    // Debounce
+    const now = Date.now();
+    if (now - lastScrollTime.current < 400) return;
+    lastScrollTime.current = now;
+    
+    if (Math.abs(deltaY) < 50) return; // Ignore small swipes
+    
+    if (deltaY > 0) {
+      // Swipe up (next)
+      if (activeIndex < features.length - 1) {
+        setActiveIndex(prev => prev + 1);
+      } else {
+        unlockScroll();
+      }
+    } else {
+      // Swipe down (prev)
+      if (activeIndex > 0) {
+        setActiveIndex(prev => prev - 1);
+      } else {
+        unlockScroll();
+      }
+    }
+  }, [isLocked, activeIndex, unlockScroll]);
+
+  // Intersection observer to detect when section enters viewport
+  useEffect(() => {
+    const section = sectionRef.current;
+    if (!section) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting && entry.intersectionRatio >= 0.5) {
+            // Section is at least 50% visible - lock and snap
+            section.scrollIntoView({ behavior: 'instant', block: 'start' });
+            setTimeout(() => {
+              lockScroll();
+            }, 100);
+          }
+        });
+      },
+      { threshold: 0.5 }
+    );
+
+    observer.observe(section);
+    return () => observer.disconnect();
+  }, [lockScroll]);
+
+  // Add/remove wheel and touch listeners
+  useEffect(() => {
+    if (isLocked) {
+      window.addEventListener('wheel', handleWheel, { passive: false });
+      window.addEventListener('touchstart', handleTouchStart, { passive: true });
+      window.addEventListener('touchend', handleTouchEnd, { passive: true });
+    }
+    
+    return () => {
+      window.removeEventListener('wheel', handleWheel);
+      window.removeEventListener('touchstart', handleTouchStart);
+      window.removeEventListener('touchend', handleTouchEnd);
+    };
+  }, [isLocked, handleWheel, handleTouchStart, handleTouchEnd]);
+
+  // Keyboard support
+  useEffect(() => {
+    if (!isLocked) return;
+    
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowDown' || e.key === 'ArrowRight') {
+        if (activeIndex < features.length - 1) {
+          setActiveIndex(prev => prev + 1);
+        } else {
+          unlockScroll();
+        }
+      } else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
+        if (activeIndex > 0) {
+          setActiveIndex(prev => prev - 1);
+        } else {
+          unlockScroll();
+        }
+      } else if (e.key === 'Escape') {
+        unlockScroll();
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isLocked, activeIndex, unlockScroll]);
+
+  const currentFeature = features[activeIndex];
+  const Icon = currentFeature.icon;
 
   return (
     <section
-      ref={containerRef}
-      className="relative bg-gradient-to-b from-background via-muted/10 to-background"
-      style={{ height: `${features.length * 100}vh` }}
+      ref={sectionRef}
+      className="h-screen relative bg-gradient-to-b from-background via-muted/10 to-background overflow-hidden"
     >
-      {/* Sticky container that holds cards */}
-      <div className="sticky top-0 h-screen flex flex-col items-center justify-center overflow-hidden">
+      <div className="h-full flex flex-col items-center justify-center px-4 py-8">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="text-center mb-8 px-4 relative z-20"
+          animate={{ opacity: 1, y: 0 }}
+          className="text-center mb-8 relative z-20"
         >
           <h2 className="text-3xl md:text-5xl font-display font-bold mb-4">
             Everything You Need to{" "}
@@ -375,34 +446,109 @@ const HorizontalScrollFeatures = () => {
           </p>
         </motion.div>
 
-        {/* Cards container */}
-        <div className="relative w-full flex-1 max-h-[500px] md:max-h-[400px]">
-          {features.map((feature, index) => (
-            <FeatureCard
-              key={feature.id}
-              feature={feature}
-              index={index}
-              progress={scrollYProgress}
+        {/* Card Container */}
+        <div className="relative flex-1 w-full max-w-4xl flex items-center justify-center">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={activeIndex}
+              initial={{ opacity: 0, y: 60, scale: 0.9 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -60, scale: 0.9 }}
+              transition={{ 
+                type: "spring", 
+                stiffness: 300, 
+                damping: 30,
+                duration: 0.4 
+              }}
+              className="w-full"
+            >
+              <Card className="bg-card/95 backdrop-blur-sm border-border/50 shadow-2xl overflow-hidden">
+                <CardContent className="p-0">
+                  <div className="grid md:grid-cols-2 gap-0">
+                    {/* Left side - Text content */}
+                    <div className="p-6 md:p-8 flex flex-col justify-center space-y-4">
+                      <motion.div 
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        transition={{ delay: 0.1, type: "spring" }}
+                        className="w-14 h-14 rounded-xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center shadow-lg"
+                      >
+                        <Icon className="w-7 h-7 text-primary-foreground" />
+                      </motion.div>
+                      
+                      <div>
+                        <motion.h3 
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: 0.15 }}
+                          className="text-xl md:text-2xl font-display font-bold mb-2"
+                        >
+                          {currentFeature.title}
+                        </motion.h3>
+                        <motion.p 
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: 0.2 }}
+                          className="text-muted-foreground text-sm md:text-base leading-relaxed"
+                        >
+                          {currentFeature.description}
+                        </motion.p>
+                      </div>
+                    </div>
+                    
+                    {/* Right side - UI preview */}
+                    <div className="p-6 md:p-8 bg-muted/30 border-l border-border/50 flex items-center justify-center min-h-[280px]">
+                      <div className="w-full max-w-xs">
+                        <FeatureUI feature={currentFeature} />
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+          </AnimatePresence>
+        </div>
+
+        {/* Progress Indicators */}
+        <div className="flex items-center gap-3 mt-6">
+          {features.map((_, i) => (
+            <button
+              key={i}
+              onClick={() => setActiveIndex(i)}
+              className={`transition-all duration-300 rounded-full ${
+                i === activeIndex 
+                  ? "w-8 h-2 bg-primary" 
+                  : "w-2 h-2 bg-muted hover:bg-muted-foreground/50"
+              }`}
+              aria-label={`Go to feature ${i + 1}`}
             />
           ))}
         </div>
 
         {/* Scroll hint */}
-        <motion.div 
-          className="absolute bottom-8 left-1/2 -translate-x-1/2 text-muted-foreground text-sm flex flex-col items-center gap-2"
-          animate={{ opacity: [0.5, 1, 0.5] }}
-          transition={{ duration: 2, repeat: Infinity }}
-        >
-          <span>Scroll to explore features</span>
-          <motion.div
-            animate={{ y: [0, 5, 0] }}
-            transition={{ duration: 1.5, repeat: Infinity }}
+        {isLocked && (
+          <motion.div 
+            className="absolute bottom-6 left-1/2 -translate-x-1/2 text-muted-foreground text-sm flex flex-col items-center gap-2"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.5 }}
           >
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" className="text-muted-foreground">
-              <path d="M10 3v14m0 0l-5-5m5 5l5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
+            <span className="text-xs">
+              {activeIndex === features.length - 1 
+                ? "Scroll to continue" 
+                : `${activeIndex + 1} / ${features.length} • Scroll to explore`
+              }
+            </span>
+            <motion.div
+              animate={{ y: [0, 5, 0] }}
+              transition={{ duration: 1.5, repeat: Infinity }}
+            >
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" className="text-muted-foreground">
+                <path d="M10 3v14m0 0l-5-5m5 5l5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </motion.div>
           </motion.div>
-        </motion.div>
+        )}
       </div>
     </section>
   );
