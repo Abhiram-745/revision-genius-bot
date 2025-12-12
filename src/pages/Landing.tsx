@@ -6,7 +6,8 @@ import { useRef, useEffect, useState } from "react";
 import { 
   Calendar, Brain, Target, Users, Clock, Sparkles, ArrowRight, 
   CheckCircle2, Star, Heart, Zap, Laptop, TrendingUp, Award,
-  BookOpen, RefreshCw, Shield, Rocket, BarChart3, MessageSquare, ChevronUp
+  BookOpen, RefreshCw, Shield, Rocket, BarChart3, MessageSquare, ChevronUp,
+  MousePointer
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import PageTransition from "@/components/PageTransition";
@@ -21,6 +22,10 @@ import AnimatedCounter from "@/components/landing/AnimatedCounter";
 import RippleButton from "@/components/landing/RippleButton";
 import MouseFollowCard from "@/components/landing/MouseFollowCard";
 import AnimatedConnectionLine from "@/components/landing/AnimatedConnectionLine";
+import WhyStudentsLoveUs from "@/components/landing/WhyStudentsLoveUs";
+import BeforeAfterSection from "@/components/landing/BeforeAfterSection";
+import FAQSection from "@/components/landing/FAQSection";
+import TrustedBySection from "@/components/landing/TrustedBySection";
 
 const Landing = () => {
   const navigate = useNavigate();
@@ -229,48 +234,86 @@ const Landing = () => {
               transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] }}
               className="space-y-8 text-center"
             >
-              {/* Badge */}
+              {/* Badge with bounce */}
               <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.6, delay: 0.2 }}
+                initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.2, type: "spring", stiffness: 150 }}
                 className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-secondary/20 border border-secondary/30"
               >
-                <Zap className="w-4 h-4 text-secondary" />
+                <motion.div
+                  animate={{ rotate: [0, 15, -15, 0] }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                >
+                  <Zap className="w-4 h-4 text-secondary" />
+                </motion.div>
                 <span className="text-sm font-medium text-secondary-foreground">
                   Built by students, for students
                 </span>
               </motion.div>
 
-              {/* Main headline with typewriter */}
-              <h1 className="text-5xl sm:text-6xl lg:text-7xl font-display font-bold tracking-tight leading-[1.1]">
-                Stop stressing about
+              {/* Main headline with character animation */}
+              <motion.h1 
+                className="text-5xl sm:text-6xl lg:text-7xl font-display font-bold tracking-tight leading-[1.1]"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.8 }}
+              >
+                <motion.span
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 }}
+                >
+                  Stop stressing about
+                </motion.span>
                 <br />
-                <span className="bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
+                <motion.span 
+                  className="bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent inline-block"
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.5, type: "spring", stiffness: 100 }}
+                >
                   <TypewriterText phrases={typewriterPhrases} />
-                </span>
-              </h1>
+                </motion.span>
+              </motion.h1>
 
-              {/* Subheadline */}
-              <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+              {/* Subheadline with fade */}
+              <motion.p 
+                className="text-xl text-muted-foreground max-w-2xl mx-auto"
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.7 }}
+              >
                 AI-powered study timetables that work around your life.
-              </p>
+              </motion.p>
 
-              {/* CTA Buttons with Ripple Effect */}
+              {/* CTA Buttons with enhanced animations */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, delay: 0.6 }}
+                transition={{ duration: 0.8, delay: 0.9 }}
                 className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4"
               >
-                <RippleButton
-                  size="lg"
-                  onClick={() => navigate("/auth")}
-                  className="text-lg px-10 py-7 bg-gradient-to-r from-primary to-secondary hover:opacity-90 hover:scale-105 transition-all duration-300 shadow-lg group rounded-full animate-pulse"
+                <motion.div
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="relative"
                 >
-                  Get Started Free
-                  <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                </RippleButton>
+                  {/* Glow effect behind button */}
+                  <motion.div
+                    className="absolute inset-0 bg-gradient-to-r from-primary to-secondary rounded-full blur-xl opacity-50"
+                    animate={{ scale: [1, 1.1, 1], opacity: [0.5, 0.7, 0.5] }}
+                    transition={{ duration: 2, repeat: Infinity }}
+                  />
+                  <RippleButton
+                    size="lg"
+                    onClick={() => navigate("/auth")}
+                    className="relative text-lg px-10 py-7 bg-gradient-to-r from-primary to-secondary hover:opacity-90 transition-all duration-300 shadow-lg group rounded-full"
+                  >
+                    Get Started Free
+                    <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                  </RippleButton>
+                </motion.div>
                 <RippleButton
                   size="lg"
                   variant="outline"
@@ -286,34 +329,74 @@ const Landing = () => {
                 </RippleButton>
               </motion.div>
 
-              {/* Social proof */}
+              {/* Social proof with stagger */}
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                transition={{ delay: 1 }}
+                transition={{ delay: 1.2 }}
                 className="flex items-center justify-center gap-8 pt-8 text-sm text-muted-foreground"
               >
-                <span>✓ No credit card</span>
-                <span>✓ 2 min setup</span>
-                <span>✓ Cancel anytime</span>
+                {["✓ No credit card", "✓ 2 min setup", "✓ Cancel anytime"].map((item, i) => (
+                  <motion.span
+                    key={i}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 1.2 + i * 0.15 }}
+                  >
+                    {item}
+                  </motion.span>
+                ))}
+              </motion.div>
+
+              {/* Scroll indicator */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 1.5 }}
+                className="pt-8"
+              >
+                <motion.div
+                  animate={{ y: [0, 8, 0] }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                  className="flex flex-col items-center gap-2 text-muted-foreground"
+                >
+                  <MousePointer className="w-5 h-5" />
+                  <span className="text-xs">Scroll to explore</span>
+                </motion.div>
               </motion.div>
             </motion.div>
           </div>
         </motion.section>
 
-        {/* Floating Features Strip with Mouse Parallax */}
+        {/* Trusted By Section */}
+        <TrustedBySection />
+
+        {/* Floating Features Strip with Enhanced Mouse Parallax */}
         <section 
-          className="py-16 px-6 border-y border-border/50 bg-muted/30 relative overflow-hidden"
+          className="py-20 px-6 border-y border-border/50 bg-gradient-to-r from-muted/30 via-muted/50 to-muted/30 relative overflow-hidden"
           onMouseMove={handleFeaturesMouseMove}
           onMouseLeave={() => setMousePosition({ x: 0, y: 0 })}
         >
-          <div className="max-w-6xl mx-auto">
+          {/* Animated background gradient */}
+          <motion.div
+            className="absolute inset-0 opacity-30"
+            animate={{
+              background: [
+                "radial-gradient(circle at 20% 50%, hsl(var(--primary) / 0.1) 0%, transparent 50%)",
+                "radial-gradient(circle at 80% 50%, hsl(var(--secondary) / 0.1) 0%, transparent 50%)",
+                "radial-gradient(circle at 20% 50%, hsl(var(--primary) / 0.1) 0%, transparent 50%)",
+              ]
+            }}
+            transition={{ duration: 8, repeat: Infinity }}
+          />
+
+          <div className="max-w-6xl mx-auto relative z-10">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
               {[
-                { icon: Calendar, label: "Smart Scheduling", delay: 0 },
-                { icon: Brain, label: "AI Insights", delay: 0.1 },
-                { icon: Target, label: "Goal Tracking", delay: 0.2 },
-                { icon: Users, label: "Study Groups", delay: 0.3 },
+                { icon: Calendar, label: "Smart Scheduling", color: "primary", delay: 0 },
+                { icon: Brain, label: "AI Insights", color: "secondary", delay: 0.1 },
+                { icon: Target, label: "Goal Tracking", color: "accent", delay: 0.2 },
+                { icon: Users, label: "Study Groups", color: "primary", delay: 0.3 },
               ].map((item, i) => (
                 <motion.div
                   key={i}
@@ -321,20 +404,40 @@ const Landing = () => {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ delay: item.delay, type: "spring", stiffness: 100 }}
-                  className="flex flex-col items-center gap-3 text-center"
+                  className="flex flex-col items-center gap-4 text-center group"
                 >
                   <motion.div
                     animate={{
-                      x: mousePosition.x * (1 + i * 0.2),
-                      y: mousePosition.y * (1 + i * 0.2),
+                      x: mousePosition.x * (1 + i * 0.3),
+                      y: mousePosition.y * (1 + i * 0.3),
                     }}
                     transition={{ type: "spring", stiffness: 150, damping: 15 }}
+                    whileHover={{ scale: 1.15, rotate: 5 }}
+                    className="relative"
                   >
-                    <FloatingIcon delay={item.delay * 2} className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center hover:bg-primary/20 transition-colors">
-                      <item.icon className="w-7 h-7 text-primary" />
+                    {/* Glow effect */}
+                    <motion.div
+                      className="absolute inset-0 rounded-2xl blur-xl opacity-0 group-hover:opacity-60 transition-opacity duration-500"
+                      style={{ backgroundColor: `hsl(var(--${item.color}))` }}
+                    />
+                    <FloatingIcon 
+                      delay={item.delay * 2} 
+                      className={`w-16 h-16 rounded-2xl flex items-center justify-center transition-all duration-300 relative z-10 border-2 bg-${item.color}/15 border-${item.color}/30`}
+                    >
+                      <motion.div
+                        animate={{ rotate: [0, 5, -5, 0] }}
+                        transition={{ duration: 4, repeat: Infinity, delay: i * 0.5 }}
+                      >
+                        <item.icon className={`w-8 h-8 text-${item.color}`} />
+                      </motion.div>
                     </FloatingIcon>
                   </motion.div>
-                  <span className="font-medium">{item.label}</span>
+                  <motion.span 
+                    className="font-display font-semibold text-lg"
+                    whileHover={{ scale: 1.05 }}
+                  >
+                    {item.label}
+                  </motion.span>
                 </motion.div>
               ))}
             </div>
