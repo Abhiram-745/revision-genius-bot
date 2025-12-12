@@ -1,197 +1,70 @@
 import { motion } from "framer-motion";
-import { ArrowRight, Sparkles, Brain, Target, BookOpen, Zap, ExternalLink, CheckCircle2 } from "lucide-react";
+import { ArrowRight, Sparkles, Brain, Target, BookOpen, Zap, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Cube3D, Sphere3D, Diamond3D, GlowingParticle } from "./3DObjects";
+import { GlowingParticle } from "./3DObjects";
+import mascotImage from "@/assets/ai-tutor-mascot.png";
 
 interface PersonalTutorSectionProps {
   onTryClick: () => void;
 }
 
-// Animated 3D Mascot Character - Friendly AI Tutor
+// Animated 3D Mascot using AI-generated image
 const TutorMascot = () => {
   return (
     <motion.div 
-      className="relative w-80 h-96"
-      animate={{ y: [0, -15, 0] }}
+      className="relative w-80 h-96 flex items-center justify-center"
+      animate={{ y: [0, -20, 0] }}
       transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
     >
       {/* Glow effect behind mascot */}
       <motion.div
         className="absolute inset-0 rounded-full blur-3xl"
         style={{
-          background: "radial-gradient(circle, hsl(var(--secondary) / 0.3) 0%, transparent 70%)"
+          background: "radial-gradient(circle, hsl(160 60% 45% / 0.4) 0%, transparent 70%)"
         }}
-        animate={{ scale: [1, 1.1, 1], opacity: [0.5, 0.8, 0.5] }}
+        animate={{ scale: [1, 1.2, 1], opacity: [0.4, 0.7, 0.4] }}
         transition={{ duration: 3, repeat: Infinity }}
       />
       
-      {/* Main body - Friendly blob shape */}
-      <motion.div 
-        className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
-        style={{ width: 200, height: 240 }}
-      >
-        {/* Body */}
-        <motion.svg
-          viewBox="0 0 200 240"
-          className="w-full h-full"
-          animate={{ scale: [1, 1.02, 1] }}
-          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-        >
-          {/* Body gradient */}
-          <defs>
-            <linearGradient id="bodyGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="hsl(var(--secondary))" />
-              <stop offset="50%" stopColor="hsl(160, 60%, 45%)" />
-              <stop offset="100%" stopColor="hsl(var(--accent))" />
-            </linearGradient>
-            <linearGradient id="shineGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="white" stopOpacity="0.4" />
-              <stop offset="100%" stopColor="white" stopOpacity="0" />
-            </linearGradient>
-            {/* Circuit pattern */}
-            <pattern id="circuitPattern" x="0" y="0" width="30" height="30" patternUnits="userSpaceOnUse">
-              <circle cx="5" cy="5" r="2" fill="hsl(var(--secondary) / 0.3)" />
-              <line x1="5" y1="5" x2="25" y2="5" stroke="hsl(var(--secondary) / 0.2)" strokeWidth="1" />
-              <line x1="5" y1="5" x2="5" y2="25" stroke="hsl(var(--secondary) / 0.2)" strokeWidth="1" />
-            </pattern>
-          </defs>
-          
-          {/* Main body blob */}
-          <motion.path
-            d="M100,20 C160,20 180,60 180,120 C180,180 150,220 100,220 C50,220 20,180 20,120 C20,60 40,20 100,20"
-            fill="url(#bodyGradient)"
-            stroke="hsl(var(--secondary))"
-            strokeWidth="2"
-            animate={{
-              d: [
-                "M100,20 C160,20 180,60 180,120 C180,180 150,220 100,220 C50,220 20,180 20,120 C20,60 40,20 100,20",
-                "M100,18 C165,22 182,58 178,122 C178,182 148,218 100,222 C52,222 22,182 22,118 C22,58 38,18 100,18",
-                "M100,20 C160,20 180,60 180,120 C180,180 150,220 100,220 C50,220 20,180 20,120 C20,60 40,20 100,20"
-              ]
-            }}
-            transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-          />
-          
-          {/* Circuit pattern overlay */}
-          <path
-            d="M100,25 C155,25 175,62 175,120 C175,178 147,215 100,215 C53,215 25,178 25,120 C25,62 45,25 100,25"
-            fill="url(#circuitPattern)"
-            opacity="0.5"
-          />
-          
-          {/* Shine effect */}
-          <ellipse cx="70" cy="80" rx="40" ry="30" fill="url(#shineGradient)" />
-        </motion.svg>
-        
-        {/* Eyes */}
-        <div className="absolute top-[35%] left-1/2 -translate-x-1/2 flex gap-8">
-          {/* Left eye */}
-          <motion.div 
-            className="relative w-10 h-10"
-            animate={{ scaleY: [1, 1, 1, 0.1, 1] }}
-            transition={{ duration: 4, repeat: Infinity, times: [0, 0.85, 0.9, 0.92, 1] }}
-          >
-            <div className="absolute inset-0 bg-white rounded-full shadow-lg" />
-            <motion.div 
-              className="absolute w-5 h-5 bg-gray-900 rounded-full top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
-              animate={{ x: [0, 2, 0, -2, 0] }}
-              transition={{ duration: 3, repeat: Infinity }}
-            >
-              <div className="absolute w-2 h-2 bg-white rounded-full top-1 left-1" />
-            </motion.div>
-          </motion.div>
-          
-          {/* Right eye */}
-          <motion.div 
-            className="relative w-10 h-10"
-            animate={{ scaleY: [1, 1, 1, 0.1, 1] }}
-            transition={{ duration: 4, repeat: Infinity, times: [0, 0.85, 0.9, 0.92, 1] }}
-          >
-            <div className="absolute inset-0 bg-white rounded-full shadow-lg" />
-            <motion.div 
-              className="absolute w-5 h-5 bg-gray-900 rounded-full top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
-              animate={{ x: [0, 2, 0, -2, 0] }}
-              transition={{ duration: 3, repeat: Infinity }}
-            >
-              <div className="absolute w-2 h-2 bg-white rounded-full top-1 left-1" />
-            </motion.div>
-          </motion.div>
-        </div>
-        
-        {/* Smile */}
-        <motion.div 
-          className="absolute top-[55%] left-1/2 -translate-x-1/2"
-          animate={{ scaleX: [1, 1.1, 1] }}
-          transition={{ duration: 2, repeat: Infinity }}
-        >
-          <svg width="50" height="25" viewBox="0 0 50 25">
-            <path 
-              d="M5,8 Q25,25 45,8" 
-              fill="none" 
-              stroke="white" 
-              strokeWidth="4" 
-              strokeLinecap="round"
-            />
-          </svg>
-        </motion.div>
-        
-        {/* Pointing arm */}
-        <motion.div 
-          className="absolute -right-16 top-[45%]"
-          animate={{ 
-            rotate: [0, 5, 0, -5, 0],
-            x: [0, 5, 0]
-          }}
-          transition={{ duration: 2, repeat: Infinity }}
-          style={{ transformOrigin: "left center" }}
-        >
-          <svg width="120" height="60" viewBox="0 0 120 60">
-            {/* Arm */}
-            <path 
-              d="M0,30 Q30,25 60,30 Q80,32 95,25" 
-              fill="none" 
-              stroke="hsl(var(--secondary))" 
-              strokeWidth="20" 
-              strokeLinecap="round"
-            />
-            {/* Hand */}
-            <circle cx="100" cy="22" r="15" fill="hsl(var(--secondary))" />
-            {/* Pointing finger */}
-            <motion.path 
-              d="M110,18 L130,10" 
-              fill="none" 
-              stroke="hsl(var(--secondary))" 
-              strokeWidth="8" 
-              strokeLinecap="round"
-              animate={{ x: [0, 5, 0] }}
-              transition={{ duration: 1, repeat: Infinity }}
-            />
-          </svg>
-        </motion.div>
-        
-        {/* Holding clipboard/notes */}
-        <motion.div 
-          className="absolute -left-10 top-[50%]"
-          animate={{ rotate: [-5, 0, -5] }}
-          transition={{ duration: 3, repeat: Infinity }}
-        >
-          <div className="bg-white rounded-lg shadow-xl p-2 w-16 h-20 border-2 border-gray-200">
-            <div className="w-full h-2 bg-primary/30 rounded mb-1" />
-            <div className="w-3/4 h-2 bg-secondary/30 rounded mb-1" />
-            <div className="w-full h-2 bg-accent/30 rounded mb-1" />
-            <div className="w-1/2 h-2 bg-primary/30 rounded" />
-          </div>
-        </motion.div>
-      </motion.div>
+      {/* Secondary glow ring */}
+      <motion.div
+        className="absolute w-72 h-72 rounded-full"
+        style={{
+          background: "radial-gradient(circle, transparent 40%, hsl(var(--secondary) / 0.2) 70%, transparent 100%)"
+        }}
+        animate={{ rotate: 360 }}
+        transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+      />
+      
+      {/* The AI-generated mascot image */}
+      <motion.img
+        src={mascotImage}
+        alt="AI Tutor Mascot"
+        className="relative z-10 w-72 h-auto drop-shadow-2xl"
+        animate={{ 
+          rotate: [-2, 2, -2],
+          scale: [1, 1.02, 1]
+        }}
+        transition={{ 
+          duration: 3, 
+          repeat: Infinity, 
+          ease: "easeInOut" 
+        }}
+        style={{
+          filter: "drop-shadow(0 20px 40px rgba(0,0,0,0.3))"
+        }}
+      />
       
       {/* Floating sparkles around mascot */}
       {[
-        { x: 20, y: 20, delay: 0 },
-        { x: 80, y: 15, delay: 0.5 },
-        { x: 15, y: 70, delay: 1 },
-        { x: 85, y: 75, delay: 1.5 },
-        { x: 50, y: 5, delay: 2 },
+        { x: 10, y: 10, delay: 0 },
+        { x: 90, y: 15, delay: 0.5 },
+        { x: 5, y: 60, delay: 1 },
+        { x: 95, y: 65, delay: 1.5 },
+        { x: 50, y: 0, delay: 2 },
+        { x: 20, y: 85, delay: 0.7 },
+        { x: 80, y: 90, delay: 1.2 },
       ].map((spark, i) => (
         <motion.div
           key={i}
@@ -200,11 +73,11 @@ const TutorMascot = () => {
           initial={{ opacity: 0, scale: 0 }}
           animate={{ 
             opacity: [0, 1, 0],
-            scale: [0.5, 1, 0.5],
-            rotate: [0, 180]
+            scale: [0.5, 1.2, 0.5],
+            rotate: [0, 180, 360]
           }}
           transition={{ 
-            duration: 2, 
+            duration: 2.5, 
             delay: spark.delay, 
             repeat: Infinity 
           }}
@@ -226,30 +99,17 @@ const PersonalTutorSection = ({ onTryClick }: PersonalTutorSectionProps) => {
 
   return (
     <section className="py-24 px-6 relative overflow-hidden bg-gradient-to-br from-background via-muted/20 to-secondary/5">
-      {/* 3D Objects floating in background */}
+      {/* Background floating 3D objects and particles */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute top-20 left-[10%]">
-          <Cube3D size={50} rotationDuration={12} />
-        </div>
-        <div className="absolute top-40 right-[15%]">
-          <Sphere3D size={40} colors={["hsl(var(--secondary))", "hsl(var(--accent))"]} />
-        </div>
-        <div className="absolute bottom-32 left-[20%]">
-          <Diamond3D size={45} color="hsl(var(--primary))" rotationDuration={8} />
-        </div>
-        <div className="absolute bottom-20 right-[10%]">
-          <Cube3D size={35} colors={["hsl(var(--accent))", "hsl(var(--primary))", "hsl(var(--secondary))"]} rotationDuration={15} />
-        </div>
-        
         {/* Glowing particles */}
-        {[...Array(8)].map((_, i) => (
+        {[...Array(12)].map((_, i) => (
           <GlowingParticle
             key={i}
-            size={6 + Math.random() * 8}
-            x={10 + Math.random() * 80}
-            y={10 + Math.random() * 80}
-            color={i % 2 === 0 ? "hsl(var(--secondary))" : "hsl(var(--accent))"}
-            delay={i * 0.4}
+            size={6 + Math.random() * 10}
+            x={5 + Math.random() * 90}
+            y={5 + Math.random() * 90}
+            color={i % 3 === 0 ? "hsl(var(--secondary))" : i % 3 === 1 ? "hsl(var(--accent))" : "hsl(var(--primary))"}
+            delay={i * 0.3}
           />
         ))}
         
