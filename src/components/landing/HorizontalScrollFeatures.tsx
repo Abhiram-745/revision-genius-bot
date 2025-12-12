@@ -287,7 +287,7 @@ const HorizontalScrollFeatures = () => {
     
     // Debounce for step-based navigation
     const now = Date.now();
-    if (now - lastScrollTime.current < 350) return;
+      if (now - lastScrollTime.current < 600) return;
     lastScrollTime.current = now;
     
     if (e.deltaY > 0) {

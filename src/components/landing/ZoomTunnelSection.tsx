@@ -73,7 +73,7 @@ export const ZoomTunnelSection = () => {
     e.preventDefault();
 
     // Smooth delta accumulation for continuous scrolling feel
-    const sensitivity = 0.0015;
+    const sensitivity = 0.0004;
     const delta = e.deltaY * sensitivity;
     
     setZoomProgress((prev) => {
@@ -121,7 +121,7 @@ export const ZoomTunnelSection = () => {
     e.preventDefault();
 
     const currentY = e.touches[0].clientY;
-    const delta = (lastTouchY.current - currentY) * 0.003;
+    const delta = (lastTouchY.current - currentY) * 0.0008;
     lastTouchY.current = currentY;
 
     setZoomProgress((prev) => {
