@@ -300,10 +300,12 @@ const HorizontalScrollFeatures = () => {
       if (activeIndex < features.length - 1) {
         setActiveIndex(prev => prev + 1);
       } else {
-        // Last card - unlock and continue scrolling
+        // Last card - unlock and scroll past section
+        const section = sectionRef.current;
+        const sectionBottom = section ? section.offsetTop + section.offsetHeight : savedScrollY + window.innerHeight;
         unlockScroll();
         setTimeout(() => {
-          window.scrollTo(0, savedScrollY + 100);
+          window.scrollTo({ top: sectionBottom + 50, behavior: 'smooth' });
         }, 50);
       }
     } else {
@@ -311,10 +313,12 @@ const HorizontalScrollFeatures = () => {
       if (activeIndex > 0) {
         setActiveIndex(prev => prev - 1);
       } else {
-        // First card - unlock and scroll up
+        // First card - unlock and scroll above section
+        const section = sectionRef.current;
+        const sectionTop = section ? section.offsetTop : savedScrollY;
         unlockScroll();
         setTimeout(() => {
-          window.scrollTo(0, savedScrollY - 100);
+          window.scrollTo({ top: Math.max(0, sectionTop - 100), behavior: 'smooth' });
         }, 50);
       }
     }
