@@ -1,4 +1,4 @@
-import { useRef, useEffect, useState } from "react";
+import { useRef, useState } from "react";
 import { motion, useScroll, useTransform, useMotionValueEvent } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { Brain, Calendar, Target, BarChart3, MessageSquare, Sparkles, Clock, TrendingUp, Zap } from "lucide-react";
@@ -94,7 +94,7 @@ const features = [
   },
 ];
 
-const FeatureUI = ({ feature }: { feature: typeof features[0] }) => {
+const FeatureUI = ({ feature, isActive }: { feature: typeof features[0]; isActive: boolean }) => {
   const { ui } = feature;
   
   if (ui.type === "timetable") {
@@ -104,7 +104,7 @@ const FeatureUI = ({ feature }: { feature: typeof features[0] }) => {
           <motion.div
             key={i}
             initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
+            animate={{ opacity: isActive ? 1 : 0.5, x: isActive ? 0 : 20 }}
             transition={{ delay: i * 0.1 }}
             className={`flex items-center gap-3 p-3 rounded-lg ${session.color}`}
           >
@@ -163,7 +163,7 @@ const FeatureUI = ({ feature }: { feature: typeof features[0] }) => {
               strokeWidth="8"
               strokeDasharray={352}
               initial={{ strokeDashoffset: 352 }}
-              animate={{ strokeDashoffset: 352 * (1 - ui.progress / 100) }}
+              animate={{ strokeDashoffset: isActive ? 352 * (1 - ui.progress / 100) : 352 }}
               transition={{ duration: 1.5 }}
             />
           </svg>
@@ -220,7 +220,7 @@ const FeatureUI = ({ feature }: { feature: typeof features[0] }) => {
                 <motion.div
                   key={star}
                   initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
+                  animate={{ scale: isActive ? 1 : 0.8 }}
                   transition={{ delay: i * 0.1 + star * 0.05 }}
                   className={`w-8 h-8 rounded-full flex items-center justify-center ${
                     star <= rating.value ? "bg-primary text-white" : "bg-muted"
@@ -243,7 +243,7 @@ const FeatureUI = ({ feature }: { feature: typeof features[0] }) => {
           <motion.div
             key={i}
             initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
+            animate={{ opacity: isActive ? 1 : 0.5, x: isActive ? 0 : -20 }}
             transition={{ delay: i * 0.2 }}
             className="flex items-start gap-3 p-3 rounded-lg bg-primary/5"
           >
@@ -267,113 +267,151 @@ const HorizontalScrollFeatures = () => {
     offset: ["start start", "end end"]
   });
 
-  const x = useTransform(scrollYProgress, [0, 1], ["0%", `-${(features.length - 1) * 100}%`]);
-  
+  // Map scroll progress to feature index
   useMotionValueEvent(scrollYProgress, "change", (latest) => {
-    const newIndex = Math.round(latest * (features.length - 1));
-    setActiveIndex(newIndex);
+    const newIndex = Math.min(
+      Math.floor(latest * features.length),
+      features.length - 1
+    );
+    if (newIndex !== activeIndex) {
+      setActiveIndex(newIndex);
+    }
   });
+
+  // Calculate x translation based on active index
+  const x = useTransform(
+    scrollYProgress, 
+    [0, 1], 
+    ["0%", `-${(features.length - 1) * 100}%`]
+  );
 
   return (
     <section 
       ref={containerRef} 
-      className="relative bg-gradient-to-b from-background to-muted/30"
-      style={{ height: `${features.length * 100}vh` }}
+      className="relative bg-gradient-to-b from-background via-muted/20 to-background"
+      style={{ height: `${(features.length + 1) * 100}vh` }}
     >
-      <div className="sticky top-0 h-screen overflow-hidden">
-        <div className="h-full flex flex-col justify-center px-6">
-          <motion.div
+      <div className="sticky top-0 h-screen overflow-hidden flex flex-col">
+        {/* Header */}
+        <div className="pt-16 pb-8 px-6 text-center">
+          <motion.h2 
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-center mb-8"
+            className="text-4xl md:text-5xl font-display font-bold mb-4"
           >
-            <h2 className="text-4xl md:text-5xl font-display font-bold mb-4">
-              Everything You Need to{" "}
-              <span className="bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
-                Succeed
-              </span>
-            </h2>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              A complete study ecosystem designed around how your brain actually works
-            </p>
-          </motion.div>
+            Everything You Need to{" "}
+            <span className="bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
+              Succeed
+            </span>
+          </motion.h2>
+          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+            A complete study ecosystem designed around how your brain actually works
+          </p>
+        </div>
 
-          {/* Progress indicators */}
-          <div className="flex justify-center gap-2 mb-8">
-            {features.map((_, index) => (
-              <motion.div
-                key={index}
-                className={`h-1.5 rounded-full transition-all duration-300 ${
-                  index === activeIndex ? "w-8 bg-primary" : "w-2 bg-muted-foreground/30"
-                }`}
-              />
-            ))}
-          </div>
+        {/* Progress indicators */}
+        <div className="flex justify-center gap-2 pb-8">
+          {features.map((_, index) => (
+            <motion.div
+              key={index}
+              className="h-1.5 rounded-full transition-all duration-500"
+              animate={{
+                width: index === activeIndex ? 32 : 8,
+                backgroundColor: index === activeIndex 
+                  ? "hsl(var(--primary))" 
+                  : "hsl(var(--muted-foreground) / 0.3)"
+              }}
+            />
+          ))}
+        </div>
 
-          {/* Horizontal scroll container */}
-          <div className="max-w-6xl mx-auto w-full overflow-hidden">
-            <motion.div 
-              className="flex"
-              style={{ x }}
-            >
-              {features.map((feature, index) => (
+        {/* Horizontal scroll container */}
+        <div className="flex-1 flex items-center overflow-hidden">
+          <motion.div 
+            className="flex h-full"
+            style={{ x }}
+          >
+            {features.map((feature, index) => {
+              const isActive = index === activeIndex;
+              
+              return (
                 <div
                   key={feature.id}
-                  className="min-w-full px-4"
+                  className="min-w-full h-full px-6 md:px-12 flex items-center"
                 >
-                  <div className="grid md:grid-cols-2 gap-8 items-center max-w-5xl mx-auto">
+                  <div className="grid md:grid-cols-2 gap-8 md:gap-16 items-center max-w-6xl mx-auto w-full">
                     {/* Text content */}
                     <motion.div
-                      initial={{ opacity: 0, x: -30 }}
                       animate={{ 
-                        opacity: index === activeIndex ? 1 : 0.3,
-                        x: index === activeIndex ? 0 : -30
+                        opacity: isActive ? 1 : 0.3,
+                        x: isActive ? 0 : -30,
+                        scale: isActive ? 1 : 0.95
                       }}
-                      transition={{ duration: 0.5 }}
+                      transition={{ duration: 0.5, ease: "easeOut" }}
                       className="space-y-6"
                     >
-                      <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${feature.color} flex items-center justify-center shadow-lg`}>
+                      <motion.div 
+                        className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${feature.color} flex items-center justify-center shadow-lg`}
+                        animate={{ rotate: isActive ? 0 : -10 }}
+                        transition={{ duration: 0.5 }}
+                      >
                         <feature.icon className="w-8 h-8 text-white" />
-                      </div>
-                      <h3 className="text-3xl font-bold">{feature.title}</h3>
+                      </motion.div>
+                      <h3 className="text-3xl md:text-4xl font-bold">{feature.title}</h3>
                       <p className="text-lg text-muted-foreground leading-relaxed">
                         {feature.description}
                       </p>
+                      <div className="text-sm text-muted-foreground">
+                        {index + 1} of {features.length}
+                      </div>
                     </motion.div>
 
                     {/* UI Preview */}
                     <motion.div
-                      initial={{ opacity: 0, x: 30 }}
                       animate={{ 
-                        opacity: index === activeIndex ? 1 : 0.3,
-                        x: index === activeIndex ? 0 : 30,
-                        scale: index === activeIndex ? 1 : 0.95
+                        opacity: isActive ? 1 : 0.3,
+                        x: isActive ? 0 : 30,
+                        scale: isActive ? 1 : 0.9,
+                        rotateY: isActive ? 0 : -5
                       }}
-                      transition={{ duration: 0.5 }}
+                      transition={{ duration: 0.5, ease: "easeOut" }}
+                      style={{ perspective: 1000 }}
                     >
-                      <Card className="bg-card/80 backdrop-blur-sm border-2 shadow-2xl overflow-hidden">
+                      <Card className="bg-card/90 backdrop-blur-sm border-2 shadow-2xl overflow-hidden">
                         <div className={`h-2 bg-gradient-to-r ${feature.color}`} />
-                        <CardContent className="p-6">
-                          <FeatureUI feature={feature} />
+                        <CardContent className="p-6 min-h-[320px]">
+                          <FeatureUI feature={feature} isActive={isActive} />
                         </CardContent>
                       </Card>
                     </motion.div>
                   </div>
                 </div>
-              ))}
-            </motion.div>
-          </div>
+              );
+            })}
+          </motion.div>
+        </div>
 
-          {/* Scroll hint */}
+        {/* Scroll hint */}
+        <motion.div
+          animate={{ opacity: activeIndex === features.length - 1 ? 0 : 1 }}
+          className="pb-8 text-center"
+        >
           <motion.div
             animate={{ y: [0, 8, 0] }}
             transition={{ duration: 2, repeat: Infinity }}
-            className="text-center mt-8 text-muted-foreground text-sm"
+            className="text-muted-foreground text-sm flex flex-col items-center gap-2"
           >
-            Scroll to explore features
+            <span>Scroll to explore features</span>
+            <div className="w-6 h-10 rounded-full border-2 border-muted-foreground/30 flex items-start justify-center p-2">
+              <motion.div
+                animate={{ y: [0, 12, 0] }}
+                transition={{ duration: 1.5, repeat: Infinity }}
+                className="w-1.5 h-1.5 rounded-full bg-primary"
+              />
+            </div>
           </motion.div>
-        </div>
+        </motion.div>
       </div>
     </section>
   );
