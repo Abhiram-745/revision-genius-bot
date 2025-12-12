@@ -26,6 +26,10 @@ import WhyStudentsLoveUs from "@/components/landing/WhyStudentsLoveUs";
 import BeforeAfterSection from "@/components/landing/BeforeAfterSection";
 import FAQSection from "@/components/landing/FAQSection";
 import TrustedBySection from "@/components/landing/TrustedBySection";
+import ParticleBackground from "@/components/landing/ParticleBackground";
+import Card3DCarousel from "@/components/landing/Card3DCarousel";
+import TimetableCreationSection from "@/components/landing/TimetableCreationSection";
+import SuccessStoriesSection from "@/components/landing/SuccessStoriesSection";
 
 const Landing = () => {
   const navigate = useNavigate();
@@ -92,6 +96,9 @@ const Landing = () => {
       <div className="min-h-screen bg-background overflow-hidden">
         {/* Parallax Background */}
         <ParallaxBackground />
+        
+        {/* Particle Background */}
+        <ParticleBackground />
 
         {/* Hero Section */}
         <motion.section
@@ -552,6 +559,12 @@ const Landing = () => {
           </div>
         </section>
 
+        {/* Detailed Timetable Creation Section */}
+        <TimetableCreationSection />
+
+        {/* 3D Feature Carousel */}
+        <Card3DCarousel />
+
         {/* Floating UI Showcase Section */}
         <section ref={featuresRef} className="py-24 px-6 bg-gradient-to-b from-muted/30 to-background relative overflow-hidden">
           <div className="max-w-6xl mx-auto">
@@ -992,6 +1005,15 @@ const Landing = () => {
           </div>
         </section>
 
+        {/* Success Stories Section */}
+        <SuccessStoriesSection />
+
+        {/* Why Students Love Us */}
+        <WhyStudentsLoveUs />
+
+        {/* Before/After Section */}
+        <BeforeAfterSection />
+
         {/* BlurtAI Integration Section */}
         <BlurtAIIntegration onTryClick={() => setShowComingSoon(true)} />
 
@@ -1128,6 +1150,9 @@ const Landing = () => {
             </div>
           </div>
         </section>
+
+        {/* FAQ Section */}
+        <FAQSection />
 
         {/* Final CTA with Gradient Shift */}
         <section className="py-24 px-6">

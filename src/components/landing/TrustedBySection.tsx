@@ -2,14 +2,16 @@ import { motion } from "framer-motion";
 import { GraduationCap, School, Building, BookOpen, Award, Users } from "lucide-react";
 
 const schools = [
-  { name: "Westminster School", icon: Building },
-  { name: "Eton College", icon: GraduationCap },
-  { name: "King's College", icon: School },
-  { name: "St Paul's School", icon: BookOpen },
-  { name: "Harrow School", icon: Award },
-  { name: "Rugby School", icon: Users },
-  { name: "Charterhouse", icon: Building },
-  { name: "Winchester College", icon: GraduationCap },
+  { name: "QE Boys", icon: GraduationCap },
+  { name: "Eton College", icon: Award },
+  { name: "Highgate School", icon: School },
+  { name: "Mill Hill School", icon: Building },
+  { name: "St Albans School", icon: BookOpen },
+  { name: "UCS Hampstead", icon: Users },
+  { name: "City of London School", icon: Building },
+  { name: "Haberdashers' Boys", icon: GraduationCap },
+  { name: "Aldenham School", icon: School },
+  { name: "North London Collegiate", icon: Award },
 ];
 
 const TrustedBySection = () => {
