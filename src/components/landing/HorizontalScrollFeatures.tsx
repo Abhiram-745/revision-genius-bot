@@ -1,32 +1,28 @@
-import { useRef, useState, useEffect, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useRef } from "react";
+import { motion, useScroll, useTransform } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
-import { Brain, Calendar, Clock, BarChart3, MessageSquare, Sparkles, TrendingUp, Zap, ChevronDown } from "lucide-react";
+import { Brain, Calendar, Clock, BarChart3, MessageSquare, Sparkles, TrendingUp, Zap } from "lucide-react";
 
 const features = [
   {
     id: 1,
     title: "AI-Powered Timetables",
-    description: "Smart algorithms analyze your subjects, test dates, and available time to create the perfect study plan. The AI considers cognitive load, spaced repetition, and your energy patterns.",
+    description: "Smart algorithms analyze your subjects, test dates, and available time to create the perfect study plan.",
     icon: Brain,
-    color: "from-blue-500 to-cyan-500",
     ui: {
       type: "timetable",
       sessions: [
         { time: "16:00", subject: "Biology", topic: "Photosynthesis", duration: "45 min", color: "bg-green-500/20 border-green-500/30" },
         { time: "16:50", subject: "Break", duration: "10 min", color: "bg-muted/50 border-muted", isBreak: true },
         { time: "17:00", subject: "Chemistry", topic: "Organic Reactions", duration: "40 min", color: "bg-purple-500/20 border-purple-500/30" },
-        { time: "17:45", subject: "Break", duration: "15 min", color: "bg-muted/50 border-muted", isBreak: true },
-        { time: "18:00", subject: "Maths", topic: "Integration", duration: "45 min", color: "bg-blue-500/20 border-blue-500/30" },
       ]
     }
   },
   {
     id: 2,
     title: "Adaptive Rescheduling",
-    description: "Life happens. Missed a session? The AI automatically adjusts your plan, ensuring you still cover everything before your tests. No manual replanning needed.",
+    description: "Missed a session? The AI automatically adjusts your plan, ensuring you still cover everything.",
     icon: Calendar,
-    color: "from-purple-500 to-pink-500",
     ui: {
       type: "reschedule",
       original: { time: "16:00", subject: "Physics", status: "missed" },
@@ -37,9 +33,8 @@ const features = [
   {
     id: 3,
     title: "Session Timer & Focus",
-    description: "Pomodoro-style focus sessions with ambient sounds keep you in the zone. Track your actual study time and see exactly how productive each session was.",
+    description: "Pomodoro-style focus sessions keep you in the zone. Track your actual study time.",
     icon: Clock,
-    color: "from-orange-500 to-red-500",
     ui: {
       type: "timer",
       time: "23:45",
@@ -51,9 +46,8 @@ const features = [
   {
     id: 4,
     title: "Progress Analytics",
-    description: "Visual dashboards show your growth over time. Track study streaks, confidence levels, and mastery across all subjects. Celebrate your wins!",
+    description: "Visual dashboards show your growth over time. Track streaks and mastery across subjects.",
     icon: BarChart3,
-    color: "from-green-500 to-emerald-500",
     ui: {
       type: "analytics",
       streak: 12,
@@ -65,9 +59,8 @@ const features = [
   {
     id: 5,
     title: "Session Reflections",
-    description: "After each session, rate your focus and understanding. The AI learns from your feedback and adapts future scheduling to optimize your learning.",
+    description: "Rate your focus and understanding. The AI learns and adapts future scheduling.",
     icon: MessageSquare,
-    color: "from-indigo-500 to-violet-500",
     ui: {
       type: "reflection",
       ratings: [
@@ -80,9 +73,8 @@ const features = [
   {
     id: 6,
     title: "AI Study Insights",
-    description: "Get personalized insights about your study patterns. Discover your most productive times, subjects that need attention, and tips to improve.",
+    description: "Get personalized insights about your study patterns and tips to improve.",
     icon: Sparkles,
-    color: "from-pink-500 to-rose-500",
     ui: {
       type: "insights",
       insights: [
@@ -94,7 +86,7 @@ const features = [
   },
 ];
 
-const FeatureUI = ({ feature, isActive }: { feature: typeof features[0]; isActive: boolean }) => {
+const FeatureUI = ({ feature }: { feature: typeof features[0] }) => {
   const { ui } = feature;
   
   if (ui.type === "timetable") {
@@ -104,7 +96,7 @@ const FeatureUI = ({ feature, isActive }: { feature: typeof features[0]; isActiv
           <motion.div
             key={i}
             initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: isActive ? 1 : 0.5, x: isActive ? 0 : 20 }}
+            whileInView={{ opacity: 1, x: 0 }}
             transition={{ delay: i * 0.1 }}
             className={`flex items-center gap-3 p-3 rounded-lg border ${session.color}`}
           >
@@ -131,10 +123,7 @@ const FeatureUI = ({ feature, isActive }: { feature: typeof features[0]; isActiv
           <p className="text-sm text-muted-foreground">{ui.original.time} - {ui.original.subject}</p>
         </div>
         <div className="flex justify-center">
-          <motion.div
-            animate={{ y: [0, 5, 0] }}
-            transition={{ duration: 1.5, repeat: Infinity }}
-          >
+          <motion.div animate={{ y: [0, 5, 0] }} transition={{ duration: 1.5, repeat: Infinity }}>
             <Zap className="w-6 h-6 text-primary" />
           </motion.div>
         </div>
@@ -163,7 +152,7 @@ const FeatureUI = ({ feature, isActive }: { feature: typeof features[0]; isActiv
               strokeWidth="8"
               strokeDasharray={352}
               initial={{ strokeDashoffset: 352 }}
-              animate={{ strokeDashoffset: isActive ? 352 * (1 - ui.progress / 100) : 352 }}
+              whileInView={{ strokeDashoffset: 352 * (1 - ui.progress / 100) }}
               transition={{ duration: 1.5 }}
             />
           </svg>
@@ -220,7 +209,7 @@ const FeatureUI = ({ feature, isActive }: { feature: typeof features[0]; isActiv
                 <motion.div
                   key={star}
                   initial={{ scale: 0 }}
-                  animate={{ scale: isActive ? 1 : 0.8 }}
+                  whileInView={{ scale: 1 }}
                   transition={{ delay: i * 0.1 + star * 0.05 }}
                   className={`w-8 h-8 rounded-full flex items-center justify-center ${
                     star <= rating.value ? "bg-primary text-primary-foreground" : "bg-muted"
@@ -243,7 +232,7 @@ const FeatureUI = ({ feature, isActive }: { feature: typeof features[0]; isActiv
           <motion.div
             key={i}
             initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: isActive ? 1 : 0.5, x: isActive ? 0 : -20 }}
+            whileInView={{ opacity: 1, x: 0 }}
             transition={{ delay: i * 0.2 }}
             className="flex items-start gap-3 p-3 rounded-lg bg-primary/5"
           >
@@ -258,172 +247,122 @@ const FeatureUI = ({ feature, isActive }: { feature: typeof features[0]; isActiv
   return null;
 };
 
+const FeatureCard = ({ 
+  feature, 
+  index, 
+  progress 
+}: { 
+  feature: typeof features[0]; 
+  index: number;
+  progress: any;
+}) => {
+  const Icon = feature.icon;
+  
+  // Each card takes 1/6 of the scroll progress
+  const cardStart = index / features.length;
+  const cardEnd = (index + 1) / features.length;
+  
+  // Scale: 0.8 -> 1 -> 0.95 (grows to full then shrinks slightly as it leaves)
+  const scale = useTransform(
+    progress,
+    [cardStart - 0.1, cardStart, cardEnd, cardEnd + 0.1],
+    [0.85, 1, 1, 0.95]
+  );
+  
+  // Y position: starts below, comes to center, moves up
+  const y = useTransform(
+    progress,
+    [cardStart - 0.15, cardStart, cardEnd, cardEnd + 0.1],
+    [100, 0, 0, -50]
+  );
+  
+  // Opacity: fade in and out
+  const opacity = useTransform(
+    progress,
+    [cardStart - 0.1, cardStart, cardEnd - 0.05, cardEnd + 0.05],
+    [0, 1, 1, 0]
+  );
+  
+  // Z-index based on position (active cards on top)
+  const zIndex = useTransform(
+    progress,
+    [cardStart - 0.1, cardStart, cardEnd],
+    [0, 10, 5]
+  );
+
+  return (
+    <motion.div
+      style={{ scale, y, opacity, zIndex }}
+      className="absolute inset-0 flex items-center justify-center px-4"
+    >
+      <Card className="w-full max-w-4xl bg-card/95 backdrop-blur-sm border-border/50 shadow-2xl overflow-hidden">
+        <CardContent className="p-0">
+          <div className="grid md:grid-cols-2 gap-0">
+            {/* Left side - Text content */}
+            <div className="p-6 md:p-8 flex flex-col justify-center space-y-4">
+              <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center shadow-lg">
+                <Icon className="w-7 h-7 text-primary-foreground" />
+              </div>
+              
+              <div>
+                <h3 className="text-xl md:text-2xl font-display font-bold mb-2">
+                  {feature.title}
+                </h3>
+                <p className="text-muted-foreground text-sm md:text-base leading-relaxed">
+                  {feature.description}
+                </p>
+              </div>
+              
+              {/* Progress indicator */}
+              <div className="flex items-center gap-2 pt-4">
+                {features.map((_, i) => (
+                  <div
+                    key={i}
+                    className={`h-1.5 rounded-full transition-all duration-300 ${
+                      i === index 
+                        ? "w-8 bg-primary" 
+                        : "w-2 bg-muted"
+                    }`}
+                  />
+                ))}
+              </div>
+            </div>
+            
+            {/* Right side - UI preview */}
+            <div className="p-6 md:p-8 bg-muted/30 border-l border-border/50 flex items-center justify-center">
+              <div className="w-full max-w-xs">
+                <FeatureUI feature={feature} />
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </motion.div>
+  );
+};
+
 const HorizontalScrollFeatures = () => {
-  const sectionRef = useRef<HTMLDivElement>(null);
-  const [activeIndex, setActiveIndex] = useState(0);
-  const [isLocked, setIsLocked] = useState(false);
-  const lastScrollTime = useRef(0);
-  const touchStartY = useRef(0);
-  const scrollCooldown = 500;
-
-  const handleFeatureChange = useCallback((direction: "up" | "down") => {
-    const now = Date.now();
-    if (now - lastScrollTime.current < scrollCooldown) return;
-    lastScrollTime.current = now;
-
-    if (direction === "down") {
-      if (activeIndex < features.length - 1) {
-        setActiveIndex(prev => prev + 1);
-      } else {
-        // Last feature, scroll down - release lock
-        setIsLocked(false);
-        document.body.style.overflow = "";
-        // Scroll past the section
-        setTimeout(() => {
-          if (sectionRef.current) {
-            const rect = sectionRef.current.getBoundingClientRect();
-            window.scrollBy({ top: rect.height - window.innerHeight + 100, behavior: "smooth" });
-          }
-        }, 50);
-      }
-    } else {
-      if (activeIndex > 0) {
-        setActiveIndex(prev => prev - 1);
-      } else {
-        // First feature, scroll up - release lock
-        setIsLocked(false);
-        document.body.style.overflow = "";
-        // Scroll to top of section
-        setTimeout(() => {
-          if (sectionRef.current) {
-            const rect = sectionRef.current.getBoundingClientRect();
-            window.scrollBy({ top: rect.top - 100, behavior: "smooth" });
-          }
-        }, 50);
-      }
-    }
-  }, [activeIndex]);
-
-  // Intersection observer to detect when section is in view
-  useEffect(() => {
-    const section = sectionRef.current;
-    if (!section) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting && entry.intersectionRatio >= 0.6) {
-            const rect = section.getBoundingClientRect();
-            // Only lock if section is centered in viewport
-            if (rect.top <= 50 && rect.top >= -50) {
-              setIsLocked(true);
-            }
-          }
-        });
-      },
-      { threshold: [0.6] }
-    );
-
-    observer.observe(section);
-    return () => observer.disconnect();
-  }, []);
-
-  // Handle scroll locking
-  useEffect(() => {
-    if (!isLocked) {
-      document.body.style.overflow = "";
-      return;
-    }
-
-    document.body.style.overflow = "hidden";
-
-    const handleWheel = (e: WheelEvent) => {
-      e.preventDefault();
-      e.stopPropagation();
-      const direction = e.deltaY > 0 ? "down" : "up";
-      handleFeatureChange(direction);
-    };
-
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "ArrowDown" || e.key === " ") {
-        e.preventDefault();
-        handleFeatureChange("down");
-      } else if (e.key === "ArrowUp") {
-        e.preventDefault();
-        handleFeatureChange("up");
-      } else if (e.key === "Escape") {
-        setIsLocked(false);
-        document.body.style.overflow = "";
-      }
-    };
-
-    const handleTouchStart = (e: TouchEvent) => {
-      touchStartY.current = e.touches[0].clientY;
-    };
-
-    const handleTouchMove = (e: TouchEvent) => {
-      e.preventDefault();
-    };
-
-    const handleTouchEnd = (e: TouchEvent) => {
-      const touchEndY = e.changedTouches[0].clientY;
-      const diff = touchStartY.current - touchEndY;
-      
-      if (Math.abs(diff) > 50) {
-        const direction = diff > 0 ? "down" : "up";
-        handleFeatureChange(direction);
-      }
-    };
-
-    window.addEventListener("wheel", handleWheel, { passive: false });
-    window.addEventListener("keydown", handleKeyDown);
-    window.addEventListener("touchstart", handleTouchStart, { passive: true });
-    window.addEventListener("touchmove", handleTouchMove, { passive: false });
-    window.addEventListener("touchend", handleTouchEnd, { passive: true });
-
-    return () => {
-      document.body.style.overflow = "";
-      window.removeEventListener("wheel", handleWheel);
-      window.removeEventListener("keydown", handleKeyDown);
-      window.removeEventListener("touchstart", handleTouchStart);
-      window.removeEventListener("touchmove", handleTouchMove);
-      window.removeEventListener("touchend", handleTouchEnd);
-    };
-  }, [isLocked, handleFeatureChange]);
-
-  // Re-lock when scrolling back to section
-  useEffect(() => {
-    const handleScroll = () => {
-      if (isLocked) return;
-      
-      const section = sectionRef.current;
-      if (!section) return;
-      
-      const rect = section.getBoundingClientRect();
-      // Lock when section is centered
-      if (rect.top <= 50 && rect.top >= -50 && rect.bottom > window.innerHeight) {
-        setIsLocked(true);
-      }
-    };
-
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, [isLocked]);
-
-  const currentFeature = features[activeIndex];
+  const containerRef = useRef<HTMLDivElement>(null);
+  
+  const { scrollYProgress } = useScroll({
+    target: containerRef,
+    offset: ["start start", "end end"]
+  });
 
   return (
     <section
-      ref={sectionRef}
-      className="min-h-screen bg-gradient-to-b from-background via-muted/20 to-background relative"
+      ref={containerRef}
+      className="relative bg-gradient-to-b from-background via-muted/10 to-background"
+      style={{ height: `${features.length * 100}vh` }}
     >
-      <div className="h-screen flex flex-col items-center justify-center px-4">
+      {/* Sticky container that holds cards */}
+      <div className="sticky top-0 h-screen flex flex-col items-center justify-center overflow-hidden">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="text-center mb-6"
+          className="text-center mb-8 px-4 relative z-20"
         >
           <h2 className="text-3xl md:text-5xl font-display font-bold mb-4">
             Everything You Need to{" "}
@@ -436,106 +375,33 @@ const HorizontalScrollFeatures = () => {
           </p>
         </motion.div>
 
-        {/* Progress Bar */}
-        <div className="w-full max-w-xs mb-6">
-          <div className="h-1.5 bg-muted rounded-full overflow-hidden">
-            <motion.div
-              className="h-full bg-gradient-to-r from-primary to-secondary"
-              animate={{ width: `${((activeIndex + 1) / features.length) * 100}%` }}
-              transition={{ duration: 0.4, ease: "easeOut" }}
-            />
-          </div>
-          <div className="flex justify-between mt-2 text-xs text-muted-foreground">
-            <span>{activeIndex + 1} of {features.length}</span>
-            <span className={isLocked ? "text-primary" : ""}>
-              {isLocked ? "Scroll to navigate" : "Entering feature view..."}
-            </span>
-          </div>
-        </div>
-
-        {/* Feature Content */}
-        <div className="w-full max-w-6xl flex-1 flex items-center">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={activeIndex}
-              initial={{ opacity: 0, x: 100 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -100 }}
-              transition={{ duration: 0.4, ease: "easeOut" }}
-              className="w-full grid md:grid-cols-2 gap-8 md:gap-16 items-center"
-            >
-              {/* Text Content */}
-              <div className="space-y-6 order-2 md:order-1">
-                <motion.div 
-                  initial={{ scale: 0, rotate: -10 }}
-                  animate={{ scale: 1, rotate: 0 }}
-                  transition={{ delay: 0.1, type: "spring" }}
-                  className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${currentFeature.color} flex items-center justify-center shadow-lg`}
-                >
-                  <currentFeature.icon className="w-8 h-8 text-white" />
-                </motion.div>
-                <motion.h3
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.15 }}
-                  className="text-2xl md:text-4xl font-bold"
-                >
-                  {currentFeature.title}
-                </motion.h3>
-                <motion.p
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.2 }}
-                  className="text-lg text-muted-foreground leading-relaxed"
-                >
-                  {currentFeature.description}
-                </motion.p>
-              </div>
-
-              {/* UI Preview */}
-              <motion.div
-                initial={{ opacity: 0, scale: 0.9, rotateY: -5 }}
-                animate={{ opacity: 1, scale: 1, rotateY: 0 }}
-                transition={{ delay: 0.1, duration: 0.5 }}
-                className="order-1 md:order-2"
-                style={{ perspective: 1000 }}
-              >
-                <Card className="bg-card/90 backdrop-blur-sm border-2 shadow-2xl overflow-hidden">
-                  <div className={`h-2 bg-gradient-to-r ${currentFeature.color}`} />
-                  <CardContent className="p-6 min-h-[320px]">
-                    <FeatureUI feature={currentFeature} isActive={true} />
-                  </CardContent>
-                </Card>
-              </motion.div>
-            </motion.div>
-          </AnimatePresence>
-        </div>
-
-        {/* Feature Dots */}
-        <div className="flex gap-2 mt-4 mb-2">
-          {features.map((_, i) => (
-            <button
-              key={i}
-              onClick={() => setActiveIndex(i)}
-              className={`h-2 rounded-full transition-all duration-300 ${
-                i === activeIndex 
-                  ? "w-8 bg-primary" 
-                  : "w-2 bg-muted-foreground/30 hover:bg-muted-foreground/50"
-              }`}
+        {/* Cards container */}
+        <div className="relative w-full flex-1 max-h-[500px] md:max-h-[400px]">
+          {features.map((feature, index) => (
+            <FeatureCard
+              key={feature.id}
+              feature={feature}
+              index={index}
+              progress={scrollYProgress}
             />
           ))}
         </div>
 
-        {/* Scroll Hint */}
-        <motion.div
-          animate={{ y: [0, 8, 0], opacity: 1 }}
-          transition={{ duration: 1.5, repeat: Infinity }}
-          className="flex flex-col items-center gap-2 text-muted-foreground pb-4"
+        {/* Scroll hint */}
+        <motion.div 
+          className="absolute bottom-8 left-1/2 -translate-x-1/2 text-muted-foreground text-sm flex flex-col items-center gap-2"
+          animate={{ opacity: [0.5, 1, 0.5] }}
+          transition={{ duration: 2, repeat: Infinity }}
         >
-          <span className="text-sm">
-            {activeIndex === features.length - 1 ? "Scroll down to continue" : "Scroll to explore"}
-          </span>
-          <ChevronDown className="w-5 h-5" />
+          <span>Scroll to explore features</span>
+          <motion.div
+            animate={{ y: [0, 5, 0] }}
+            transition={{ duration: 1.5, repeat: Infinity }}
+          >
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" className="text-muted-foreground">
+              <path d="M10 3v14m0 0l-5-5m5 5l5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </motion.div>
         </motion.div>
       </div>
     </section>
