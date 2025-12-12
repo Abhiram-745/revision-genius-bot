@@ -239,7 +239,7 @@ export const ColorChangeFeatures = () => {
     e.preventDefault();
     
     const now = Date.now();
-    if (now - lastScrollTime.current < 400) return;
+      if (now - lastScrollTime.current < 700) return;
     lastScrollTime.current = now;
 
     if (e.deltaY > 0) {
