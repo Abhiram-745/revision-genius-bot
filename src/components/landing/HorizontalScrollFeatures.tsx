@@ -251,15 +251,12 @@ const HorizontalScrollFeatures = () => {
   const sectionRef = useRef<HTMLDivElement>(null);
   const [activeIndex, setActiveIndex] = useState(0);
   
-  // Track scroll progress through the section using CSS sticky
-  const { scrollYProgress } = useScroll({
-    target: sectionRef,
-    offset: ["start start", "end end"]
-  });
+  // Use scroll lock so the section is pinned and scroll maps to local progress
+  const { progress } = useScrollLockSection(sectionRef, { lockThreshold: 0.5 });
 
   // Calculate active index based on scroll progress - evenly distributed
   const activeIndexValue = useTransform(
-    scrollYProgress,
+    progress,
     [0, 0.15, 0.32, 0.49, 0.66, 0.83, 1],
     [0, 1, 2, 3, 4, 5, 5]
   );

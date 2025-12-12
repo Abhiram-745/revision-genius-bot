@@ -161,14 +161,11 @@ const StickyFeatureShowcase = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [activeIndex, setActiveIndex] = useState(0);
   
-  const { scrollYProgress } = useScroll({
-    target: containerRef,
-    offset: ["start start", "end end"]
-  });
+  const { progress } = useScrollLockSection(containerRef, { lockThreshold: 0.5 });
 
-  // Convert scroll progress to active index
+  // Convert local progress to active index
   const activeIndexMotion = useTransform(
-    scrollYProgress,
+    progress,
     [0, 0.15, 0.32, 0.49, 0.66, 0.83, 1],
     [0, 1, 2, 3, 4, 5, 5]
   );
@@ -177,8 +174,8 @@ const StickyFeatureShowcase = () => {
     setActiveIndex(Math.round(latest));
   });
 
-  // Progress bar width
-  const progressWidth = useTransform(scrollYProgress, [0, 1], ["0%", "100%"]);
+  // Progress bar width (if we add a linear bar later)
+  const progressWidth = useTransform(progress, [0, 1], ["0%", "100%"]);
 
   const activeFeature = features[activeIndex];
 
