@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { Quote, Star, TrendingUp, Award } from "lucide-react";
+import pointingOwl from "@/assets/pointing-owl.png";
 
 const stories = [
   {
@@ -48,6 +49,17 @@ const SuccessStoriesSection = () => {
   return (
     <section className="py-24 px-6 bg-muted/30 relative overflow-hidden">
       <div className="absolute inset-0 bg-gradient-to-b from-transparent via-primary/5 to-transparent" />
+      
+      {/* Pointing owl mascot */}
+      <motion.img
+        src={pointingOwl}
+        alt="Pointing owl mascot"
+        className="absolute top-20 right-4 md:right-12 lg:right-20 w-28 h-28 md:w-36 md:h-36 lg:w-44 lg:h-44 object-contain drop-shadow-xl z-10 hidden lg:block"
+        initial={{ opacity: 0, y: -20, rotate: 5 }}
+        whileInView={{ opacity: 1, y: 0, rotate: 0 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.6, delay: 0.3 }}
+      />
       
       <div className="max-w-6xl mx-auto relative z-10">
         <motion.div

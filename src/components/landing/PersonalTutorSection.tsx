@@ -3,7 +3,7 @@ import { ArrowRight, Sparkles, Brain, Target, BookOpen, Zap, ExternalLink } from
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { GlowingParticle } from "./3DObjects";
-import mascotImage from "@/assets/ai-tutor-mascot.png";
+import studyingOwl from "@/assets/studying-owl.png";
 
 interface PersonalTutorSectionProps {
   onTryClick: () => void;
@@ -37,10 +37,10 @@ const TutorMascot = () => {
         transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
       />
       
-      {/* The AI-generated mascot image */}
+      {/* The studying owl mascot */}
       <motion.img
-        src={mascotImage}
-        alt="AI Tutor Mascot"
+        src={studyingOwl}
+        alt="Studying Owl Mascot"
         className="relative z-10 w-72 h-auto drop-shadow-2xl"
         animate={{ 
           rotate: [-2, 2, -2],
