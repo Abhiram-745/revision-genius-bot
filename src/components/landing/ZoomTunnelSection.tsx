@@ -1,10 +1,11 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
-  Brain, Rocket, Target, Lightbulb, Clock, BarChart3, Sparkles, Zap, Star, Heart,
-  Trophy, GraduationCap, BookOpen, PenTool, Flame, Compass, Gem, Orbit
+  Brain, Target, Lightbulb, Clock, BarChart3, Sparkles, Zap, Star,
+  Trophy, GraduationCap, BookOpen, Pencil, Award, Calendar, CheckCircle,
+  Calculator, Notebook, Medal, Ruler, FileText, type LucideIcon
 } from "lucide-react";
-import { Cube3D, Sphere3D, Diamond3D, Pyramid3D, Hexagon3D, Torus3D, GlowingParticle } from "./3DObjects";
+import { GlowingParticle } from "./3DObjects";
 
 const tunnelContent = [
   { title: "AI-Powered Schedules", subtitle: "Let AI plan your perfect study sessions", icon: Brain, color: "from-pink-500 to-rose-400" },
@@ -13,43 +14,43 @@ const tunnelContent = [
   { title: "Achieve Your Goals", subtitle: "Ace your exams with confidence", icon: Target, color: "from-blue-500 to-cyan-400" },
 ];
 
-// Enhanced 3D Floating shapes with more variety
-const floatingShapes = [
-  { type: "cube", x: 15, y: 20, size: 40, orbitRadius: 200, orbitSpeed: 0.5, delay: 0 },
-  { type: "sphere", x: 85, y: 25, size: 32, orbitRadius: 180, orbitSpeed: 0.7, delay: 0.2 },
-  { type: "pyramid", x: 10, y: 75, size: 36, orbitRadius: 220, orbitSpeed: 0.4, delay: 0.4 },
-  { type: "cube", x: 88, y: 70, size: 28, orbitRadius: 190, orbitSpeed: 0.6, delay: 0.6 },
-  { type: "sphere", x: 25, y: 45, size: 44, orbitRadius: 240, orbitSpeed: 0.3, delay: 0.3 },
-  { type: "pyramid", x: 78, y: 50, size: 38, orbitRadius: 210, orbitSpeed: 0.55, delay: 0.5 },
-  { type: "diamond", x: 50, y: 15, size: 30, orbitRadius: 260, orbitSpeed: 0.45, delay: 0.15 },
-  { type: "hexagon", x: 50, y: 85, size: 35, orbitRadius: 230, orbitSpeed: 0.65, delay: 0.35 },
-  { type: "torus", x: 35, y: 65, size: 42, orbitRadius: 250, orbitSpeed: 0.35, delay: 0.45 },
-  { type: "cube", x: 65, y: 35, size: 26, orbitRadius: 170, orbitSpeed: 0.75, delay: 0.55 },
+// Study-themed floating icons with 3D effects
+const floatingStudyIcons: { Icon: LucideIcon; x: number; y: number; size: number; orbitRadius: number; orbitSpeed: number; delay: number; color: string }[] = [
+  { Icon: BookOpen, x: 15, y: 20, size: 40, orbitRadius: 200, orbitSpeed: 0.5, delay: 0, color: "text-blue-500" },
+  { Icon: Trophy, x: 85, y: 25, size: 36, orbitRadius: 180, orbitSpeed: 0.7, delay: 0.2, color: "text-yellow-500" },
+  { Icon: GraduationCap, x: 10, y: 75, size: 38, orbitRadius: 220, orbitSpeed: 0.4, delay: 0.4, color: "text-purple-500" },
+  { Icon: Star, x: 88, y: 70, size: 32, orbitRadius: 190, orbitSpeed: 0.6, delay: 0.6, color: "text-amber-500" },
+  { Icon: Pencil, x: 25, y: 45, size: 44, orbitRadius: 240, orbitSpeed: 0.3, delay: 0.3, color: "text-green-500" },
+  { Icon: Target, x: 78, y: 50, size: 36, orbitRadius: 210, orbitSpeed: 0.55, delay: 0.5, color: "text-red-500" },
+  { Icon: Award, x: 50, y: 15, size: 34, orbitRadius: 260, orbitSpeed: 0.45, delay: 0.15, color: "text-pink-500" },
+  { Icon: Clock, x: 50, y: 85, size: 38, orbitRadius: 230, orbitSpeed: 0.65, delay: 0.35, color: "text-cyan-500" },
+  { Icon: Brain, x: 35, y: 65, size: 42, orbitRadius: 250, orbitSpeed: 0.35, delay: 0.45, color: "text-violet-500" },
+  { Icon: Lightbulb, x: 65, y: 35, size: 30, orbitRadius: 170, orbitSpeed: 0.75, delay: 0.55, color: "text-orange-500" },
 ];
 
-// More floating icons with 3D rotation
-const floatingIcons = [
-  { Icon: Rocket, x: 12, y: 18, delay: 0, size: 32, rotateSpeed: 3 },
-  { Icon: Lightbulb, x: 88, y: 22, delay: 0.2, size: 28, rotateSpeed: 4 },
-  { Icon: Clock, x: 8, y: 78, delay: 0.4, size: 24, rotateSpeed: 5 },
-  { Icon: Sparkles, x: 92, y: 72, delay: 0.6, size: 30, rotateSpeed: 3.5 },
-  { Icon: Star, x: 20, y: 40, delay: 0.3, size: 26, rotateSpeed: 4.5 },
-  { Icon: Heart, x: 80, y: 55, delay: 0.5, size: 28, rotateSpeed: 3.2 },
-  { Icon: Trophy, x: 15, y: 60, delay: 0.1, size: 30, rotateSpeed: 4.2 },
-  { Icon: GraduationCap, x: 85, y: 40, delay: 0.25, size: 32, rotateSpeed: 3.8 },
-  { Icon: BookOpen, x: 30, y: 25, delay: 0.35, size: 26, rotateSpeed: 5.2 },
-  { Icon: PenTool, x: 70, y: 75, delay: 0.45, size: 24, rotateSpeed: 4.8 },
-  { Icon: Flame, x: 45, y: 12, delay: 0.15, size: 28, rotateSpeed: 3.6 },
-  { Icon: Compass, x: 55, y: 88, delay: 0.55, size: 30, rotateSpeed: 4.4 },
-  { Icon: Gem, x: 25, y: 85, delay: 0.65, size: 26, rotateSpeed: 5.5 },
-  { Icon: Orbit, x: 75, y: 15, delay: 0.75, size: 32, rotateSpeed: 3.4 },
+// More floating study icons with 3D rotation
+const floatingIcons: { Icon: LucideIcon; x: number; y: number; delay: number; size: number; rotateSpeed: number; color: string }[] = [
+  { Icon: Notebook, x: 12, y: 18, delay: 0, size: 32, rotateSpeed: 3, color: "text-blue-400" },
+  { Icon: Lightbulb, x: 88, y: 22, delay: 0.2, size: 28, rotateSpeed: 4, color: "text-yellow-400" },
+  { Icon: Clock, x: 8, y: 78, delay: 0.4, size: 24, rotateSpeed: 5, color: "text-cyan-400" },
+  { Icon: Sparkles, x: 92, y: 72, delay: 0.6, size: 30, rotateSpeed: 3.5, color: "text-purple-400" },
+  { Icon: Star, x: 20, y: 40, delay: 0.3, size: 26, rotateSpeed: 4.5, color: "text-amber-400" },
+  { Icon: Medal, x: 80, y: 55, delay: 0.5, size: 28, rotateSpeed: 3.2, color: "text-orange-400" },
+  { Icon: Trophy, x: 15, y: 60, delay: 0.1, size: 30, rotateSpeed: 4.2, color: "text-yellow-500" },
+  { Icon: GraduationCap, x: 85, y: 40, delay: 0.25, size: 32, rotateSpeed: 3.8, color: "text-indigo-400" },
+  { Icon: BookOpen, x: 30, y: 25, delay: 0.35, size: 26, rotateSpeed: 5.2, color: "text-emerald-400" },
+  { Icon: Pencil, x: 70, y: 75, delay: 0.45, size: 24, rotateSpeed: 4.8, color: "text-green-400" },
+  { Icon: Calculator, x: 45, y: 12, delay: 0.15, size: 28, rotateSpeed: 3.6, color: "text-slate-400" },
+  { Icon: Calendar, x: 55, y: 88, delay: 0.55, size: 30, rotateSpeed: 4.4, color: "text-rose-400" },
+  { Icon: Ruler, x: 25, y: 85, delay: 0.65, size: 26, rotateSpeed: 5.5, color: "text-teal-400" },
+  { Icon: FileText, x: 75, y: 15, delay: 0.75, size: 32, rotateSpeed: 3.4, color: "text-blue-300" },
 ];
 
-// Orbiting icon rings
-const orbitingRings = [
-  { radius: 150, icons: [Brain, Target, Zap], speed: 0.3, reverse: false },
-  { radius: 220, icons: [Rocket, Star, Sparkles, Heart], speed: 0.2, reverse: true },
-  { radius: 300, icons: [Trophy, BookOpen, Flame, Gem, Compass], speed: 0.15, reverse: false },
+// Study-themed orbiting icon rings
+const orbitingRings: { radius: number; icons: LucideIcon[]; speed: number; reverse: boolean }[] = [
+  { radius: 150, icons: [BookOpen, Trophy, Target], speed: 0.3, reverse: false },
+  { radius: 220, icons: [GraduationCap, Star, Award, Medal], speed: 0.2, reverse: true },
+  { radius: 300, icons: [Brain, Lightbulb, Clock, Calendar, Pencil], speed: 0.15, reverse: false },
 ];
 
 export const ZoomTunnelSection = () => {
@@ -113,8 +114,8 @@ export const ZoomTunnelSection = () => {
 
     e.preventDefault();
 
-    // Faster sensitivity - completes in reasonable scroll amount
-    const sensitivity = 0.002;
+    // Slower sensitivity - takes more time to complete the journey
+    const sensitivity = 0.0008;
     const delta = e.deltaY * sensitivity;
     
     setZoomProgress((prev) => {
@@ -165,7 +166,7 @@ export const ZoomTunnelSection = () => {
     e.preventDefault();
 
     const currentY = e.touches[0].clientY;
-    const delta = (lastTouchY.current - currentY) * 0.004;
+    const delta = (lastTouchY.current - currentY) * 0.0016;
     lastTouchY.current = currentY;
 
     setZoomProgress((prev) => {
@@ -304,93 +305,40 @@ export const ZoomTunnelSection = () => {
             );
           })}
 
-          {/* 3D Floating Cubes and Spheres - Enhanced */}
-          {floatingShapes.map((shape, index) => {
-            const orbitAngle = (zoomProgress * 360 * shape.orbitSpeed) + (index * 60);
+          {/* 3D Floating Study Icons */}
+          {floatingStudyIcons.map((iconData, index) => {
+            const orbitAngle = (zoomProgress * 360 * iconData.orbitSpeed) + (index * 60);
             const radians = (orbitAngle * Math.PI) / 180;
-            const x = Math.cos(radians) * shape.orbitRadius * (1 - zoomProgress * 0.5);
-            const y = Math.sin(radians) * shape.orbitRadius * (1 - zoomProgress * 0.5);
+            const x = Math.cos(radians) * iconData.orbitRadius * (1 - zoomProgress * 0.5);
+            const y = Math.sin(radians) * iconData.orbitRadius * (1 - zoomProgress * 0.5);
             const z = Math.sin(radians * 2) * 100;
             const opacity = Math.max(0, 0.7 - zoomProgress * 0.9);
             const selfRotation = zoomProgress * 360 * (index % 2 === 0 ? 1 : -1);
+            const IconComponent = iconData.Icon;
             
             return (
               <motion.div
-                key={`shape-${index}`}
+                key={`study-icon-${index}`}
                 className="absolute left-1/2 top-1/2 pointer-events-none"
                 style={{
                   transformStyle: 'preserve-3d',
                   transform: `
                     translate(-50%, -50%)
                     translate3d(${x}px, ${y}px, ${z}px)
-                    rotateX(${selfRotation}deg)
-                    rotateY(${selfRotation * 0.7}deg)
-                    rotateZ(${selfRotation * 0.5}deg)
+                    rotateX(${selfRotation * 0.3}deg)
+                    rotateY(${selfRotation * 0.5}deg)
                   `,
                   opacity,
                 }}
               >
-                {shape.type === 'cube' && (
-                  <div
-                    className="bg-gradient-to-br from-primary/30 to-secondary/30 border border-primary/40"
-                    style={{
-                      width: shape.size,
-                      height: shape.size,
-                      transform: 'rotateX(45deg) rotateZ(45deg)',
-                      boxShadow: '0 0 20px hsl(var(--primary) / 0.3)',
-                    }}
-                  />
-                )}
-                {shape.type === 'sphere' && (
-                  <div
-                    className="rounded-full bg-gradient-to-br from-accent/40 to-primary/30"
-                    style={{
-                      width: shape.size,
-                      height: shape.size,
-                      boxShadow: `inset -${shape.size/4}px -${shape.size/4}px ${shape.size/2}px rgba(0,0,0,0.2), 0 0 30px hsl(var(--accent) / 0.3)`,
-                    }}
-                  />
-                )}
-                {shape.type === 'pyramid' && (
-                  <div
-                    className="border-l-[20px] border-r-[20px] border-b-[35px] border-l-transparent border-r-transparent border-b-secondary/40"
-                    style={{
-                      filter: 'drop-shadow(0 0 15px hsl(var(--secondary) / 0.4))',
-                    }}
-                  />
-                )}
-                {shape.type === 'diamond' && (
-                  <div
-                    className="bg-gradient-to-br from-purple-500/40 to-pink-500/30"
-                    style={{
-                      width: shape.size,
-                      height: shape.size,
-                      transform: 'rotate(45deg)',
-                      boxShadow: '0 0 25px hsl(280 70% 50% / 0.4)',
-                    }}
-                  />
-                )}
-                {shape.type === 'hexagon' && (
-                  <div
-                    className="bg-gradient-to-br from-cyan-500/40 to-blue-500/30"
-                    style={{
-                      width: shape.size,
-                      height: shape.size * 0.866,
-                      clipPath: 'polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%)',
-                      boxShadow: '0 0 20px hsl(200 70% 50% / 0.4)',
-                    }}
-                  />
-                )}
-                {shape.type === 'torus' && (
-                  <div
-                    className="rounded-full border-4 border-amber-500/40"
-                    style={{
-                      width: shape.size,
-                      height: shape.size,
-                      boxShadow: '0 0 25px hsl(40 70% 50% / 0.4), inset 0 0 15px hsl(40 70% 50% / 0.2)',
-                    }}
-                  />
-                )}
+                <div 
+                  className={`${iconData.color} p-3 rounded-xl bg-background/20 backdrop-blur-sm border border-current/20`}
+                  style={{
+                    boxShadow: '0 0 30px currentColor',
+                  }}
+                >
+                  <IconComponent size={iconData.size} strokeWidth={1.5} />
+                </div>
               </motion.div>
             );
           })}
@@ -509,114 +457,142 @@ export const ZoomTunnelSection = () => {
         );
       })}
 
-      {/* Real 3D Objects - CSS 3D Cubes, Spheres, Diamonds */}
+      {/* Study-themed 3D Icons around the edges */}
       <div className="absolute inset-0 pointer-events-none" style={{ perspective: '1000px' }}>
-        {/* Top left Cube */}
-        <div 
-          className="absolute"
+        {/* Top left - BookOpen */}
+        <motion.div 
+          className="absolute text-blue-500"
           style={{ 
             left: '10%', 
             top: '15%',
             opacity: Math.max(0, 0.8 - zoomProgress * 0.9),
             transform: `scale(${1 - zoomProgress * 0.5})`
           }}
+          animate={{ rotateY: 360 }}
+          transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
         >
-          <Cube3D size={50} rotationDuration={10} />
-        </div>
+          <div className="p-4 rounded-xl bg-background/20 backdrop-blur-sm border border-blue-500/30" style={{ boxShadow: '0 0 30px hsl(217 91% 60% / 0.4)' }}>
+            <BookOpen size={50} strokeWidth={1.5} />
+          </div>
+        </motion.div>
         
-        {/* Top right Sphere */}
-        <div 
-          className="absolute"
+        {/* Top right - Trophy */}
+        <motion.div 
+          className="absolute text-yellow-500"
           style={{ 
             right: '12%', 
             top: '20%',
             opacity: Math.max(0, 0.8 - zoomProgress * 0.9),
             transform: `scale(${1 - zoomProgress * 0.5})`
           }}
+          animate={{ y: [-10, 10, -10] }}
+          transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
         >
-          <Sphere3D size={45} colors={["hsl(var(--secondary))", "hsl(var(--accent))"]} floatDuration={5} />
-        </div>
+          <div className="p-4 rounded-xl bg-background/20 backdrop-blur-sm border border-yellow-500/30" style={{ boxShadow: '0 0 30px hsl(48 96% 53% / 0.4)' }}>
+            <Trophy size={45} strokeWidth={1.5} />
+          </div>
+        </motion.div>
         
-        {/* Left Diamond */}
-        <div 
-          className="absolute"
+        {/* Left - GraduationCap */}
+        <motion.div 
+          className="absolute text-purple-500"
           style={{ 
             left: '8%', 
             top: '50%',
             opacity: Math.max(0, 0.8 - zoomProgress * 0.9),
             transform: `translateY(-50%) scale(${1 - zoomProgress * 0.5})`
           }}
+          animate={{ rotateZ: [-5, 5, -5] }}
+          transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
         >
-          <Diamond3D size={40} color="hsl(var(--accent))" rotationDuration={8} />
-        </div>
+          <div className="p-4 rounded-xl bg-background/20 backdrop-blur-sm border border-purple-500/30" style={{ boxShadow: '0 0 30px hsl(271 91% 65% / 0.4)' }}>
+            <GraduationCap size={40} strokeWidth={1.5} />
+          </div>
+        </motion.div>
         
-        {/* Right Hexagon */}
-        <div 
-          className="absolute"
+        {/* Right - Target */}
+        <motion.div 
+          className="absolute text-red-500"
           style={{ 
             right: '10%', 
             top: '55%',
             opacity: Math.max(0, 0.8 - zoomProgress * 0.9),
             transform: `scale(${1 - zoomProgress * 0.5})`
           }}
+          animate={{ scale: [1, 1.1, 1] }}
+          transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
         >
-          <Hexagon3D size={48} color="hsl(var(--primary))" rotationDuration={12} />
-        </div>
+          <div className="p-4 rounded-xl bg-background/20 backdrop-blur-sm border border-red-500/30" style={{ boxShadow: '0 0 30px hsl(0 84% 60% / 0.4)' }}>
+            <Target size={48} strokeWidth={1.5} />
+          </div>
+        </motion.div>
         
-        {/* Bottom left Torus */}
-        <div 
-          className="absolute"
+        {/* Bottom left - Brain */}
+        <motion.div 
+          className="absolute text-pink-500"
           style={{ 
             left: '15%', 
             bottom: '20%',
             opacity: Math.max(0, 0.8 - zoomProgress * 0.9),
             transform: `scale(${1 - zoomProgress * 0.5})`
           }}
+          animate={{ rotateY: 360 }}
+          transition={{ duration: 9, repeat: Infinity, ease: "linear" }}
         >
-          <Torus3D size={55} color="hsl(var(--secondary))" rotationDuration={9} />
-        </div>
+          <div className="p-4 rounded-xl bg-background/20 backdrop-blur-sm border border-pink-500/30" style={{ boxShadow: '0 0 30px hsl(330 81% 60% / 0.4)' }}>
+            <Brain size={55} strokeWidth={1.5} />
+          </div>
+        </motion.div>
         
-        {/* Bottom right Pyramid */}
-        <div 
-          className="absolute"
+        {/* Bottom right - Star */}
+        <motion.div 
+          className="absolute text-amber-500"
           style={{ 
             right: '15%', 
             bottom: '18%',
             opacity: Math.max(0, 0.8 - zoomProgress * 0.9),
             transform: `scale(${1 - zoomProgress * 0.5})`
           }}
+          animate={{ rotate: 360 }}
+          transition={{ duration: 11, repeat: Infinity, ease: "linear" }}
         >
-          <Pyramid3D size={45} color="hsl(var(--primary))" rotationDuration={11} />
-        </div>
+          <div className="p-4 rounded-xl bg-background/20 backdrop-blur-sm border border-amber-500/30" style={{ boxShadow: '0 0 30px hsl(38 92% 50% / 0.4)' }}>
+            <Star size={45} strokeWidth={1.5} />
+          </div>
+        </motion.div>
         
-        {/* Additional floating cubes */}
-        <div 
-          className="absolute"
+        {/* Additional floating study icons */}
+        <motion.div 
+          className="absolute text-emerald-500"
           style={{ 
             left: '30%', 
             top: '25%',
             opacity: Math.max(0, 0.6 - zoomProgress * 0.7),
             transform: `scale(${1 - zoomProgress * 0.5})`
           }}
+          animate={{ y: [-15, 15, -15] }}
+          transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
         >
-          <Cube3D 
-            size={35} 
-            colors={["hsl(var(--accent))", "hsl(var(--primary))", "hsl(var(--secondary))"]} 
-            rotationDuration={14} 
-          />
-        </div>
+          <div className="p-3 rounded-xl bg-background/20 backdrop-blur-sm border border-emerald-500/30" style={{ boxShadow: '0 0 25px hsl(160 84% 39% / 0.4)' }}>
+            <Pencil size={35} strokeWidth={1.5} />
+          </div>
+        </motion.div>
         
-        <div 
-          className="absolute"
+        <motion.div 
+          className="absolute text-cyan-500"
           style={{ 
             right: '28%', 
             bottom: '30%',
             opacity: Math.max(0, 0.6 - zoomProgress * 0.7),
             transform: `scale(${1 - zoomProgress * 0.5})`
           }}
+          animate={{ rotateZ: [-8, 8, -8] }}
+          transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
         >
-          <Sphere3D size={38} colors={["hsl(var(--primary))", "hsl(var(--accent))"]} floatDuration={6} />
-        </div>
+          <div className="p-3 rounded-xl bg-background/20 backdrop-blur-sm border border-cyan-500/30" style={{ boxShadow: '0 0 25px hsl(188 94% 43% / 0.4)' }}>
+            <Clock size={38} strokeWidth={1.5} />
+          </div>
+        </motion.div>
       </div>
 
       {/* Glowing Particles */}
