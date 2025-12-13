@@ -3,6 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { 
   Zap, Shield, Clock, Brain, Heart, Sparkles 
 } from "lucide-react";
+import laughingOwl from "@/assets/laughing-owl.png";
 
 const features = [
   {
@@ -55,6 +56,17 @@ const WhyStudentsLoveUs = () => {
       {/* Background decoration */}
       <div className="absolute top-0 left-1/4 w-96 h-96 bg-primary/5 rounded-full blur-3xl" />
       <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-secondary/5 rounded-full blur-3xl" />
+      
+      {/* Laughing Owl Mascot */}
+      <motion.img
+        src={laughingOwl}
+        alt="Happy owl mascot"
+        className="absolute bottom-8 left-4 md:left-8 w-36 h-36 md:w-44 md:h-44 lg:w-52 lg:h-52 object-contain drop-shadow-xl z-10"
+        initial={{ opacity: 0, y: 30, rotate: -10 }}
+        whileInView={{ opacity: 1, y: 0, rotate: 0 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.6, delay: 0.3 }}
+      />
 
       <div className="max-w-6xl mx-auto relative z-10">
         <motion.div

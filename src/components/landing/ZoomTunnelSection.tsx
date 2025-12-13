@@ -80,14 +80,14 @@ export const ZoomTunnelSection = () => {
     
     // Smooth scroll to exit the section
     window.scrollBy({ 
-      top: direction === 'down' ? 200 : -200, 
+      top: direction === 'down' ? 400 : -400, 
       behavior: 'smooth' 
     });
     
     // Cooldown before re-locking
     setTimeout(() => {
       hasExited.current = false;
-    }, 1000);
+    }, 800);
   }, []);
 
   // Handle wheel events for smooth continuous zoom
@@ -96,7 +96,7 @@ export const ZoomTunnelSection = () => {
     if (!section) return;
 
     const rect = section.getBoundingClientRect();
-    const sectionInView = rect.top <= window.innerHeight * 0.3 && rect.bottom >= window.innerHeight * 0.7;
+    const sectionInView = rect.top <= window.innerHeight * 0.5 && rect.bottom >= window.innerHeight * 0.5;
 
     if (!sectionInView || hasExited.current) {
       if (isLocked) {
@@ -113,8 +113,8 @@ export const ZoomTunnelSection = () => {
 
     e.preventDefault();
 
-    // Much lower sensitivity - requires significantly more scrolling
-    const sensitivity = 0.00006;
+    // Faster sensitivity - completes in reasonable scroll amount
+    const sensitivity = 0.002;
     const delta = e.deltaY * sensitivity;
     
     setZoomProgress((prev) => {
@@ -148,7 +148,7 @@ export const ZoomTunnelSection = () => {
     if (!section) return;
 
     const rect = section.getBoundingClientRect();
-    const sectionInView = rect.top <= window.innerHeight * 0.3 && rect.bottom >= window.innerHeight * 0.7;
+    const sectionInView = rect.top <= window.innerHeight * 0.5 && rect.bottom >= window.innerHeight * 0.5;
 
     if (!sectionInView || hasExited.current) {
       if (isLocked) {
@@ -165,7 +165,7 @@ export const ZoomTunnelSection = () => {
     e.preventDefault();
 
     const currentY = e.touches[0].clientY;
-    const delta = (lastTouchY.current - currentY) * 0.00012;
+    const delta = (lastTouchY.current - currentY) * 0.004;
     lastTouchY.current = currentY;
 
     setZoomProgress((prev) => {
