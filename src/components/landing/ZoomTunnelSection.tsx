@@ -647,7 +647,7 @@ export const ZoomTunnelSection = () => {
         />
       </motion.div>
 
-      {/* Content Cards - zoom in/out based on progress */}
+      {/* Content Cards - TRUE ZOOM IN effect: starts small, grows as you scroll */}
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
         <AnimatePresence mode="wait">
           {tunnelContent.map((content, index) => {
@@ -655,20 +655,31 @@ export const ZoomTunnelSection = () => {
             if (!isActive) return null;
 
             const Icon = content.icon;
+            
+            // Calculate zoom-in scale based on progress within this card's segment
+            const cardProgress = (zoomProgress * tunnelContent.length) - index;
+            const clampedProgress = Math.max(0, Math.min(1, cardProgress));
+            
+            // Start very small (0.2) and grow to full size (1.2) as you scroll
+            const contentScale = 0.2 + clampedProgress * 1.0;
+            // Fade in quickly, stay visible
+            const contentOpacity = Math.min(1, clampedProgress * 3);
 
             return (
               <motion.div
                 key={content.title}
                 className="absolute flex flex-col items-center text-center px-6"
-                initial={{ scale: 0.3, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 2.5, opacity: 0 }}
-                transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
+                initial={{ scale: 0.1, opacity: 0 }}
+                animate={{ 
+                  scale: contentScale, 
+                  opacity: contentOpacity 
+                }}
+                exit={{ scale: 2.5, opacity: 0, filter: 'blur(10px)' }}
+                transition={{ duration: 0.15, ease: "easeOut" }}
               >
                 <motion.div
                   className={`w-20 h-20 md:w-24 md:h-24 rounded-2xl bg-gradient-to-br ${content.color} flex items-center justify-center mb-6 shadow-lg`}
                   animate={{ 
-                    scale: [1, 1.05, 1],
                     rotate: [0, 3, -3, 0],
                   }}
                   transition={{ 
@@ -677,12 +688,17 @@ export const ZoomTunnelSection = () => {
                     repeatDelay: 0.5 
                   }}
                   style={{
-                    boxShadow: `0 0 40px hsl(var(--primary) / 0.4)`,
+                    boxShadow: `0 0 ${40 + clampedProgress * 30}px hsl(var(--primary) / ${0.3 + clampedProgress * 0.3})`,
                   }}
                 >
                   <Icon className="w-10 h-10 md:w-12 md:h-12 text-white" />
                 </motion.div>
-                <h3 className={`text-3xl md:text-5xl font-bold bg-gradient-to-r ${content.color} bg-clip-text text-transparent mb-4`}>
+                <h3 
+                  className={`text-3xl md:text-5xl font-bold bg-gradient-to-r ${content.color} bg-clip-text text-transparent mb-4`}
+                  style={{
+                    textShadow: `0 0 ${20 + clampedProgress * 20}px hsl(var(--primary) / 0.2)`,
+                  }}
+                >
                   {content.title}
                 </h3>
                 <p className="text-lg md:text-xl text-muted-foreground max-w-md">
