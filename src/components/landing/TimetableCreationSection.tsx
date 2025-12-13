@@ -1,6 +1,8 @@
 import { motion } from "framer-motion";
 import { Upload, Calendar, Brain, Sparkles, FileText, Clock, Target, Zap } from "lucide-react";
 import MorphingBlob from "./MorphingBlob";
+import happyOwl from "@/assets/happy-owl.png";
+import confusedOwl from "@/assets/confused-owl.png";
 
 const steps = [
   {
@@ -62,6 +64,28 @@ const TimetableCreationSection = () => {
     <section className="py-24 px-6 relative overflow-hidden">
       <MorphingBlob className="-top-40 -right-40 opacity-50" size={600} />
       <MorphingBlob className="-bottom-40 -left-40 opacity-50" size={500} />
+      
+      {/* Confused owl on left side */}
+      <motion.img
+        src={confusedOwl}
+        alt="Confused owl mascot"
+        className="absolute top-32 left-4 md:left-8 lg:left-16 w-24 h-24 md:w-32 md:h-32 lg:w-40 lg:h-40 object-contain drop-shadow-xl z-10 hidden md:block"
+        initial={{ opacity: 0, x: -30, rotate: -10 }}
+        whileInView={{ opacity: 1, x: 0, rotate: 0 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.6, delay: 0.2 }}
+      />
+      
+      {/* Happy owl on right side at bottom */}
+      <motion.img
+        src={happyOwl}
+        alt="Happy owl mascot"
+        className="absolute bottom-20 right-4 md:right-8 lg:right-16 w-24 h-24 md:w-32 md:h-32 lg:w-40 lg:h-40 object-contain drop-shadow-xl z-10 hidden md:block"
+        initial={{ opacity: 0, x: 30, rotate: 10 }}
+        whileInView={{ opacity: 1, x: 0, rotate: 0 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.6, delay: 0.4 }}
+      />
 
       <div className="max-w-6xl mx-auto relative z-10">
         <motion.div
