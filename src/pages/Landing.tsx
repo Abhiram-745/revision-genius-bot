@@ -34,6 +34,8 @@ import HorizontalScrollFeatures from "@/components/landing/HorizontalScrollFeatu
 import ZoomTunnelSection from "@/components/landing/ZoomTunnelSection";
 import ColorChangeFeatures from "@/components/landing/ColorChangeFeatures";
 import PersonalTutorSection from "@/components/landing/PersonalTutorSection";
+import owlWithBook from "@/assets/owl-with-book.png";
+import pointingOwl from "@/assets/pointing-owl.png";
 
 const Landing = () => {
   const navigate = useNavigate();
@@ -332,6 +334,17 @@ const Landing = () => {
 
         {/* How It Works Section with Step-by-Step Reveal */}
         <section ref={howItWorksRef} className="py-24 px-6 relative">
+          {/* Owl with Book - floating left */}
+          <motion.img
+            src={owlWithBook}
+            alt=""
+            className="hidden lg:block absolute left-4 bottom-24 w-36 h-36 object-contain pointer-events-none opacity-90"
+            initial={{ opacity: 0, x: -30 }}
+            whileInView={{ opacity: 0.9, x: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.5 }}
+          />
+
           {/* Floating cards */}
           <div className="hidden lg:block absolute right-10 top-20">
             <FloatingIcon delay={0.5} duration={5}>
@@ -342,7 +355,7 @@ const Landing = () => {
             </FloatingIcon>
           </div>
           
-          <div className="hidden lg:block absolute left-10 bottom-32">
+          <div className="hidden lg:block absolute left-10 bottom-64">
             <FloatingIcon delay={1} duration={5.5}>
               <div className="bg-primary/10 border border-primary/20 rounded-2xl p-4 shadow-lg w-48">
                 <p className="text-sm font-medium text-primary">✨ Vistara Way</p>
@@ -709,6 +722,17 @@ const Landing = () => {
             viewport={{ once: true }}
             className="max-w-4xl mx-auto text-center space-y-8 p-12 rounded-3xl bg-gradient-to-br from-primary/10 via-secondary/10 to-accent/10 border border-primary/20 relative overflow-hidden"
           >
+            {/* Pointing Owl - right side pointing to CTA */}
+            <motion.img
+              src={pointingOwl}
+              alt=""
+              className="absolute right-4 md:right-8 bottom-6 w-28 h-28 md:w-36 md:h-36 object-contain pointer-events-none z-20"
+              initial={{ opacity: 0, x: 30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.4 }}
+            />
+
             <motion.div 
               className="absolute inset-0"
               animate={{

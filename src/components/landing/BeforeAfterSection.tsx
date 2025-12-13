@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { X, Check, AlertTriangle, Frown, Smile, ArrowRight } from "lucide-react";
+import happyOwl from "@/assets/happy-owl.png";
 
 const BeforeAfterSection = () => {
   return (
@@ -110,6 +111,17 @@ const BeforeAfterSection = () => {
             transition={{ type: "spring", stiffness: 100, delay: 0.2 }}
           >
             <Card className="h-full border-secondary/30 bg-gradient-to-br from-secondary/5 to-card relative overflow-hidden group">
+              {/* Happy Owl peeking from bottom right */}
+              <motion.img
+                src={happyOwl}
+                alt=""
+                className="absolute -right-4 -bottom-6 w-24 h-24 md:w-28 md:h-28 object-contain z-20 pointer-events-none"
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.6 }}
+              />
+
               <div className="absolute top-4 right-4">
                 <motion.div
                   animate={{ scale: [1, 1.2, 1] }}
