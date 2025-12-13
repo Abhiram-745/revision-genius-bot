@@ -70,7 +70,7 @@ export const ZoomTunnelSection = () => {
     if (!section) return;
 
     const rect = section.getBoundingClientRect();
-    const sectionInView = rect.top <= window.innerHeight * 0.5 && rect.bottom >= window.innerHeight * 0.5;
+    const sectionInView = rect.top <= window.innerHeight * 0.15 && rect.bottom >= window.innerHeight * 0.85;
 
     if (!sectionInView || hasExited.current) {
       if (isLocked) {
@@ -117,7 +117,7 @@ export const ZoomTunnelSection = () => {
     if (!section) return;
 
     const rect = section.getBoundingClientRect();
-    const sectionInView = rect.top <= window.innerHeight * 0.5 && rect.bottom >= window.innerHeight * 0.5;
+    const sectionInView = rect.top <= window.innerHeight * 0.15 && rect.bottom >= window.innerHeight * 0.85;
 
     if (!sectionInView || hasExited.current) {
       if (isLocked) {
