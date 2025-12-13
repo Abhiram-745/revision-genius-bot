@@ -6,6 +6,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { HelpCircle } from "lucide-react";
+import confusedOwl from "@/assets/confused-owl.png";
 
 const faqs = [
   {
@@ -41,11 +42,22 @@ const FAQSection = () => {
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-gradient-to-r from-primary/5 via-secondary/5 to-accent/5 rounded-full blur-3xl" />
 
       <div className="max-w-3xl mx-auto relative z-10">
+        {/* Confused Owl - top right of heading */}
+        <motion.img
+          src={confusedOwl}
+          alt=""
+          className="absolute -right-4 md:right-8 top-0 w-24 h-24 md:w-32 md:h-32 object-contain opacity-90 -z-0 pointer-events-none"
+          initial={{ opacity: 0, x: 20 }}
+          whileInView={{ opacity: 0.9, x: 0 }}
+          viewport={{ once: true }}
+          transition={{ delay: 0.3 }}
+        />
+
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="text-center mb-12"
+          className="text-center mb-12 relative"
         >
           <motion.div
             initial={{ opacity: 0, scale: 0 }}

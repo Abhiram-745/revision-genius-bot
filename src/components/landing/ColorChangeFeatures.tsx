@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Brain, Calendar, BarChart3, Sparkles, Zap, Star, Rocket, Target, Heart, BookOpen, Trophy, Flame } from "lucide-react";
+import { Brain, Calendar, BarChart3, Sparkles, Zap, Star, Rocket, Target, Heart, BookOpen, Trophy, Flame, MousePointer2 } from "lucide-react";
 import { Cube3D, Sphere3D, Diamond3D, GlowingParticle } from "./3DObjects";
 
 const features = [
@@ -9,7 +9,7 @@ const features = [
     title: "AI Creates Your Perfect Schedule",
     description: "Upload your syllabus and let our AI analyze your subjects, test dates, and learning patterns to build the optimal study plan.",
     icon: Brain,
-    bgColor: "from-violet-600 via-purple-600 to-indigo-700",
+    bgColor: "from-violet-500 via-indigo-500 to-purple-600",
     cardBg: "from-emerald-400 to-teal-500",
     ui: {
       type: "schedule",
@@ -25,7 +25,7 @@ const features = [
     title: "Adapts When Life Happens",
     description: "Missed a session? Football practice? The AI automatically reschedules your study time to keep you on track without stress.",
     icon: Calendar,
-    bgColor: "from-fuchsia-500 via-pink-500 to-rose-500",
+    bgColor: "from-rose-500 via-pink-500 to-fuchsia-500",
     cardBg: "from-pink-400 to-rose-500",
     ui: {
       type: "reschedule",
@@ -40,7 +40,7 @@ const features = [
     title: "Track Your Growth",
     description: "Watch your progress with beautiful analytics. See your streaks, mastery levels, and improvement over time.",
     icon: BarChart3,
-    bgColor: "from-cyan-500 via-teal-500 to-emerald-600",
+    bgColor: "from-emerald-500 via-teal-500 to-cyan-500",
     cardBg: "from-amber-400 to-orange-500",
     ui: {
       type: "stats",
@@ -54,7 +54,7 @@ const features = [
     title: "AI-Powered Insights",
     description: "Get personalized tips based on your study patterns. Know when you focus best and which topics need more attention.",
     icon: Sparkles,
-    bgColor: "from-amber-500 via-orange-500 to-red-500",
+    bgColor: "from-amber-500 via-orange-500 to-rose-500",
     cardBg: "from-violet-400 to-purple-500",
     ui: {
       type: "insights",
@@ -66,6 +66,75 @@ const features = [
     }
   },
 ];
+
+// Animated cursor component for each feature type
+const AnimatedCursor = ({ type }: { type: string }) => {
+  const cursorPaths = {
+    schedule: [
+      { x: 120, y: 80, duration: 0.8 },
+      { x: 120, y: 120, duration: 0.6 },
+      { x: 120, y: 160, duration: 0.6 },
+      { x: 120, y: 80, duration: 0.8 },
+    ],
+    reschedule: [
+      { x: 100, y: 60, duration: 0.8 },
+      { x: 100, y: 100, duration: 0.6 },
+      { x: 100, y: 150, duration: 0.8 },
+      { x: 100, y: 60, duration: 0.6 },
+    ],
+    stats: [
+      { x: 50, y: 80, duration: 0.7 },
+      { x: 120, y: 80, duration: 0.5 },
+      { x: 190, y: 80, duration: 0.5 },
+      { x: 50, y: 80, duration: 0.7 },
+    ],
+    insights: [
+      { x: 100, y: 70, duration: 0.8 },
+      { x: 100, y: 105, duration: 0.5 },
+      { x: 100, y: 140, duration: 0.5 },
+      { x: 100, y: 70, duration: 0.8 },
+    ],
+  };
+
+  const path = cursorPaths[type as keyof typeof cursorPaths] || cursorPaths.schedule;
+  const totalDuration = path.reduce((acc, p) => acc + p.duration, 0);
+
+  return (
+    <motion.div
+      className="absolute pointer-events-none z-50"
+      initial={{ x: path[0].x, y: path[0].y, opacity: 0 }}
+      animate={{
+        x: path.map(p => p.x),
+        y: path.map(p => p.y),
+        opacity: 1,
+      }}
+      transition={{
+        duration: totalDuration,
+        repeat: Infinity,
+        ease: "easeInOut",
+        times: path.map((_, i) => {
+          const elapsed = path.slice(0, i + 1).reduce((acc, p) => acc + p.duration, 0);
+          return elapsed / totalDuration;
+        }),
+      }}
+    >
+      <MousePointer2 className="w-5 h-5 text-white drop-shadow-lg" style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))' }} />
+      {/* Click ripple effect */}
+      <motion.div
+        className="absolute -top-1 -left-1 w-8 h-8 rounded-full border-2 border-white/60"
+        animate={{
+          scale: [0.5, 1.5, 0.5],
+          opacity: [0.8, 0, 0.8],
+        }}
+        transition={{
+          duration: totalDuration / 2,
+          repeat: Infinity,
+          ease: "easeOut",
+        }}
+      />
+    </motion.div>
+  );
+};
 
 // Floating 3D icons per feature
 const floatingIconsPerFeature = [
@@ -80,7 +149,8 @@ const FeatureCard = ({ feature }: { feature: typeof features[0] }) => {
 
   if (ui.type === "schedule") {
     return (
-      <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20 space-y-2">
+      <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20 space-y-2 relative overflow-hidden">
+        <AnimatedCursor type="schedule" />
         <div className="flex items-center gap-2 mb-3">
           <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center">
             <span className="text-white text-sm font-bold">V</span>
@@ -109,7 +179,8 @@ const FeatureCard = ({ feature }: { feature: typeof features[0] }) => {
 
   if (ui.type === "reschedule") {
     return (
-      <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
+      <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20 relative overflow-hidden">
+        <AnimatedCursor type="reschedule" />
         <div className="flex items-center gap-2 mb-4">
           <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center">
             <span className="text-white text-sm font-bold">V</span>
@@ -140,7 +211,8 @@ const FeatureCard = ({ feature }: { feature: typeof features[0] }) => {
 
   if (ui.type === "stats") {
     return (
-      <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
+      <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20 relative overflow-hidden">
+        <AnimatedCursor type="stats" />
         <div className="flex items-center gap-2 mb-4">
           <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center">
             <span className="text-white text-sm font-bold">V</span>
@@ -182,7 +254,8 @@ const FeatureCard = ({ feature }: { feature: typeof features[0] }) => {
 
   if (ui.type === "insights") {
     return (
-      <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
+      <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20 relative overflow-hidden">
+        <AnimatedCursor type="insights" />
         <div className="flex items-center gap-2 mb-4">
           <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center">
             <Sparkles className="w-4 h-4 text-white" />
