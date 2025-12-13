@@ -490,7 +490,7 @@ const Auth = () => {
                         fill="#EA4335"
                       />
                     </svg>
-                    <span>Google - please do not use right now as not working. Use normal sign up instead</span>
+                    <span>Continue with Google</span>
                   </Button>
                 </form>
               </TabsContent>
