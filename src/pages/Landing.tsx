@@ -36,8 +36,6 @@ import ColorChangeFeatures from "@/components/landing/ColorChangeFeatures";
 import PersonalTutorSection from "@/components/landing/PersonalTutorSection";
 import owlWithBook from "@/assets/owl-with-book.png";
 import pointingOwl from "@/assets/pointing-owl.png";
-import happyOwl from "@/assets/happy-owl.png";
-import confusedOwl from "@/assets/confused-owl.png";
 
 const Landing = () => {
   const navigate = useNavigate();
@@ -114,15 +112,6 @@ const Landing = () => {
           style={{ y: heroY, opacity: heroOpacity }}
           className="relative min-h-[85vh] flex items-center justify-center px-6 pt-20 pb-16"
         >
-          {/* Happy Owl in Hero - bottom left */}
-          <motion.img
-            src={happyOwl}
-            alt=""
-            className="hidden md:block absolute left-4 lg:left-12 bottom-12 lg:bottom-20 w-32 h-32 lg:w-40 lg:h-40 object-contain pointer-events-none drop-shadow-lg z-10"
-            initial={{ opacity: 0, y: 30, scale: 0.8 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            transition={{ delay: 1.2, type: "spring", stiffness: 80 }}
-          />
           <div className="relative z-10 max-w-5xl mx-auto">
             <motion.div
               initial={{ opacity: 0, y: 30 }}
@@ -276,17 +265,6 @@ const Landing = () => {
           onMouseMove={handleFeaturesMouseMove}
           onMouseLeave={() => setMousePosition({ x: 0, y: 0 })}
         >
-          {/* Confused Owl - top right of features section */}
-          <motion.img
-            src={confusedOwl}
-            alt=""
-            className="hidden lg:block absolute right-4 xl:right-12 top-4 w-28 h-28 xl:w-36 xl:h-36 object-contain pointer-events-none drop-shadow-lg z-10"
-            initial={{ opacity: 0, rotate: 10 }}
-            whileInView={{ opacity: 1, rotate: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.3, type: "spring", stiffness: 80 }}
-          />
-
           {/* Animated background gradient */}
           <motion.div
             className="absolute inset-0 opacity-30"
@@ -808,18 +786,7 @@ const Landing = () => {
         </section>
 
         {/* Footer */}
-        <footer className="py-8 px-6 border-t bg-card/50 relative">
-          {/* Owl with Book in footer - waving goodbye */}
-          <motion.img
-            src={owlWithBook}
-            alt=""
-            className="hidden md:block absolute left-8 -top-12 w-20 h-20 object-contain pointer-events-none drop-shadow-lg"
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.2, type: "spring", stiffness: 100 }}
-          />
-
+        <footer className="py-8 px-6 border-t bg-card/50">
           <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-2">
               <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-secondary flex items-center justify-center">

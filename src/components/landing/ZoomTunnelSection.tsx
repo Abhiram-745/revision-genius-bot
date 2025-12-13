@@ -57,83 +57,64 @@ export const ZoomTunnelSection = () => {
   const [isLocked, setIsLocked] = useState(false);
   const sectionRef = useRef<HTMLElement>(null);
   const hasExited = useRef(false);
-  const isInSection = useRef(false);
+  const lastScrollTime = useRef(0);
+  const accumulatedDelta = useRef(0);
 
   const activeCardIndex = Math.min(
     Math.floor(zoomProgress * tunnelContent.length),
     tunnelContent.length - 1
   );
 
-  // Lock scroll - more aggressive locking
+  // Lock scroll
   const lockScroll = useCallback(() => {
-    if (hasExited.current) return;
+    if (isLocked || hasExited.current) return;
     document.body.style.overflow = 'hidden';
-    document.body.style.position = 'fixed';
-    document.body.style.width = '100%';
     setIsLocked(true);
-  }, []);
+  }, [isLocked]);
 
   // Unlock and exit with smooth scroll
   const unlockScroll = useCallback((direction: 'up' | 'down') => {
     document.body.style.overflow = '';
-    document.body.style.position = '';
-    document.body.style.width = '';
     setIsLocked(false);
     hasExited.current = true;
-    isInSection.current = false;
+    
+    // Smooth scroll to exit the section
+    window.scrollBy({ 
+      top: direction === 'down' ? 200 : -200, 
+      behavior: 'smooth' 
+    });
     
     // Cooldown before re-locking
     setTimeout(() => {
       hasExited.current = false;
-    }, 1200);
-  }, []);
-
-  // Check if section is in view for locking
-  const checkSectionInView = useCallback(() => {
-    const section = sectionRef.current;
-    if (!section) return false;
-
-    const rect = section.getBoundingClientRect();
-    const viewportHeight = window.innerHeight;
-    
-    // Section center should be roughly in the viewport center
-    const sectionCenter = rect.top + rect.height / 2;
-    const viewportCenter = viewportHeight / 2;
-    const tolerance = viewportHeight * 0.4;
-    
-    return Math.abs(sectionCenter - viewportCenter) < tolerance;
+    }, 1000);
   }, []);
 
   // Handle wheel events for smooth continuous zoom
   const handleWheel = useCallback((e: WheelEvent) => {
     const section = sectionRef.current;
-    if (!section || hasExited.current) return;
+    if (!section) return;
 
-    const sectionInView = checkSectionInView();
+    const rect = section.getBoundingClientRect();
+    const sectionInView = rect.top <= window.innerHeight * 0.3 && rect.bottom >= window.innerHeight * 0.7;
 
-    if (!sectionInView) {
+    if (!sectionInView || hasExited.current) {
       if (isLocked) {
-        unlockScroll(e.deltaY > 0 ? 'down' : 'up');
+        document.body.style.overflow = '';
+        setIsLocked(false);
       }
       return;
     }
 
-    // Entering section - lock and scroll to center first
-    if (!isLocked && !hasExited.current && sectionInView) {
-      // Scroll section to center of viewport
-      section.scrollIntoView({ behavior: 'instant', block: 'center' });
+    // Lock when section is in view
+    if (!isLocked && !hasExited.current) {
       lockScroll();
-      isInSection.current = true;
-      e.preventDefault();
-      return;
     }
-
-    if (!isLocked) return;
 
     e.preventDefault();
 
-    // Higher sensitivity for faster progression
-    const sensitivity = 0.0004;
+    // Much lower sensitivity - requires significantly more scrolling
+    const sensitivity = 0.00006;
     const delta = e.deltaY * sensitivity;
     
     setZoomProgress((prev) => {
@@ -141,17 +122,17 @@ export const ZoomTunnelSection = () => {
       
       // Unlock at boundaries
       if (next >= 1 && delta > 0) {
-        setTimeout(() => unlockScroll('down'), 50);
+        setTimeout(() => unlockScroll('down'), 10);
         return 1;
       }
       if (next <= 0 && delta < 0) {
-        setTimeout(() => unlockScroll('up'), 50);
+        setTimeout(() => unlockScroll('up'), 10);
         return 0;
       }
       
       return next;
     });
-  }, [isLocked, lockScroll, unlockScroll, checkSectionInView]);
+  }, [isLocked, lockScroll, unlockScroll]);
 
   // Touch handling for smooth zoom
   const touchStartY = useRef(0);
@@ -164,49 +145,44 @@ export const ZoomTunnelSection = () => {
 
   const handleTouchMove = useCallback((e: TouchEvent) => {
     const section = sectionRef.current;
-    if (!section || hasExited.current) return;
+    if (!section) return;
 
-    const sectionInView = checkSectionInView();
+    const rect = section.getBoundingClientRect();
+    const sectionInView = rect.top <= window.innerHeight * 0.3 && rect.bottom >= window.innerHeight * 0.7;
 
-    if (!sectionInView) {
+    if (!sectionInView || hasExited.current) {
       if (isLocked) {
-        const delta = lastTouchY.current - e.touches[0].clientY;
-        unlockScroll(delta > 0 ? 'down' : 'up');
+        document.body.style.overflow = '';
+        setIsLocked(false);
       }
       return;
     }
 
-    if (!isLocked && !hasExited.current && sectionInView) {
-      section.scrollIntoView({ behavior: 'instant', block: 'center' });
+    if (!isLocked && !hasExited.current) {
       lockScroll();
-      isInSection.current = true;
-      e.preventDefault();
-      return;
     }
-
-    if (!isLocked) return;
 
     e.preventDefault();
 
     const currentY = e.touches[0].clientY;
-    const delta = (lastTouchY.current - currentY) * 0.003;
+    const delta = (lastTouchY.current - currentY) * 0.00012;
     lastTouchY.current = currentY;
 
     setZoomProgress((prev) => {
       const next = Math.max(0, Math.min(1, prev + delta));
       
       if (next >= 1 && delta > 0) {
-        setTimeout(() => unlockScroll('down'), 50);
+        setTimeout(() => unlockScroll('down'), 10);
         return 1;
       }
       if (next <= 0 && delta < 0) {
-        setTimeout(() => unlockScroll('up'), 50);
+        setTimeout(() => unlockScroll('up'), 10);
         return 0;
       }
       
       return next;
     });
-  }, [isLocked, lockScroll, unlockScroll, checkSectionInView]);
+  }, [isLocked, lockScroll, unlockScroll]);
 
   const handleTouchEnd = useCallback(() => {
     // Let momentum continue naturally
@@ -231,8 +207,6 @@ export const ZoomTunnelSection = () => {
   useEffect(() => {
     return () => {
       document.body.style.overflow = '';
-      document.body.style.position = '';
-      document.body.style.width = '';
     };
   }, []);
 
