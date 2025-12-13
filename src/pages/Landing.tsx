@@ -36,6 +36,7 @@ import ColorChangeFeatures from "@/components/landing/ColorChangeFeatures";
 import PersonalTutorSection from "@/components/landing/PersonalTutorSection";
 import owlWithBook from "@/assets/owl-with-book.png";
 import pointingOwl from "@/assets/pointing-owl.png";
+import wavingOwl from "@/assets/waving-owl.png";
 
 const Landing = () => {
   const navigate = useNavigate();
@@ -112,6 +113,16 @@ const Landing = () => {
           style={{ y: heroY, opacity: heroOpacity }}
           className="relative min-h-[85vh] flex items-center justify-center px-6 pt-20 pb-16"
         >
+          {/* Waving Owl Mascot - Top Right */}
+          <motion.img
+            src={wavingOwl}
+            alt="Waving owl mascot"
+            className="absolute top-24 right-4 md:right-8 lg:right-16 w-28 h-28 md:w-36 md:h-36 lg:w-44 lg:h-44 object-contain drop-shadow-xl z-20"
+            initial={{ opacity: 0, x: 50, rotate: 15 }}
+            animate={{ opacity: 1, x: 0, rotate: 0 }}
+            transition={{ duration: 0.8, delay: 1.2 }}
+          />
+          
           <div className="relative z-10 max-w-5xl mx-auto">
             <motion.div
               initial={{ opacity: 0, y: 30 }}

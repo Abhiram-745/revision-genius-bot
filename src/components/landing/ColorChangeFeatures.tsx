@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Brain, Calendar, BarChart3, Sparkles, Zap, Star, Rocket, Target, Heart, BookOpen, Trophy, Flame, MousePointer2 } from "lucide-react";
 import { Cube3D, Sphere3D, Diamond3D, GlowingParticle } from "./3DObjects";
+import readingOwl from "@/assets/reading-owl.png";
 
 const features = [
   {
@@ -585,6 +586,16 @@ export const ColorChangeFeatures = () => {
           </AnimatePresence>
         </div>
       </div>
+
+      {/* Reading Owl Mascot */}
+      <motion.img
+        src={readingOwl}
+        alt="Reading owl mascot"
+        className="absolute top-16 right-4 md:right-8 lg:right-12 w-32 h-32 md:w-40 md:h-40 lg:w-48 lg:h-48 object-contain drop-shadow-xl z-30"
+        initial={{ opacity: 0, y: -30, rotate: 10 }}
+        animate={{ opacity: 1, y: 0, rotate: 0 }}
+        transition={{ duration: 0.6, delay: 0.5 }}
+      />
 
       {/* Progress Indicator */}
       <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-4 z-20">
