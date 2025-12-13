@@ -1,11 +1,9 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
-  Brain, Target, Lightbulb, Clock, BarChart3, Sparkles, Zap, Star,
-  Trophy, GraduationCap, BookOpen, Pencil, Award, Calendar, CheckCircle,
-  Calculator, Notebook, Medal, Ruler, FileText, type LucideIcon
+  Brain, Target, Lightbulb, BarChart3, Zap,
+  Trophy, GraduationCap, BookOpen, type LucideIcon
 } from "lucide-react";
-import { GlowingParticle } from "./3DObjects";
 
 const tunnelContent = [
   { title: "AI-Powered Schedules", subtitle: "Let AI plan your perfect study sessions", icon: Brain, color: "from-pink-500 to-rose-400" },
@@ -14,43 +12,18 @@ const tunnelContent = [
   { title: "Achieve Your Goals", subtitle: "Ace your exams with confidence", icon: Target, color: "from-blue-500 to-cyan-400" },
 ];
 
-// Study-themed floating icons with 3D effects
-const floatingStudyIcons: { Icon: LucideIcon; x: number; y: number; size: number; orbitRadius: number; orbitSpeed: number; delay: number; color: string }[] = [
-  { Icon: BookOpen, x: 15, y: 20, size: 40, orbitRadius: 200, orbitSpeed: 0.5, delay: 0, color: "text-blue-500" },
-  { Icon: Trophy, x: 85, y: 25, size: 36, orbitRadius: 180, orbitSpeed: 0.7, delay: 0.2, color: "text-yellow-500" },
-  { Icon: GraduationCap, x: 10, y: 75, size: 38, orbitRadius: 220, orbitSpeed: 0.4, delay: 0.4, color: "text-purple-500" },
-  { Icon: Star, x: 88, y: 70, size: 32, orbitRadius: 190, orbitSpeed: 0.6, delay: 0.6, color: "text-amber-500" },
-  { Icon: Pencil, x: 25, y: 45, size: 44, orbitRadius: 240, orbitSpeed: 0.3, delay: 0.3, color: "text-green-500" },
-  { Icon: Target, x: 78, y: 50, size: 36, orbitRadius: 210, orbitSpeed: 0.55, delay: 0.5, color: "text-red-500" },
-  { Icon: Award, x: 50, y: 15, size: 34, orbitRadius: 260, orbitSpeed: 0.45, delay: 0.15, color: "text-pink-500" },
-  { Icon: Clock, x: 50, y: 85, size: 38, orbitRadius: 230, orbitSpeed: 0.65, delay: 0.35, color: "text-cyan-500" },
-  { Icon: Brain, x: 35, y: 65, size: 42, orbitRadius: 250, orbitSpeed: 0.35, delay: 0.45, color: "text-violet-500" },
-  { Icon: Lightbulb, x: 65, y: 35, size: 30, orbitRadius: 170, orbitSpeed: 0.75, delay: 0.55, color: "text-orange-500" },
+// Simplified study icons - only 5 key icons
+const floatingStudyIcons: { Icon: LucideIcon; x: number; y: number; size: number; orbitRadius: number; orbitSpeed: number; color: string }[] = [
+  { Icon: BookOpen, x: 15, y: 25, size: 36, orbitRadius: 180, orbitSpeed: 0.4, color: "text-blue-500" },
+  { Icon: Trophy, x: 85, y: 30, size: 32, orbitRadius: 160, orbitSpeed: 0.5, color: "text-yellow-500" },
+  { Icon: GraduationCap, x: 12, y: 70, size: 34, orbitRadius: 170, orbitSpeed: 0.35, color: "text-purple-500" },
+  { Icon: Target, x: 88, y: 65, size: 30, orbitRadius: 150, orbitSpeed: 0.45, color: "text-red-500" },
+  { Icon: Lightbulb, x: 50, y: 15, size: 28, orbitRadius: 140, orbitSpeed: 0.55, color: "text-orange-500" },
 ];
 
-// More floating study icons with 3D rotation
-const floatingIcons: { Icon: LucideIcon; x: number; y: number; delay: number; size: number; rotateSpeed: number; color: string }[] = [
-  { Icon: Notebook, x: 12, y: 18, delay: 0, size: 32, rotateSpeed: 3, color: "text-blue-400" },
-  { Icon: Lightbulb, x: 88, y: 22, delay: 0.2, size: 28, rotateSpeed: 4, color: "text-yellow-400" },
-  { Icon: Clock, x: 8, y: 78, delay: 0.4, size: 24, rotateSpeed: 5, color: "text-cyan-400" },
-  { Icon: Sparkles, x: 92, y: 72, delay: 0.6, size: 30, rotateSpeed: 3.5, color: "text-purple-400" },
-  { Icon: Star, x: 20, y: 40, delay: 0.3, size: 26, rotateSpeed: 4.5, color: "text-amber-400" },
-  { Icon: Medal, x: 80, y: 55, delay: 0.5, size: 28, rotateSpeed: 3.2, color: "text-orange-400" },
-  { Icon: Trophy, x: 15, y: 60, delay: 0.1, size: 30, rotateSpeed: 4.2, color: "text-yellow-500" },
-  { Icon: GraduationCap, x: 85, y: 40, delay: 0.25, size: 32, rotateSpeed: 3.8, color: "text-indigo-400" },
-  { Icon: BookOpen, x: 30, y: 25, delay: 0.35, size: 26, rotateSpeed: 5.2, color: "text-emerald-400" },
-  { Icon: Pencil, x: 70, y: 75, delay: 0.45, size: 24, rotateSpeed: 4.8, color: "text-green-400" },
-  { Icon: Calculator, x: 45, y: 12, delay: 0.15, size: 28, rotateSpeed: 3.6, color: "text-slate-400" },
-  { Icon: Calendar, x: 55, y: 88, delay: 0.55, size: 30, rotateSpeed: 4.4, color: "text-rose-400" },
-  { Icon: Ruler, x: 25, y: 85, delay: 0.65, size: 26, rotateSpeed: 5.5, color: "text-teal-400" },
-  { Icon: FileText, x: 75, y: 15, delay: 0.75, size: 32, rotateSpeed: 3.4, color: "text-blue-300" },
-];
-
-// Study-themed orbiting icon rings
+// Single orbiting ring with 4 icons
 const orbitingRings: { radius: number; icons: LucideIcon[]; speed: number; reverse: boolean }[] = [
-  { radius: 150, icons: [BookOpen, Trophy, Target], speed: 0.3, reverse: false },
-  { radius: 220, icons: [GraduationCap, Star, Award, Medal], speed: 0.2, reverse: true },
-  { radius: 300, icons: [Brain, Lightbulb, Clock, Calendar, Pencil], speed: 0.15, reverse: false },
+  { radius: 200, icons: [BookOpen, Trophy, GraduationCap, Target], speed: 0.25, reverse: false },
 ];
 
 export const ZoomTunnelSection = () => {
@@ -246,7 +219,8 @@ export const ZoomTunnelSection = () => {
               rotateY(${spiralRotationY}deg) 
               scale(${spiralScale})
             `,
-            transition: 'transform 0.1s ease-out',
+            transition: 'transform 0.3s ease-out',
+            willChange: 'transform',
           }}
         >
           {/* Spiral Arms - 6 rotating arms */}
@@ -325,16 +299,16 @@ export const ZoomTunnelSection = () => {
                   transform: `
                     translate(-50%, -50%)
                     translate3d(${x}px, ${y}px, ${z}px)
-                    rotateX(${selfRotation * 0.3}deg)
-                    rotateY(${selfRotation * 0.5}deg)
                   `,
                   opacity,
+                  transition: 'transform 0.3s ease-out, opacity 0.3s ease-out',
+                  willChange: 'transform, opacity',
                 }}
               >
                 <div 
                   className={`${iconData.color} p-3 rounded-xl bg-background/20 backdrop-blur-sm border border-current/20`}
                   style={{
-                    boxShadow: '0 0 30px currentColor',
+                    boxShadow: '0 0 20px currentColor',
                   }}
                 >
                   <IconComponent size={iconData.size} strokeWidth={1.5} />
@@ -343,10 +317,10 @@ export const ZoomTunnelSection = () => {
             );
           })}
 
-          {/* Orbiting Icon Rings */}
+          {/* Single Orbiting Ring */}
           {orbitingRings.map((ring, ringIndex) => {
             const ringRotation = zoomProgress * 360 * ring.speed * (ring.reverse ? -1 : 1);
-            const ringOpacity = Math.max(0, 0.8 - zoomProgress * 0.9);
+            const ringOpacity = Math.max(0, 0.7 - zoomProgress * 0.8);
             
             return (
               <div
@@ -356,10 +330,11 @@ export const ZoomTunnelSection = () => {
                   transformStyle: 'preserve-3d',
                   transform: `
                     translate(-50%, -50%)
-                    rotateX(${60 + ringIndex * 15}deg)
+                    rotateX(60deg)
                     rotateZ(${ringRotation}deg)
                   `,
                   opacity: ringOpacity,
+                  transition: 'transform 0.3s ease-out, opacity 0.3s ease-out',
                 }}
               >
                 {ring.icons.map((Icon, iconIndex) => {
@@ -367,25 +342,20 @@ export const ZoomTunnelSection = () => {
                   const rad = (angle * Math.PI) / 180;
                   const iconX = Math.cos(rad) * ring.radius;
                   const iconY = Math.sin(rad) * ring.radius;
-                  const iconSelfRotate = zoomProgress * 720 * (iconIndex % 2 === 0 ? 1 : -1);
                   
                   return (
                     <motion.div
                       key={`orbit-icon-${ringIndex}-${iconIndex}`}
                       className="absolute"
                       style={{
-                        transform: `
-                          translate(${iconX}px, ${iconY}px)
-                          rotateX(-${60 + ringIndex * 15}deg)
-                          rotateZ(${iconSelfRotate}deg)
-                        `,
+                        transform: `translate(${iconX}px, ${iconY}px) rotateX(-60deg)`,
                       }}
                     >
                       <Icon 
-                        className="text-primary/60" 
-                        size={20 + ringIndex * 4} 
+                        className="text-primary/50" 
+                        size={24} 
                         style={{
-                          filter: `drop-shadow(0 0 10px hsl(var(--primary) / 0.5))`,
+                          filter: `drop-shadow(0 0 8px hsl(var(--primary) / 0.4))`,
                         }}
                       />
                     </motion.div>
@@ -397,61 +367,22 @@ export const ZoomTunnelSection = () => {
         </div>
       </div>
 
-      {/* Floating Icons that zoom past - Enhanced with 3D rotation */}
-      {floatingIcons.map(({ Icon, x, y, delay, size, rotateSpeed }, index) => {
-        const iconScale = 1 + zoomProgress * 5;
-        const iconOpacity = Math.max(0, 0.6 - zoomProgress);
-        const iconBlur = zoomProgress * 4;
-        const iconRotate = zoomProgress * 360 * rotateSpeed;
-        
-        return (
-          <motion.div
-            key={index}
-            className="absolute pointer-events-none"
-            style={{
-              left: `${x}%`,
-              top: `${y}%`,
-              transform: `translate(-50%, -50%) scale(${iconScale}) rotateY(${iconRotate}deg) rotateX(${iconRotate * 0.3}deg)`,
-              opacity: iconOpacity,
-              filter: `blur(${iconBlur}px)`,
-              transformStyle: 'preserve-3d',
-            }}
-            initial={{ opacity: 0, scale: 0.5 }}
-            animate={{ 
-              opacity: iconOpacity,
-              scale: iconScale,
-            }}
-            transition={{ duration: 0.1 }}
-          >
-            <Icon 
-              size={size} 
-              className="text-primary/50" 
-              style={{
-                filter: `drop-shadow(0 0 ${8 + size/4}px hsl(var(--primary) / 0.4))`,
-              }}
-            />
-          </motion.div>
-        );
-      })}
 
-      {/* Glowing particles */}
-      {Array.from({ length: 20 }).map((_, i) => {
-        const particleProgress = (zoomProgress + i * 0.05) % 1;
-        const particleOpacity = Math.max(0, 0.5 - zoomProgress * 0.6);
-        const particleX = 20 + (i * 3) % 60;
-        const particleY = 15 + (i * 7) % 70;
-        const particleScale = 0.5 + particleProgress * 2;
+      {/* Glowing particles - reduced to 8 */}
+      {Array.from({ length: 8 }).map((_, i) => {
+        const particleOpacity = Math.max(0, 0.4 - zoomProgress * 0.5);
+        const particleX = 15 + (i * 10) % 70;
+        const particleY = 20 + (i * 9) % 60;
         
         return (
           <motion.div
             key={`particle-${i}`}
-            className="absolute w-2 h-2 rounded-full bg-primary/60 pointer-events-none"
+            className="absolute w-2 h-2 rounded-full bg-primary/50 pointer-events-none"
             style={{
               left: `${particleX}%`,
               top: `${particleY}%`,
-              transform: `scale(${particleScale})`,
               opacity: particleOpacity,
-              boxShadow: '0 0 10px hsl(var(--primary) / 0.8)',
+              boxShadow: '0 0 8px hsl(var(--primary) / 0.6)',
             }}
           />
         );
@@ -544,69 +475,6 @@ export const ZoomTunnelSection = () => {
           </div>
         </motion.div>
         
-        {/* Bottom right - Star */}
-        <motion.div 
-          className="absolute text-amber-500"
-          style={{ 
-            right: '15%', 
-            bottom: '18%',
-            opacity: Math.max(0, 0.8 - zoomProgress * 0.9),
-            transform: `scale(${1 - zoomProgress * 0.5})`
-          }}
-          animate={{ rotate: 360 }}
-          transition={{ duration: 11, repeat: Infinity, ease: "linear" }}
-        >
-          <div className="p-4 rounded-xl bg-background/20 backdrop-blur-sm border border-amber-500/30" style={{ boxShadow: '0 0 30px hsl(38 92% 50% / 0.4)' }}>
-            <Star size={45} strokeWidth={1.5} />
-          </div>
-        </motion.div>
-        
-        {/* Additional floating study icons */}
-        <motion.div 
-          className="absolute text-emerald-500"
-          style={{ 
-            left: '30%', 
-            top: '25%',
-            opacity: Math.max(0, 0.6 - zoomProgress * 0.7),
-            transform: `scale(${1 - zoomProgress * 0.5})`
-          }}
-          animate={{ y: [-15, 15, -15] }}
-          transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-        >
-          <div className="p-3 rounded-xl bg-background/20 backdrop-blur-sm border border-emerald-500/30" style={{ boxShadow: '0 0 25px hsl(160 84% 39% / 0.4)' }}>
-            <Pencil size={35} strokeWidth={1.5} />
-          </div>
-        </motion.div>
-        
-        <motion.div 
-          className="absolute text-cyan-500"
-          style={{ 
-            right: '28%', 
-            bottom: '30%',
-            opacity: Math.max(0, 0.6 - zoomProgress * 0.7),
-            transform: `scale(${1 - zoomProgress * 0.5})`
-          }}
-          animate={{ rotateZ: [-8, 8, -8] }}
-          transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
-        >
-          <div className="p-3 rounded-xl bg-background/20 backdrop-blur-sm border border-cyan-500/30" style={{ boxShadow: '0 0 25px hsl(188 94% 43% / 0.4)' }}>
-            <Clock size={38} strokeWidth={1.5} />
-          </div>
-        </motion.div>
-      </div>
-
-      {/* Glowing Particles */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        {[...Array(12)].map((_, i) => (
-          <GlowingParticle
-            key={`glow-${i}`}
-            size={4 + Math.random() * 6}
-            x={5 + (i * 8) % 90}
-            y={10 + (i * 12) % 80}
-            color={i % 3 === 0 ? "hsl(var(--primary))" : i % 3 === 1 ? "hsl(var(--secondary))" : "hsl(var(--accent))"}
-            delay={i * 0.3}
-          />
-        ))}
       </div>
 
       {/* Center Glow that expands with zoom */}
