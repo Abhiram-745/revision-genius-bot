@@ -174,7 +174,7 @@ export const ZoomTunnelSection = () => {
   }, []);
 
   // Number of rectangular frames
-  const frameCount = 5;
+  const frameCount = 4;
 
   return (
     <section
@@ -184,102 +184,148 @@ export const ZoomTunnelSection = () => {
         perspective: '1200px',
       }}
     >
-      {/* Rectangular Perspective Tunnel */}
+      {/* 3D Grid Tunnel - Top Grid (Ceiling) */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        {Array.from({ length: 10 }).map((_, i) => {
+          const yPosition = 5 + i * 4.5; // 5% to 45.5%
+          const progress = i / 9; // 0 to 1
+          const perspectiveScale = 0.3 + progress * 0.7; // Lines get wider as they go down
+          const lineOpacity = Math.max(0, (0.4 - zoomProgress * 0.5) * (0.4 + progress * 0.6));
+          
+          return (
+            <div
+              key={`top-grid-${i}`}
+              className="absolute left-1/2 -translate-x-1/2 h-[1px] will-change-transform"
+              style={{
+                top: `${yPosition}%`,
+                width: `${20 + progress * 80}%`,
+                background: `linear-gradient(90deg, 
+                  transparent 0%,
+                  hsl(var(--primary) / ${lineOpacity}) 15%,
+                  hsl(var(--primary) / ${lineOpacity * 1.2}) 50%,
+                  hsl(var(--primary) / ${lineOpacity}) 85%,
+                  transparent 100%
+                )`,
+                transform: `scaleX(${perspectiveScale + zoomProgress * 0.3})`,
+                transition: 'transform 0.3s ease-out, opacity 0.3s ease-out',
+              }}
+            />
+          );
+        })}
+        
+        {/* Bottom Grid (Floor) */}
+        {Array.from({ length: 10 }).map((_, i) => {
+          const yPosition = 54.5 + i * 4.5; // 54.5% to 95%
+          const progress = i / 9; // 0 to 1
+          const perspectiveScale = 0.3 + (1 - progress) * 0.7; // Lines get wider as they approach center
+          const lineOpacity = Math.max(0, (0.4 - zoomProgress * 0.5) * (0.4 + (1 - progress) * 0.6));
+          
+          return (
+            <div
+              key={`bottom-grid-${i}`}
+              className="absolute left-1/2 -translate-x-1/2 h-[1px] will-change-transform"
+              style={{
+                top: `${yPosition}%`,
+                width: `${20 + (1 - progress) * 80}%`,
+                background: `linear-gradient(90deg, 
+                  transparent 0%,
+                  hsl(var(--primary) / ${lineOpacity}) 15%,
+                  hsl(var(--primary) / ${lineOpacity * 1.2}) 50%,
+                  hsl(var(--primary) / ${lineOpacity}) 85%,
+                  transparent 100%
+                )`,
+                transform: `scaleX(${perspectiveScale + zoomProgress * 0.3})`,
+                transition: 'transform 0.3s ease-out, opacity 0.3s ease-out',
+              }}
+            />
+          );
+        })}
+
+        {/* Radiating perspective lines from corners */}
+        {Array.from({ length: 12 }).map((_, i) => {
+          const angle = -90 + (i * 180) / 11; // -90 to 90 degrees spread
+          const isTopHalf = i < 6;
+          const lineOpacity = Math.max(0, 0.35 - zoomProgress * 0.4);
+          
+          return (
+            <div
+              key={`radial-${i}`}
+              className="absolute h-[1px] will-change-transform"
+              style={{
+                left: '50%',
+                top: isTopHalf ? '0%' : '100%',
+                width: '70%',
+                background: `linear-gradient(90deg, 
+                  hsl(var(--primary) / ${lineOpacity * 0.8}) 0%,
+                  transparent 100%
+                )`,
+                transformOrigin: 'left center',
+                transform: `translateX(-50%) rotate(${isTopHalf ? 90 + angle * 0.4 : -90 - angle * 0.4}deg)`,
+                opacity: lineOpacity,
+                transition: 'opacity 0.3s ease-out',
+              }}
+            />
+          );
+        })}
+
+        {/* Left edge vertical lines */}
+        {Array.from({ length: 8 }).map((_, i) => {
+          const xPosition = 3 + i * 5; // 3% to 38%
+          const progress = i / 7;
+          const lineOpacity = Math.max(0, (0.3 - zoomProgress * 0.4) * (1 - progress * 0.5));
+          
+          return (
+            <div
+              key={`left-vert-${i}`}
+              className="absolute w-[1px] will-change-transform"
+              style={{
+                left: `${xPosition}%`,
+                top: `${10 + progress * 40}%`,
+                height: `${80 - progress * 80}%`,
+                background: `linear-gradient(180deg, 
+                  transparent 0%,
+                  hsl(var(--primary) / ${lineOpacity}) 50%,
+                  transparent 100%
+                )`,
+                transition: 'opacity 0.3s ease-out',
+              }}
+            />
+          );
+        })}
+
+        {/* Right edge vertical lines */}
+        {Array.from({ length: 8 }).map((_, i) => {
+          const xPosition = 97 - i * 5; // 97% to 62%
+          const progress = i / 7;
+          const lineOpacity = Math.max(0, (0.3 - zoomProgress * 0.4) * (1 - progress * 0.5));
+          
+          return (
+            <div
+              key={`right-vert-${i}`}
+              className="absolute w-[1px] will-change-transform"
+              style={{
+                left: `${xPosition}%`,
+                top: `${10 + progress * 40}%`,
+                height: `${80 - progress * 80}%`,
+                background: `linear-gradient(180deg, 
+                  transparent 0%,
+                  hsl(var(--primary) / ${lineOpacity}) 50%,
+                  transparent 100%
+                )`,
+                transition: 'opacity 0.3s ease-out',
+              }}
+            />
+          );
+        })}
+      </div>
+
+      {/* Center Rectangular Frames */}
       <div 
         className="absolute inset-0 flex items-center justify-center"
         style={{
           perspectiveOrigin: '50% 50%',
         }}
       >
-        {/* Perspective lines from corners to center */}
-        <div className="absolute inset-0 pointer-events-none">
-          {/* Top-left to center */}
-          <div 
-            className="absolute h-[2px] origin-top-left"
-            style={{
-              left: '0%',
-              top: '0%',
-              width: '60%',
-              background: 'linear-gradient(90deg, hsl(var(--primary) / 0.5), transparent)',
-              transform: 'rotate(33deg)',
-            }}
-          />
-          {/* Top-right to center */}
-          <div 
-            className="absolute h-[2px] origin-top-right"
-            style={{
-              right: '0%',
-              top: '0%',
-              width: '60%',
-              background: 'linear-gradient(-90deg, hsl(var(--primary) / 0.5), transparent)',
-              transform: 'rotate(-33deg)',
-            }}
-          />
-          {/* Bottom-left to center */}
-          <div 
-            className="absolute h-[2px] origin-bottom-left"
-            style={{
-              left: '0%',
-              bottom: '0%',
-              width: '60%',
-              background: 'linear-gradient(90deg, hsl(var(--primary) / 0.5), transparent)',
-              transform: 'rotate(-33deg)',
-            }}
-          />
-          {/* Bottom-right to center */}
-          <div 
-            className="absolute h-[2px] origin-bottom-right"
-            style={{
-              right: '0%',
-              bottom: '0%',
-              width: '60%',
-              background: 'linear-gradient(-90deg, hsl(var(--primary) / 0.5), transparent)',
-              transform: 'rotate(33deg)',
-            }}
-          />
-          
-          {/* Additional edge lines */}
-          {/* Top edge to center */}
-          <div 
-            className="absolute h-[2px] left-1/2 top-0 origin-top"
-            style={{
-              width: '50%',
-              background: 'linear-gradient(180deg, hsl(var(--primary) / 0.4), transparent)',
-              transform: 'translateX(-50%) rotate(90deg)',
-              transformOrigin: 'top center',
-            }}
-          />
-          {/* Bottom edge to center */}
-          <div 
-            className="absolute h-[2px] left-1/2 bottom-0 origin-bottom"
-            style={{
-              width: '50%',
-              background: 'linear-gradient(0deg, hsl(var(--primary) / 0.4), transparent)',
-              transform: 'translateX(-50%) rotate(90deg)',
-              transformOrigin: 'bottom center',
-            }}
-          />
-          {/* Left edge to center */}
-          <div 
-            className="absolute w-[2px] left-0 top-1/2"
-            style={{
-              height: '50%',
-              background: 'linear-gradient(90deg, hsl(var(--primary) / 0.4), transparent)',
-              transform: 'translateY(-50%)',
-            }}
-          />
-          {/* Right edge to center */}
-          <div 
-            className="absolute w-[2px] right-0 top-1/2"
-            style={{
-              height: '50%',
-              background: 'linear-gradient(-90deg, hsl(var(--primary) / 0.4), transparent)',
-              transform: 'translateY(-50%)',
-            }}
-          />
-        </div>
-
-        {/* Nested Rectangular Frames */}
         <div 
           className="relative w-full h-full flex items-center justify-center"
           style={{
@@ -287,57 +333,25 @@ export const ZoomTunnelSection = () => {
           }}
         >
           {Array.from({ length: frameCount }).map((_, i) => {
-            // Calculate frame properties based on zoom
-            const baseZ = -600 + i * 150;
-            const zoomOffset = zoomProgress * 1200;
+            const baseZ = -500 + i * 150;
+            const zoomOffset = zoomProgress * 1000;
             const currentZ = baseZ + zoomOffset;
-            
-            // Scale based on z-position (closer = bigger)
             const scale = Math.max(0.1, 1 + currentZ / 400);
-            
-            // Opacity - fade out when too close or too far
-            const opacity = currentZ > 200 ? 0 : currentZ < -500 ? 0 : 0.6 - Math.abs(currentZ) / 800;
-            
-            // Frame size increases as it gets closer
-            const baseSize = 20 + i * 8;
+            const opacity = currentZ > 200 ? 0 : currentZ < -500 ? 0 : 0.5 - Math.abs(currentZ) / 800;
+            const baseSize = 15 + i * 10;
             
             return (
               <div
                 key={`frame-${i}`}
-                className="absolute border-2 rounded-sm will-change-transform"
+                className="absolute border rounded-sm will-change-transform"
                 style={{
                   width: `${baseSize}%`,
-                  height: `${baseSize * 0.6}%`,
-                  transform: `translateZ(${currentZ}px) scale(${scale})`,
+                  height: `${baseSize * 0.55}%`,
+                  transform: `translate3d(0, 0, ${currentZ}px) scale(${scale})`,
                   borderColor: `hsl(var(--primary) / ${Math.max(0, opacity)})`,
-                  boxShadow: opacity > 0.1 ? `0 0 20px hsl(var(--primary) / ${opacity * 0.2})` : 'none',
-                  transition: 'transform 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+                  boxShadow: opacity > 0.1 ? `0 0 15px hsl(var(--primary) / ${opacity * 0.15})` : 'none',
+                  transition: 'transform 0.3s ease-out',
                   transformStyle: 'preserve-3d',
-                }}
-              />
-            );
-          })}
-          
-          {/* Horizontal grid lines inside tunnel */}
-          {Array.from({ length: 3 }).map((_, i) => {
-            const baseZ = -300 + i * 150;
-            const zoomOffset = zoomProgress * 1000;
-            const currentZ = baseZ + zoomOffset;
-            const opacity = currentZ > 150 ? 0 : currentZ < -400 ? 0 : 0.3 - Math.abs(currentZ) / 600;
-            
-            return (
-              <div
-                key={`h-line-${i}`}
-                className="absolute w-[80%] h-[1px] will-change-transform"
-                style={{
-                  transform: `translateZ(${currentZ}px)`,
-                  background: `linear-gradient(90deg, 
-                    transparent 0%, 
-                    hsl(var(--primary) / ${Math.max(0, opacity)}) 30%, 
-                    hsl(var(--primary) / ${Math.max(0, opacity)}) 70%, 
-                    transparent 100%
-                  )`,
-                  transition: 'transform 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
                 }}
               />
             );
@@ -379,26 +393,6 @@ export const ZoomTunnelSection = () => {
           );
         })}
       </div>
-
-      {/* Glowing particles */}
-      {Array.from({ length: 6 }).map((_, i) => {
-        const particleOpacity = Math.max(0, 0.35 - zoomProgress * 0.4);
-        const particleX = 15 + (i * 14) % 70;
-        const particleY = 20 + (i * 12) % 60;
-        
-        return (
-          <div
-            key={`particle-${i}`}
-            className="absolute w-1.5 h-1.5 rounded-full bg-primary/60 pointer-events-none"
-            style={{
-              left: `${particleX}%`,
-              top: `${particleY}%`,
-              opacity: particleOpacity,
-              boxShadow: '0 0 8px hsl(var(--primary) / 0.5)',
-            }}
-          />
-        );
-      })}
 
       {/* Center Glow */}
       <div 
