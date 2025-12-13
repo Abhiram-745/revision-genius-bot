@@ -46,11 +46,11 @@ const FAQSection = () => {
         <motion.img
           src={confusedOwl}
           alt=""
-          className="absolute -right-4 md:right-8 top-0 w-24 h-24 md:w-32 md:h-32 object-contain opacity-90 -z-0 pointer-events-none"
-          initial={{ opacity: 0, x: 20 }}
-          whileInView={{ opacity: 0.9, x: 0 }}
+          className="absolute -right-4 md:right-0 lg:right-8 -top-4 md:top-0 w-36 h-36 md:w-48 md:h-48 object-contain pointer-events-none drop-shadow-lg"
+          initial={{ opacity: 0, x: 30, rotate: -10 }}
+          whileInView={{ opacity: 1, x: 0, rotate: 0 }}
           viewport={{ once: true }}
-          transition={{ delay: 0.3 }}
+          transition={{ delay: 0.3, type: "spring", stiffness: 100 }}
         />
 
         <motion.div

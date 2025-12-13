@@ -338,11 +338,11 @@ const Landing = () => {
           <motion.img
             src={owlWithBook}
             alt=""
-            className="hidden lg:block absolute left-4 bottom-24 w-36 h-36 object-contain pointer-events-none opacity-90"
-            initial={{ opacity: 0, x: -30 }}
-            whileInView={{ opacity: 0.9, x: 0 }}
+            className="hidden lg:block absolute left-0 xl:left-8 bottom-16 w-48 h-48 lg:w-56 lg:h-56 object-contain pointer-events-none drop-shadow-lg"
+            initial={{ opacity: 0, x: -40, rotate: -5 }}
+            whileInView={{ opacity: 1, x: 0, rotate: 0 }}
             viewport={{ once: true }}
-            transition={{ delay: 0.5 }}
+            transition={{ delay: 0.5, type: "spring", stiffness: 80 }}
           />
 
           {/* Floating cards */}
@@ -726,11 +726,11 @@ const Landing = () => {
             <motion.img
               src={pointingOwl}
               alt=""
-              className="absolute right-4 md:right-8 bottom-6 w-28 h-28 md:w-36 md:h-36 object-contain pointer-events-none z-20"
-              initial={{ opacity: 0, x: 30 }}
-              whileInView={{ opacity: 1, x: 0 }}
+              className="absolute right-2 md:right-6 lg:right-10 bottom-4 w-36 h-36 md:w-44 md:h-44 lg:w-52 lg:h-52 object-contain pointer-events-none z-20 drop-shadow-lg"
+              initial={{ opacity: 0, x: 40, rotate: 5 }}
+              whileInView={{ opacity: 1, x: 0, rotate: 0 }}
               viewport={{ once: true }}
-              transition={{ delay: 0.4 }}
+              transition={{ delay: 0.4, type: "spring", stiffness: 80 }}
             />
 
             <motion.div 
