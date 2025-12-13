@@ -86,7 +86,7 @@ export const ZoomTunnelSection = () => {
 
     e.preventDefault();
 
-    const sensitivity = 0.0008;
+    const sensitivity = 0.0003;
     const delta = e.deltaY * sensitivity;
     
     setZoomProgress((prev) => {
@@ -134,7 +134,7 @@ export const ZoomTunnelSection = () => {
     e.preventDefault();
 
     const currentY = e.touches[0].clientY;
-    const delta = (lastTouchY.current - currentY) * 0.0016;
+    const delta = (lastTouchY.current - currentY) * 0.0006;
     lastTouchY.current = currentY;
 
     setZoomProgress((prev) => {
@@ -174,7 +174,7 @@ export const ZoomTunnelSection = () => {
   }, []);
 
   // Number of rectangular frames
-  const frameCount = 8;
+  const frameCount = 5;
 
   return (
     <section
@@ -304,17 +304,14 @@ export const ZoomTunnelSection = () => {
             return (
               <div
                 key={`frame-${i}`}
-                className="absolute border-2 rounded-sm"
+                className="absolute border-2 rounded-sm will-change-transform"
                 style={{
                   width: `${baseSize}%`,
                   height: `${baseSize * 0.6}%`,
                   transform: `translateZ(${currentZ}px) scale(${scale})`,
                   borderColor: `hsl(var(--primary) / ${Math.max(0, opacity)})`,
-                  boxShadow: opacity > 0 ? `
-                    0 0 ${30 + i * 10}px hsl(var(--primary) / ${opacity * 0.3}),
-                    inset 0 0 ${20 + i * 5}px hsl(var(--primary) / ${opacity * 0.1})
-                  ` : 'none',
-                  transition: 'transform 0.15s ease-out',
+                  boxShadow: opacity > 0.1 ? `0 0 20px hsl(var(--primary) / ${opacity * 0.2})` : 'none',
+                  transition: 'transform 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
                   transformStyle: 'preserve-3d',
                 }}
               />
@@ -322,8 +319,8 @@ export const ZoomTunnelSection = () => {
           })}
           
           {/* Horizontal grid lines inside tunnel */}
-          {Array.from({ length: 5 }).map((_, i) => {
-            const baseZ = -400 + i * 120;
+          {Array.from({ length: 3 }).map((_, i) => {
+            const baseZ = -300 + i * 150;
             const zoomOffset = zoomProgress * 1000;
             const currentZ = baseZ + zoomOffset;
             const opacity = currentZ > 150 ? 0 : currentZ < -400 ? 0 : 0.3 - Math.abs(currentZ) / 600;
@@ -331,7 +328,7 @@ export const ZoomTunnelSection = () => {
             return (
               <div
                 key={`h-line-${i}`}
-                className="absolute w-[80%] h-[1px]"
+                className="absolute w-[80%] h-[1px] will-change-transform"
                 style={{
                   transform: `translateZ(${currentZ}px)`,
                   background: `linear-gradient(90deg, 
@@ -340,7 +337,7 @@ export const ZoomTunnelSection = () => {
                     hsl(var(--primary) / ${Math.max(0, opacity)}) 70%, 
                     transparent 100%
                   )`,
-                  transition: 'transform 0.15s ease-out',
+                  transition: 'transform 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
                 }}
               />
             );
@@ -384,13 +381,13 @@ export const ZoomTunnelSection = () => {
       </div>
 
       {/* Glowing particles */}
-      {Array.from({ length: 12 }).map((_, i) => {
+      {Array.from({ length: 6 }).map((_, i) => {
         const particleOpacity = Math.max(0, 0.35 - zoomProgress * 0.4);
-        const particleX = 10 + (i * 7) % 80;
-        const particleY = 15 + (i * 11) % 70;
+        const particleX = 15 + (i * 14) % 70;
+        const particleY = 20 + (i * 12) % 60;
         
         return (
-          <motion.div
+          <div
             key={`particle-${i}`}
             className="absolute w-1.5 h-1.5 rounded-full bg-primary/60 pointer-events-none"
             style={{
@@ -398,15 +395,6 @@ export const ZoomTunnelSection = () => {
               top: `${particleY}%`,
               opacity: particleOpacity,
               boxShadow: '0 0 8px hsl(var(--primary) / 0.5)',
-            }}
-            animate={{
-              scale: [1, 1.3, 1],
-              opacity: [particleOpacity, particleOpacity * 1.3, particleOpacity],
-            }}
-            transition={{
-              duration: 2 + i * 0.3,
-              repeat: Infinity,
-              ease: "easeInOut",
             }}
           />
         );
@@ -442,9 +430,9 @@ export const ZoomTunnelSection = () => {
             className="relative z-10"
           >
             <div 
-              className={`p-6 md:p-8 rounded-2xl bg-gradient-to-br ${tunnelContent[activeCardIndex].color} text-white shadow-2xl`}
+              className="p-6 md:p-8 rounded-2xl bg-background/95 backdrop-blur-lg border border-primary/30 text-foreground shadow-2xl"
               style={{
-                boxShadow: `0 0 60px hsl(var(--primary) / 0.4)`,
+                boxShadow: `0 0 40px hsl(var(--primary) / 0.3)`,
               }}
             >
               <div className="flex items-center gap-4 mb-3">
