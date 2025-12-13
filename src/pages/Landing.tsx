@@ -31,7 +31,7 @@ import Card3DCarousel from "@/components/landing/Card3DCarousel";
 import TimetableCreationSection from "@/components/landing/TimetableCreationSection";
 import SuccessStoriesSection from "@/components/landing/SuccessStoriesSection";
 import HorizontalScrollFeatures from "@/components/landing/HorizontalScrollFeatures";
-import ZoomTunnelSection from "@/components/landing/ZoomTunnelSection";
+import { ZoomTunnelSection } from "@/components/landing/ZoomTunnelSection";
 import ColorChangeFeatures from "@/components/landing/ColorChangeFeatures";
 import PersonalTutorSection from "@/components/landing/PersonalTutorSection";
 import owlWithBook from "@/assets/owl-with-book.png";
