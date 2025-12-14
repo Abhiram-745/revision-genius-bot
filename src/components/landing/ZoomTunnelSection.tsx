@@ -4,6 +4,7 @@ import {
   Brain, Target, Lightbulb, BarChart3, Zap,
   Trophy, GraduationCap, BookOpen, type LucideIcon
 } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const tunnelContent = [
   { title: "AI-Powered Schedules", subtitle: "Let AI plan your perfect study sessions", icon: Brain, color: "from-pink-500 to-rose-400" },
@@ -16,21 +17,73 @@ const tunnelContent = [
 interface EdgeIcon {
   Icon: LucideIcon;
   position: string;
+  mobilePosition: string;
   color: string;
   size: number;
+  mobileSize: number;
   animation: { rotateY?: number; y?: number[]; rotateZ?: number[]; scale?: number[]; rotate?: number[] };
 }
 
 const edgeIcons: EdgeIcon[] = [
-  { Icon: BookOpen, position: "left-[8%] top-[15%]", color: "text-blue-500", size: 44, animation: { rotateY: 360 } },
-  { Icon: Trophy, position: "right-[8%] top-[18%]", color: "text-yellow-500", size: 40, animation: { y: [-8, 8, -8] } },
-  { Icon: GraduationCap, position: "left-[5%] top-[50%] -translate-y-1/2", color: "text-purple-500", size: 38, animation: { rotateZ: [-5, 5, -5] } },
-  { Icon: Target, position: "right-[6%] top-[55%]", color: "text-red-500", size: 42, animation: { scale: [1, 1.1, 1] } },
-  { Icon: Brain, position: "left-[10%] bottom-[18%]", color: "text-pink-500", size: 40, animation: { rotateY: 360 } },
-  { Icon: Lightbulb, position: "right-[12%] bottom-[22%]", color: "text-orange-500", size: 36, animation: { rotate: [-10, 10, -10] } },
+  { Icon: BookOpen, position: "left-[8%] top-[15%]", mobilePosition: "left-[5%] top-[10%]", color: "text-blue-500", size: 44, mobileSize: 28, animation: { rotateY: 360 } },
+  { Icon: Trophy, position: "right-[8%] top-[18%]", mobilePosition: "right-[5%] top-[12%]", color: "text-yellow-500", size: 40, mobileSize: 26, animation: { y: [-8, 8, -8] } },
+  { Icon: GraduationCap, position: "left-[5%] top-[50%] -translate-y-1/2", mobilePosition: "left-[3%] top-[45%]", color: "text-purple-500", size: 38, mobileSize: 24, animation: { rotateZ: [-5, 5, -5] } },
+  { Icon: Target, position: "right-[6%] top-[55%]", mobilePosition: "right-[3%] top-[50%]", color: "text-red-500", size: 42, mobileSize: 26, animation: { scale: [1, 1.1, 1] } },
+  { Icon: Brain, position: "left-[10%] bottom-[18%]", mobilePosition: "left-[5%] bottom-[15%]", color: "text-pink-500", size: 40, mobileSize: 24, animation: { rotateY: 360 } },
+  { Icon: Lightbulb, position: "right-[12%] bottom-[22%]", mobilePosition: "right-[5%] bottom-[18%]", color: "text-orange-500", size: 36, mobileSize: 22, animation: { rotate: [-10, 10, -10] } },
 ];
 
-export const ZoomTunnelSection = () => {
+// Mobile simplified version - no scroll lock
+const MobileZoomSection = () => {
+  return (
+    <section className="relative py-16 px-4 overflow-hidden bg-background">
+      <div className="max-w-lg mx-auto">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="text-center mb-8"
+        >
+          <h2 className="text-2xl font-display font-bold mb-2">
+            Your Study Journey
+          </h2>
+          <p className="text-sm text-muted-foreground">
+            Everything you need to succeed
+          </p>
+        </motion.div>
+
+        <div className="space-y-4">
+          {tunnelContent.map((item, index) => {
+            const IconComponent = item.icon;
+            return (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, x: index % 2 === 0 ? -30 : 30 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: index * 0.1 }}
+                className="p-4 rounded-xl bg-card/80 backdrop-blur-sm border border-border/50 shadow-sm"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                    <IconComponent size={20} strokeWidth={1.5} className="text-primary" />
+                  </div>
+                  <div>
+                    <h3 className="text-base font-semibold">{item.title}</h3>
+                    <p className="text-xs text-muted-foreground">{item.subtitle}</p>
+                  </div>
+                </div>
+              </motion.div>
+            );
+          })}
+        </div>
+      </div>
+    </section>
+  );
+};
+
+// Desktop version with full 3D tunnel effect
+const DesktopZoomSection = () => {
   const [zoomProgress, setZoomProgress] = useState(0);
   const [isLocked, setIsLocked] = useState(false);
   const sectionRef = useRef<HTMLElement>(null);
@@ -41,14 +94,12 @@ export const ZoomTunnelSection = () => {
     tunnelContent.length - 1
   );
 
-  // Lock scroll
   const lockScroll = useCallback(() => {
     if (isLocked || hasExited.current) return;
     document.body.style.overflow = 'hidden';
     setIsLocked(true);
   }, [isLocked]);
 
-  // Unlock and exit with smooth scroll
   const unlockScroll = useCallback((direction: 'up' | 'down') => {
     document.body.style.overflow = '';
     setIsLocked(false);
@@ -64,7 +115,6 @@ export const ZoomTunnelSection = () => {
     }, 800);
   }, []);
 
-  // Handle wheel events
   const handleWheel = useCallback((e: WheelEvent) => {
     const section = sectionRef.current;
     if (!section) return;
@@ -105,91 +155,33 @@ export const ZoomTunnelSection = () => {
     });
   }, [isLocked, lockScroll, unlockScroll]);
 
-  // Touch handling
-  const lastTouchY = useRef(0);
-  
-  const handleTouchStart = useCallback((e: TouchEvent) => {
-    lastTouchY.current = e.touches[0].clientY;
-  }, []);
-
-  const handleTouchMove = useCallback((e: TouchEvent) => {
-    const section = sectionRef.current;
-    if (!section) return;
-
-    const rect = section.getBoundingClientRect();
-    const sectionInView = rect.top <= window.innerHeight * 0.15 && rect.bottom >= window.innerHeight * 0.85;
-
-    if (!sectionInView || hasExited.current) {
-      if (isLocked) {
-        document.body.style.overflow = '';
-        setIsLocked(false);
-      }
-      return;
-    }
-
-    if (!isLocked && !hasExited.current) {
-      lockScroll();
-    }
-
-    e.preventDefault();
-
-    const currentY = e.touches[0].clientY;
-    const delta = (lastTouchY.current - currentY) * 0.0006;
-    lastTouchY.current = currentY;
-
-    setZoomProgress((prev) => {
-      const next = Math.max(0, Math.min(1, prev + delta));
-      
-      if (next >= 1 && delta > 0) {
-        setTimeout(() => unlockScroll('down'), 10);
-        return 1;
-      }
-      if (next <= 0 && delta < 0) {
-        setTimeout(() => unlockScroll('up'), 10);
-        return 0;
-      }
-      
-      return next;
-    });
-  }, [isLocked, lockScroll, unlockScroll]);
-
-  // Add event listeners
   useEffect(() => {
     window.addEventListener('wheel', handleWheel, { passive: false });
-    window.addEventListener('touchstart', handleTouchStart, { passive: true });
-    window.addEventListener('touchmove', handleTouchMove, { passive: false });
-    
     return () => {
       window.removeEventListener('wheel', handleWheel);
-      window.removeEventListener('touchstart', handleTouchStart);
-      window.removeEventListener('touchmove', handleTouchMove);
     };
-  }, [handleWheel, handleTouchStart, handleTouchMove]);
+  }, [handleWheel]);
 
-  // Cleanup on unmount
   useEffect(() => {
     return () => {
       document.body.style.overflow = '';
     };
   }, []);
 
-  // Number of rectangular frames
   const frameCount = 4;
 
   return (
     <section
       ref={sectionRef}
       className="relative h-screen w-full overflow-hidden bg-background"
-      style={{
-        perspective: '1200px',
-      }}
+      style={{ perspective: '1200px' }}
     >
       {/* 3D Grid Tunnel - Top Grid (Ceiling) */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         {Array.from({ length: 10 }).map((_, i) => {
-          const yPosition = 5 + i * 4.5; // 5% to 45.5%
-          const progress = i / 9; // 0 to 1
-          const perspectiveScale = 0.3 + progress * 0.7; // Lines get wider as they go down
+          const yPosition = 5 + i * 4.5;
+          const progress = i / 9;
+          const perspectiveScale = 0.3 + progress * 0.7;
           const lineOpacity = Math.max(0, (0.4 - zoomProgress * 0.5) * (0.4 + progress * 0.6));
           
           return (
@@ -207,7 +199,7 @@ export const ZoomTunnelSection = () => {
                   transparent 100%
                 )`,
                 transform: `scaleX(${perspectiveScale + zoomProgress * 0.3})`,
-                transition: 'transform 0.3s ease-out, opacity 0.3s ease-out',
+                transition: 'transform 0.3s ease-out',
               }}
             />
           );
@@ -215,9 +207,9 @@ export const ZoomTunnelSection = () => {
         
         {/* Bottom Grid (Floor) */}
         {Array.from({ length: 10 }).map((_, i) => {
-          const yPosition = 54.5 + i * 4.5; // 54.5% to 95%
-          const progress = i / 9; // 0 to 1
-          const perspectiveScale = 0.3 + (1 - progress) * 0.7; // Lines get wider as they approach center
+          const yPosition = 54.5 + i * 4.5;
+          const progress = i / 9;
+          const perspectiveScale = 0.3 + (1 - progress) * 0.7;
           const lineOpacity = Math.max(0, (0.4 - zoomProgress * 0.5) * (0.4 + (1 - progress) * 0.6));
           
           return (
@@ -235,84 +227,7 @@ export const ZoomTunnelSection = () => {
                   transparent 100%
                 )`,
                 transform: `scaleX(${perspectiveScale + zoomProgress * 0.3})`,
-                transition: 'transform 0.3s ease-out, opacity 0.3s ease-out',
-              }}
-            />
-          );
-        })}
-
-        {/* Radiating perspective lines from corners */}
-        {Array.from({ length: 12 }).map((_, i) => {
-          const angle = -90 + (i * 180) / 11; // -90 to 90 degrees spread
-          const isTopHalf = i < 6;
-          const lineOpacity = Math.max(0, 0.35 - zoomProgress * 0.4);
-          
-          return (
-            <div
-              key={`radial-${i}`}
-              className="absolute h-[1px] will-change-transform"
-              style={{
-                left: '50%',
-                top: isTopHalf ? '0%' : '100%',
-                width: '70%',
-                background: `linear-gradient(90deg, 
-                  hsl(var(--primary) / ${lineOpacity * 0.8}) 0%,
-                  transparent 100%
-                )`,
-                transformOrigin: 'left center',
-                transform: `translateX(-50%) rotate(${isTopHalf ? 90 + angle * 0.4 : -90 - angle * 0.4}deg)`,
-                opacity: lineOpacity,
-                transition: 'opacity 0.3s ease-out',
-              }}
-            />
-          );
-        })}
-
-        {/* Left edge vertical lines */}
-        {Array.from({ length: 8 }).map((_, i) => {
-          const xPosition = 3 + i * 5; // 3% to 38%
-          const progress = i / 7;
-          const lineOpacity = Math.max(0, (0.3 - zoomProgress * 0.4) * (1 - progress * 0.5));
-          
-          return (
-            <div
-              key={`left-vert-${i}`}
-              className="absolute w-[1px] will-change-transform"
-              style={{
-                left: `${xPosition}%`,
-                top: `${10 + progress * 40}%`,
-                height: `${80 - progress * 80}%`,
-                background: `linear-gradient(180deg, 
-                  transparent 0%,
-                  hsl(var(--primary) / ${lineOpacity}) 50%,
-                  transparent 100%
-                )`,
-                transition: 'opacity 0.3s ease-out',
-              }}
-            />
-          );
-        })}
-
-        {/* Right edge vertical lines */}
-        {Array.from({ length: 8 }).map((_, i) => {
-          const xPosition = 97 - i * 5; // 97% to 62%
-          const progress = i / 7;
-          const lineOpacity = Math.max(0, (0.3 - zoomProgress * 0.4) * (1 - progress * 0.5));
-          
-          return (
-            <div
-              key={`right-vert-${i}`}
-              className="absolute w-[1px] will-change-transform"
-              style={{
-                left: `${xPosition}%`,
-                top: `${10 + progress * 40}%`,
-                height: `${80 - progress * 80}%`,
-                background: `linear-gradient(180deg, 
-                  transparent 0%,
-                  hsl(var(--primary) / ${lineOpacity}) 50%,
-                  transparent 100%
-                )`,
-                transition: 'opacity 0.3s ease-out',
+                transition: 'transform 0.3s ease-out',
               }}
             />
           );
@@ -322,15 +237,11 @@ export const ZoomTunnelSection = () => {
       {/* Center Rectangular Frames */}
       <div 
         className="absolute inset-0 flex items-center justify-center"
-        style={{
-          perspectiveOrigin: '50% 50%',
-        }}
+        style={{ perspectiveOrigin: '50% 50%' }}
       >
         <div 
           className="relative w-full h-full flex items-center justify-center"
-          style={{
-            transformStyle: 'preserve-3d',
-          }}
+          style={{ transformStyle: 'preserve-3d' }}
         >
           {Array.from({ length: frameCount }).map((_, i) => {
             const baseZ = -500 + i * 150;
@@ -370,22 +281,13 @@ export const ZoomTunnelSection = () => {
             <motion.div 
               key={`edge-icon-${index}`}
               className={`absolute ${iconData.position} ${iconData.color}`}
-              style={{ 
-                opacity,
-                transform: `scale(${scale})`,
-              }}
+              style={{ opacity, transform: `scale(${scale})` }}
               animate={iconData.animation}
-              transition={{ 
-                duration: 5 + index, 
-                repeat: Infinity, 
-                ease: "easeInOut" 
-              }}
+              transition={{ duration: 5 + index, repeat: Infinity, ease: "easeInOut" }}
             >
               <div 
                 className="p-3 md:p-4 rounded-xl bg-background/30 backdrop-blur-sm border border-current/30"
-                style={{ 
-                  boxShadow: '0 0 25px currentColor',
-                }}
+                style={{ boxShadow: '0 0 25px currentColor' }}
               >
                 <IconComponent size={iconData.size} strokeWidth={1.5} />
               </div>
@@ -409,7 +311,7 @@ export const ZoomTunnelSection = () => {
         }}
       />
 
-      {/* Content Cards - appear as you zoom */}
+      {/* Content Cards */}
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
         <AnimatePresence mode="wait">
           <motion.div
@@ -425,9 +327,7 @@ export const ZoomTunnelSection = () => {
           >
             <div 
               className="p-6 md:p-8 rounded-2xl bg-background/95 backdrop-blur-lg border border-primary/30 text-foreground shadow-2xl"
-              style={{
-                boxShadow: `0 0 40px hsl(var(--primary) / 0.3)`,
-              }}
+              style={{ boxShadow: `0 0 40px hsl(var(--primary) / 0.3)` }}
             >
               <div className="flex items-center gap-4 mb-3">
                 {(() => {
@@ -448,7 +348,6 @@ export const ZoomTunnelSection = () => {
 
       {/* Progress Indicator */}
       <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-3 z-20">
-        {/* Progress bar */}
         <div className="w-32 h-1 bg-muted rounded-full overflow-hidden">
           <motion.div 
             className="h-full bg-primary rounded-full"
@@ -456,7 +355,6 @@ export const ZoomTunnelSection = () => {
           />
         </div>
         
-        {/* Dot indicators */}
         <div className="flex gap-2">
           {tunnelContent.map((_, index) => (
             <div
@@ -470,7 +368,6 @@ export const ZoomTunnelSection = () => {
           ))}
         </div>
         
-        {/* Scroll hint */}
         <motion.p 
           className="text-xs text-muted-foreground"
           animate={{ opacity: zoomProgress < 0.1 ? 1 : 0 }}
@@ -480,4 +377,14 @@ export const ZoomTunnelSection = () => {
       </div>
     </section>
   );
+};
+
+export const ZoomTunnelSection = () => {
+  const isMobile = useIsMobile();
+  
+  if (isMobile) {
+    return <MobileZoomSection />;
+  }
+  
+  return <DesktopZoomSection />;
 };
