@@ -16,13 +16,13 @@ const schools = [
 
 const TrustedBySection = () => {
   return (
-    <section className="py-16 px-6 border-y border-border/50 bg-muted/20 overflow-hidden">
+    <section className="py-8 md:py-16 px-4 md:px-6 border-y border-border/50 bg-muted/20 overflow-hidden">
       <div className="max-w-6xl mx-auto">
         <motion.p
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
-          className="text-center text-sm text-muted-foreground mb-8 font-medium uppercase tracking-wider"
+          className="text-center text-xs md:text-sm text-muted-foreground mb-4 md:mb-8 font-medium uppercase tracking-wider"
         >
           Trusted by students from top schools
         </motion.p>
@@ -30,8 +30,8 @@ const TrustedBySection = () => {
         {/* Infinite scroll container */}
         <div className="relative">
           {/* Fade edges */}
-          <div className="absolute left-0 top-0 bottom-0 w-24 bg-gradient-to-r from-muted/80 to-transparent z-10 pointer-events-none" />
-          <div className="absolute right-0 top-0 bottom-0 w-24 bg-gradient-to-l from-muted/80 to-transparent z-10 pointer-events-none" />
+          <div className="absolute left-0 top-0 bottom-0 w-12 md:w-24 bg-gradient-to-r from-muted/80 to-transparent z-10 pointer-events-none" />
+          <div className="absolute right-0 top-0 bottom-0 w-12 md:w-24 bg-gradient-to-l from-muted/80 to-transparent z-10 pointer-events-none" />
           
           {/* Scrolling content */}
           <div className="flex animate-infinite-scroll">
@@ -39,12 +39,12 @@ const TrustedBySection = () => {
             {[...schools, ...schools].map((school, i) => (
               <motion.div
                 key={i}
-                className="flex items-center gap-3 px-8 py-3 mx-4 bg-card/50 rounded-full border border-border/50 whitespace-nowrap shrink-0"
+                className="flex items-center gap-2 md:gap-3 px-4 md:px-8 py-2 md:py-3 mx-2 md:mx-4 bg-card/50 rounded-full border border-border/50 whitespace-nowrap shrink-0"
                 whileHover={{ scale: 1.05, backgroundColor: "hsl(var(--card))" }}
                 transition={{ type: "spring", stiffness: 300 }}
               >
-                <school.icon className="w-5 h-5 text-primary" />
-                <span className="font-medium text-sm">{school.name}</span>
+                <school.icon className="w-4 h-4 md:w-5 md:h-5 text-primary" />
+                <span className="font-medium text-xs md:text-sm">{school.name}</span>
               </motion.div>
             ))}
           </div>

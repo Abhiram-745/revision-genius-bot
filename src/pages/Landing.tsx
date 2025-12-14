@@ -111,13 +111,13 @@ const Landing = () => {
         <motion.section
           ref={heroRef}
           style={{ y: heroY, opacity: heroOpacity }}
-          className="relative min-h-[85vh] flex items-center justify-center px-6 pt-20 pb-16"
+          className="relative min-h-[70vh] md:min-h-[85vh] flex items-center justify-center px-4 md:px-6 pt-16 md:pt-20 pb-8 md:pb-16"
         >
-          {/* Waving Owl Mascot - Top Right */}
+          {/* Waving Owl Mascot - Top Right - smaller on mobile */}
           <motion.img
             src={wavingOwl}
             alt="Waving owl mascot"
-            className="absolute top-24 right-4 md:right-8 lg:right-16 w-28 h-28 md:w-36 md:h-36 lg:w-44 lg:h-44 object-contain drop-shadow-xl z-20"
+            className="absolute top-20 md:top-24 right-2 md:right-8 lg:right-16 w-16 h-16 md:w-36 md:h-36 lg:w-44 lg:h-44 object-contain drop-shadow-xl z-20"
             initial={{ opacity: 0, x: 50, rotate: 15 }}
             animate={{ opacity: 1, x: 0, rotate: 0 }}
             transition={{ duration: 0.8, delay: 1.2 }}
@@ -128,29 +128,29 @@ const Landing = () => {
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] }}
-              className="space-y-8 text-center"
+              className="space-y-4 md:space-y-8 text-center"
             >
-              {/* Badge with bounce */}
+              {/* Badge */}
               <motion.div
                 initial={{ opacity: 0, scale: 0.9, y: 20 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.2, type: "spring", stiffness: 150 }}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-secondary/20 border border-secondary/30"
+                className="inline-flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 rounded-full bg-secondary/20 border border-secondary/30"
               >
                 <motion.div
                   animate={{ rotate: [0, 15, -15, 0] }}
                   transition={{ duration: 2, repeat: Infinity }}
                 >
-                  <Zap className="w-4 h-4 text-secondary" />
+                  <Zap className="w-3 h-3 md:w-4 md:h-4 text-secondary" />
                 </motion.div>
-                <span className="text-sm font-medium text-secondary-foreground">
+                <span className="text-xs md:text-sm font-medium text-secondary-foreground">
                   Built by students, for students
                 </span>
               </motion.div>
 
-              {/* Main headline with character animation */}
+              {/* Main headline */}
               <motion.h1 
-                className="text-5xl sm:text-6xl lg:text-7xl font-display font-bold tracking-tight leading-[1.1]"
+                className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-display font-bold tracking-tight leading-[1.1]"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.8 }}
@@ -173,9 +173,9 @@ const Landing = () => {
                 </motion.span>
               </motion.h1>
 
-              {/* Subheadline with fade */}
+              {/* Subheadline */}
               <motion.p 
-                className="text-xl text-muted-foreground max-w-2xl mx-auto"
+                className="text-base md:text-xl text-muted-foreground max-w-2xl mx-auto px-4"
                 initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.7 }}
@@ -183,31 +183,30 @@ const Landing = () => {
                 AI-powered study timetables that work around your life.
               </motion.p>
 
-              {/* CTA Buttons with enhanced animations */}
+              {/* CTA Buttons */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.8, delay: 0.9 }}
-                className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4"
+                className="flex flex-col sm:flex-row items-center justify-center gap-3 md:gap-4 pt-2 md:pt-4"
               >
                 <motion.div
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.98 }}
-                  className="relative"
+                  className="relative w-full sm:w-auto"
                 >
-                  {/* Glow effect behind button */}
                   <motion.div
-                    className="absolute inset-0 bg-gradient-to-r from-primary to-secondary rounded-full blur-xl opacity-50"
+                    className="absolute inset-0 bg-gradient-to-r from-primary to-secondary rounded-full blur-xl opacity-50 hidden md:block"
                     animate={{ scale: [1, 1.1, 1], opacity: [0.5, 0.7, 0.5] }}
                     transition={{ duration: 2, repeat: Infinity }}
                   />
                   <RippleButton
                     size="lg"
                     onClick={() => navigate("/auth")}
-                    className="relative text-lg px-10 py-7 bg-gradient-to-r from-primary to-secondary hover:opacity-90 transition-all duration-300 shadow-lg group rounded-full"
+                    className="relative w-full sm:w-auto text-base md:text-lg px-6 py-5 md:px-10 md:py-7 bg-gradient-to-r from-primary to-secondary hover:opacity-90 transition-all duration-300 shadow-lg group rounded-full"
                   >
                     Get Started Free
-                    <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                    <ArrowRight className="ml-2 w-4 h-4 md:w-5 md:h-5 group-hover:translate-x-1 transition-transform" />
                   </RippleButton>
                 </motion.div>
                 <RippleButton
@@ -217,20 +216,20 @@ const Landing = () => {
                     const demoSection = document.getElementById('try-demo');
                     demoSection?.scrollIntoView({ behavior: 'smooth' });
                   }}
-                  className="text-lg px-10 py-7 hover:scale-105 transition-all duration-300 rounded-full"
+                  className="w-full sm:w-auto text-base md:text-lg px-6 py-5 md:px-10 md:py-7 hover:scale-105 transition-all duration-300 rounded-full"
                   rippleColor="rgba(0, 0, 0, 0.2)"
                 >
-                  <Laptop className="mr-2 w-5 h-5" />
+                  <Laptop className="mr-2 w-4 h-4 md:w-5 md:h-5" />
                   Try Demo
                 </RippleButton>
               </motion.div>
 
-              {/* Social proof with stagger */}
+              {/* Social proof */}
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 1.2 }}
-                className="flex items-center justify-center gap-8 pt-8 text-sm text-muted-foreground"
+                className="flex flex-wrap items-center justify-center gap-4 md:gap-8 pt-4 md:pt-8 text-xs md:text-sm text-muted-foreground"
               >
                 {["✓ No credit card", "✓ 2 min setup", "✓ Cancel anytime"].map((item, i) => (
                   <motion.span
@@ -244,12 +243,12 @@ const Landing = () => {
                 ))}
               </motion.div>
 
-              {/* Scroll indicator */}
+              {/* Scroll indicator - hidden on mobile */}
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 1.5 }}
-                className="pt-8"
+                className="pt-4 md:pt-8 hidden md:block"
               >
                 <motion.div
                   animate={{ y: [0, 8, 0] }}
