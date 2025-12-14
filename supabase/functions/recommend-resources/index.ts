@@ -78,7 +78,7 @@ Return a JSON object with this EXACT structure:
 
 Be SPECIFIC to the topic. Don't give generic advice.`;
 
-    const response = await fetch("https://api.zenmux.ai/v1/chat/completions", {
+    const response = await fetch("https://zenmux.ai/api/v1/chat/completions", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${ZENMUX_API_KEY}`,

@@ -155,7 +155,7 @@ Format your response as JSON with this structure:
 
     console.log('Calling Zenmux AI...');
 
-    const response = await fetch('https://api.zenmux.ai/v1/chat/completions', {
+    const response = await fetch('https://zenmux.ai/api/v1/chat/completions', {
       method: "POST",
       headers: { 
         "Content-Type": "application/json",

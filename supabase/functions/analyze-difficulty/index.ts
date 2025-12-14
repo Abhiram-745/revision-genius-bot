@@ -106,7 +106,7 @@ Return ONLY valid JSON in this format:
     }
 
     const response = await fetchWithRetry(
-      'https://api.zenmux.ai/v1/chat/completions',
+      'https://zenmux.ai/api/v1/chat/completions',
       {
         method: "POST",
         headers: { 
