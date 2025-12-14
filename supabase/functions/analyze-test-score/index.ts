@@ -119,22 +119,21 @@ Be constructive, specific, and focused on GCSE exam success. Return ONLY valid J
 
     const systemPrompt = "You are an expert GCSE tutor analyzing student test performance. Provide specific, actionable feedback. Always return valid JSON.";
 
-    const OPEN_ROUTER_API_KEY = Deno.env.get('OPEN_ROUTER_API_KEY');
-    if (!OPEN_ROUTER_API_KEY) {
-      throw new Error("OPEN_ROUTER_API_KEY not configured");
+    const ZENMUX_API_KEY = Deno.env.get('ZENMUX_API_KEY');
+    if (!ZENMUX_API_KEY) {
+      throw new Error("ZENMUX_API_KEY not configured");
     }
 
     const response = await fetchWithRetry(
-      'https://openrouter.ai/api/v1/chat/completions',
+      'https://api.zenmux.ai/v1/chat/completions',
       {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${OPEN_ROUTER_API_KEY}`,
-          "HTTP-Referer": Deno.env.get('SUPABASE_URL') || "https://vistari.app"
+          "Authorization": `Bearer ${ZENMUX_API_KEY}`,
         },
         body: JSON.stringify({
-          model: "x-ai/grok-4.1-fast:free",
+          model: "z-ai/glm-4.6v-flash",
           messages: [
             { role: "user", content: `${systemPrompt}\n\n${prompt}` }
           ],

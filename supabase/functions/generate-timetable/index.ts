@@ -1221,10 +1221,10 @@ VERIFICATION BEFORE RESPONDING:
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 120000);
 
-    const BYTEZ_API_KEY = Deno.env.get('BYTEZ_API_KEY');
+    const ZENMUX_API_KEY = Deno.env.get('ZENMUX_API_KEY');
     
-    if (!BYTEZ_API_KEY) {
-      console.error("BYTEZ_API_KEY not configured");
+    if (!ZENMUX_API_KEY) {
+      console.error("ZENMUX_API_KEY not configured");
       throw new Error("AI service not configured. Please contact support.");
     }
 
@@ -1239,17 +1239,17 @@ VERIFICATION BEFORE RESPONDING:
           await new Promise(resolve => setTimeout(resolve, retryCount * 2000));
         }
         
-        console.log(`Calling Bytez API (attempt ${retryCount + 1}/${maxRetries + 1})...`);
+        console.log(`Calling Zenmux API (attempt ${retryCount + 1}/${maxRetries + 1})...`);
         const response = await fetch(
-          'https://api.bytez.com/models/v2/openai/v1/chat/completions',
+          'https://api.zenmux.ai/v1/chat/completions',
           {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
-              "Authorization": BYTEZ_API_KEY
+              "Authorization": `Bearer ${ZENMUX_API_KEY}`
             },
             body: JSON.stringify({
-              model: "google/gemini-2.5-flash",
+              model: "z-ai/glm-4.6v-flash",
               messages: [
                 { role: "user", content: `INSTRUCTIONS: You are an expert educational planner.
 
@@ -1271,7 +1271,7 @@ ${prompt}` }
 
         if (!response.ok) {
           const errorText = await response.text();
-          console.error("Bytez API error:", response.status, errorText);
+          console.error("Zenmux API error:", response.status, errorText);
           
           if ((response.status === 503 || response.status === 429) && retryCount < maxRetries) {
             retryCount++;

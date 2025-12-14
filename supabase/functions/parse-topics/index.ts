@@ -131,26 +131,26 @@ Do NOT include any explanation or commentary - ONLY the JSON.`;
       }
     }
 
-    // Using Bytez API with Gemini 2.5 Flash for image extraction
-    const BYTEZ_API_KEY = Deno.env.get('BYTEZ_API_KEY');
+    // Using Zenmux API with z-ai/glm-4.6v-flash for image extraction
+    const ZENMUX_API_KEY = Deno.env.get('ZENMUX_API_KEY');
     
-    if (!BYTEZ_API_KEY) {
-      console.error("BYTEZ_API_KEY not configured");
+    if (!ZENMUX_API_KEY) {
+      console.error("ZENMUX_API_KEY not configured");
       throw new Error("AI service not configured. Please contact support.");
     }
 
-    console.log(`Calling Bytez API with ${messageContent.length} content parts (${images?.length || 0} images)`);
+    console.log(`Calling Zenmux API with ${messageContent.length} content parts (${images?.length || 0} images)`);
 
     const response = await fetchWithRetry(
-      'https://api.bytez.com/models/v2/openai/v1/chat/completions',
+      'https://api.zenmux.ai/v1/chat/completions',
       {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",
-          "Authorization": BYTEZ_API_KEY
+          "Authorization": `Bearer ${ZENMUX_API_KEY}`
         },
         body: JSON.stringify({
-          model: "google/gemini-2.5-flash",
+          model: "z-ai/glm-4.6v-flash",
           messages: [
             { role: "user", content: messageContent }
           ],
@@ -179,7 +179,7 @@ Do NOT include any explanation or commentary - ONLY the JSON.`;
     }
 
     const openaiResult = await response.json();
-    console.log('Bytez Gemini response:', JSON.stringify(openaiResult, null, 2));
+    console.log('Zenmux response:', JSON.stringify(openaiResult, null, 2));
 
     // Extract content from response
     let responseText: string | undefined;

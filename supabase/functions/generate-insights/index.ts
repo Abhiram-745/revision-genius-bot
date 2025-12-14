@@ -148,21 +148,21 @@ Format your response as JSON with this structure:
   "overallSummary": "string"
 }`;
 
-    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
-    if (!LOVABLE_API_KEY) {
-      throw new Error("LOVABLE_API_KEY not configured");
+    const ZENMUX_API_KEY = Deno.env.get('ZENMUX_API_KEY');
+    if (!ZENMUX_API_KEY) {
+      throw new Error("ZENMUX_API_KEY not configured");
     }
 
-    console.log('Calling Lovable AI gateway...');
+    console.log('Calling Zenmux AI...');
 
-    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    const response = await fetch('https://api.zenmux.ai/v1/chat/completions', {
       method: "POST",
       headers: { 
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${LOVABLE_API_KEY}`,
+        "Authorization": `Bearer ${ZENMUX_API_KEY}`,
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
+        model: "z-ai/glm-4.6v-flash",
         messages: [
           { 
             role: "system", 
@@ -175,7 +175,7 @@ Format your response as JSON with this structure:
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("Lovable AI error:", response.status, errorText);
+      console.error("Zenmux AI error:", response.status, errorText);
       
       if (response.status === 429) {
         return new Response(JSON.stringify({ error: "Rate limit exceeded. Please try again in a moment." }), {
