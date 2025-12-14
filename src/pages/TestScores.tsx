@@ -44,32 +44,33 @@ const TestScores = () => {
         sectionSteps={testScoresPageSteps}
       />
 
-      {/* Floating background elements */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="floating-blob top-20 -left-32 w-96 h-96 bg-primary/10 animate-float"></div>
-        <div className="floating-blob top-40 right-10 w-[500px] h-[500px] bg-secondary/15 animate-float-delayed"></div>
-        <div className="floating-blob bottom-20 left-1/3 w-80 h-80 bg-accent/10 animate-float-slow"></div>
+      {/* Floating background elements - hidden on mobile */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none hidden md:block">
+        <div className="floating-blob top-20 -left-32 w-64 md:w-96 h-64 md:h-96 bg-primary/10 animate-float"></div>
+        <div className="floating-blob top-40 right-10 w-72 md:w-[500px] h-72 md:h-[500px] bg-secondary/15 animate-float-delayed"></div>
+        <div className="floating-blob bottom-20 left-1/3 w-48 md:w-80 h-48 md:h-80 bg-accent/10 animate-float-slow"></div>
       </div>
 
       <Header />
       
-      <div className="container mx-auto px-4 py-8 max-w-6xl relative z-10">
+      <div className="container mx-auto px-3 sm:px-4 py-4 md:py-8 max-w-6xl relative z-10">
         <Button
           variant="ghost"
+          size="sm"
           onClick={() => navigate("/")}
-          className="mb-6 gap-2 hover-lift"
+          className="mb-4 md:mb-6 gap-2 hover-lift text-sm"
         >
-          <ArrowLeft className="w-4 h-4" /> Back to Dashboard
+          <ArrowLeft className="w-3 h-3 sm:w-4 sm:h-4" /> Back to Dashboard
         </Button>
 
-        <div className="mb-6 flex items-center justify-between">
+        <div className="mb-4 md:mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-4xl font-display font-bold gradient-text mb-3">Test Scores & Analysis</h1>
-            <p className="text-muted-foreground text-lg">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-display font-bold gradient-text mb-2 md:mb-3">Test Scores & Analysis</h1>
+            <p className="text-muted-foreground text-sm md:text-lg">
               Track your test results and get AI-powered insights to improve your performance
             </p>
           </div>
-          <div data-tour="add-test-score">
+          <div data-tour="add-test-score" className="w-full sm:w-auto">
             {userId && <TestScoreEntry userId={userId} onScoreAdded={() => setRefresh(r => r + 1)} />}
           </div>
         </div>

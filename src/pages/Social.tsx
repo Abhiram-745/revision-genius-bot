@@ -42,23 +42,23 @@ const Social = () => {
   return (
     <PageTransition>
     <div className="min-h-screen bg-background relative overflow-hidden">
-      {/* Floating background elements */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="floating-blob top-20 -left-32 w-96 h-96 bg-primary/10 animate-float"></div>
-        <div className="floating-blob top-40 right-10 w-[500px] h-[500px] bg-secondary/15 animate-float-delayed"></div>
-        <div className="floating-blob bottom-20 left-1/3 w-80 h-80 bg-accent/10 animate-float-slow"></div>
+      {/* Floating background elements - hidden on mobile */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none hidden md:block">
+        <div className="floating-blob top-20 -left-32 w-64 md:w-96 h-64 md:h-96 bg-primary/10 animate-float"></div>
+        <div className="floating-blob top-40 right-10 w-72 md:w-[500px] h-72 md:h-[500px] bg-secondary/15 animate-float-delayed"></div>
+        <div className="floating-blob bottom-20 left-1/3 w-48 md:w-80 h-48 md:h-80 bg-accent/10 animate-float-slow"></div>
       </div>
 
       <Header />
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 relative z-10">
+      <main className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 md:py-8 relative z-10">
         <div className="space-y-6 animate-fade-in" data-tour="social-page">
           {/* Header Section */}
-          <div className="space-y-2">
-            <h1 className="text-4xl font-display font-bold gradient-text">
+          <div className="space-y-1 md:space-y-2">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-display font-bold gradient-text">
               Social Hub
             </h1>
-            <p className="text-muted-foreground text-lg font-medium">
+            <p className="text-muted-foreground text-sm md:text-lg font-medium">
               Connect with friends and compete on the leaderboard
             </p>
           </div>

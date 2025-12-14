@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Lock, Unlock, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { useIsMobile } from "@/hooks/use-mobile";
 import "react-grid-layout/css/styles.css";
 
 export interface WidgetConfig {
@@ -29,8 +30,11 @@ interface DashboardGridProps {
 }
 
 const COLS = 12;
+const MOBILE_COLS = 1;
 const ROW_HEIGHT = 80;
+const MOBILE_ROW_HEIGHT = 60;
 const MARGIN: [number, number] = [16, 16];
+const MOBILE_MARGIN: [number, number] = [12, 12];
 
 export const DashboardGrid = ({
   widgets,
@@ -39,19 +43,20 @@ export const DashboardGrid = ({
   containerWidth,
 }: DashboardGridProps) => {
   const [isEditMode, setIsEditMode] = useState(false);
+  const isMobile = useIsMobile();
 
   // Convert widget configs to react-grid-layout format
   const layout: Layout[] = widgets
     .filter((w) => w.enabled)
-    .map((widget) => ({
+    .map((widget, index) => ({
       i: widget.id,
-      x: widget.x,
-      y: widget.y,
-      w: widget.w,
-      h: widget.h,
-      minW: widget.minW || 2,
-      minH: widget.minH || 2,
-      static: !isEditMode,
+      x: isMobile ? 0 : widget.x,
+      y: isMobile ? index * 4 : widget.y,
+      w: isMobile ? 1 : widget.w,
+      h: isMobile ? 4 : widget.h,
+      minW: isMobile ? 1 : (widget.minW || 2),
+      minH: isMobile ? 3 : (widget.minH || 2),
+      static: isMobile || !isEditMode,
     }));
 
   const handleLayoutChange = useCallback(
@@ -102,39 +107,41 @@ export const DashboardGrid = ({
 
   return (
     <div className="dashboard-grid-container relative">
-      {/* Edit Mode Controls */}
-      <div className="flex items-center justify-end gap-2 mb-4">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleResetLayout}
-          className="gap-2"
-        >
-          <RotateCcw className="h-4 w-4" />
-          Reset Layout
-        </Button>
-        <Button
-          variant={isEditMode ? "default" : "outline"}
-          size="sm"
-          onClick={toggleEditMode}
-          className="gap-2"
-        >
-          {isEditMode ? (
-            <>
-              <Lock className="h-4 w-4" />
-              Lock Layout
-            </>
-          ) : (
-            <>
-              <Unlock className="h-4 w-4" />
-              Edit Layout
-            </>
-          )}
-        </Button>
-      </div>
+      {/* Edit Mode Controls - hidden on mobile */}
+      {!isMobile && (
+        <div className="flex items-center justify-end gap-2 mb-4">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleResetLayout}
+            className="gap-2"
+          >
+            <RotateCcw className="h-4 w-4" />
+            Reset Layout
+          </Button>
+          <Button
+            variant={isEditMode ? "default" : "outline"}
+            size="sm"
+            onClick={toggleEditMode}
+            className="gap-2"
+          >
+            {isEditMode ? (
+              <>
+                <Lock className="h-4 w-4" />
+                Lock Layout
+              </>
+            ) : (
+              <>
+                <Unlock className="h-4 w-4" />
+                Edit Layout
+              </>
+            )}
+          </Button>
+        </div>
+      )}
 
       {/* Edit Mode Indicator */}
-      {isEditMode && (
+      {isEditMode && !isMobile && (
         <div className="mb-4 p-3 rounded-lg bg-primary/10 border border-primary/20 text-sm text-primary">
           <strong>Edit Mode:</strong> Drag widgets by their headers to reposition. Drag corners to resize.
         </div>
@@ -144,20 +151,20 @@ export const DashboardGrid = ({
       <div
         className={cn(
           "dashboard-grid transition-all duration-300",
-          isEditMode && "dashboard-grid-edit-mode"
+          isEditMode && !isMobile && "dashboard-grid-edit-mode"
         )}
       >
         <GridLayout
           className="layout"
           layout={layout}
-          cols={COLS}
-          rowHeight={ROW_HEIGHT}
+          cols={isMobile ? MOBILE_COLS : COLS}
+          rowHeight={isMobile ? MOBILE_ROW_HEIGHT : ROW_HEIGHT}
           width={containerWidth}
-          margin={MARGIN}
+          margin={isMobile ? MOBILE_MARGIN : MARGIN}
           containerPadding={[0, 0]}
           onLayoutChange={handleLayoutChange}
-          isDraggable={isEditMode}
-          isResizable={isEditMode}
+          isDraggable={!isMobile && isEditMode}
+          isResizable={!isMobile && isEditMode}
           draggableHandle=".drag-handle"
           resizeHandles={["se", "sw", "ne", "nw", "e", "w", "n", "s"]}
           compactType="vertical"
@@ -169,9 +176,9 @@ export const DashboardGrid = ({
                 id={widget.id}
                 title={widget.label}
                 icon={widget.icon}
-                isEditMode={isEditMode}
+                isEditMode={!isMobile && isEditMode}
               >
-                {renderWidget(widget.id, "md")}
+                {renderWidget(widget.id, isMobile ? "sm" : "md")}
               </DashboardWidget>
             </div>
           ))}

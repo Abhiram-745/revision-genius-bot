@@ -247,16 +247,16 @@ const Dashboard = () => {
         <WelcomeModal />
         <GuidedOnboarding />
         
-        {/* Floating background elements */}
-        <div className="fixed inset-0 overflow-hidden pointer-events-none">
-          <div className="floating-blob top-20 -left-32 w-96 h-96 bg-primary/10 animate-float"></div>
-          <div className="floating-blob top-40 right-10 w-[500px] h-[500px] bg-secondary/15 animate-float-delayed"></div>
-          <div className="floating-blob bottom-20 left-1/3 w-80 h-80 bg-accent/10 animate-float-slow"></div>
+        {/* Floating background elements - hidden on mobile */}
+        <div className="fixed inset-0 overflow-hidden pointer-events-none hidden md:block">
+          <div className="floating-blob top-20 -left-32 w-64 md:w-96 h-64 md:h-96 bg-primary/10 animate-float"></div>
+          <div className="floating-blob top-40 right-10 w-72 md:w-[500px] h-72 md:h-[500px] bg-secondary/15 animate-float-delayed"></div>
+          <div className="floating-blob bottom-20 left-1/3 w-48 md:w-80 h-48 md:h-80 bg-accent/10 animate-float-slow"></div>
         </div>
 
         <Header onNewTimetable={() => setShowOnboarding(true)} />
 
-        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 relative z-10" ref={containerRef}>
+        <main className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 md:py-8 relative z-10" ref={containerRef}>
           {!hasData && !showOnboarding ? (
             <div className="flex flex-col items-center justify-center py-16 space-y-8 animate-fade-in">
               <div className="text-center space-y-4">
@@ -264,7 +264,7 @@ const Dashboard = () => {
                   <Sparkles className="h-4 w-4 text-secondary" />
                   <span className="text-sm font-medium text-secondary-foreground">Welcome to Study Planner</span>
                 </div>
-                <h2 className="text-4xl md:text-5xl font-display font-bold gradient-text">
+                <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-display font-bold gradient-text">
                   Let's Get Started!
                 </h2>
                 <p className="text-muted-foreground max-w-lg text-lg leading-relaxed">
@@ -275,7 +275,7 @@ const Dashboard = () => {
               <Button
                 size="lg"
                 onClick={() => setShowOnboarding(true)}
-                className="gap-2 text-lg px-10 py-7 rounded-full"
+                className="gap-2 text-base md:text-lg px-6 py-5 md:px-10 md:py-7 rounded-full"
               >
                 <Plus className="h-5 w-5" />
                 Get Started
@@ -293,17 +293,17 @@ const Dashboard = () => {
           ) : (
             <div className="space-y-8 animate-fade-in">
               {/* Welcome Section */}
-              <div className="dashboard-greeting relative overflow-hidden rounded-2xl bg-gradient-warm border border-primary/20 p-8 md:p-10 shadow-lg">
+              <div className="dashboard-greeting relative overflow-hidden rounded-xl md:rounded-2xl bg-gradient-warm border border-primary/20 p-4 sm:p-6 md:p-8 lg:p-10 shadow-lg">
                 <div className="relative z-10">
-                  <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-                    <div className="space-y-4 flex-1">
-                      <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20">
+                  <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 md:gap-6">
+                    <div className="space-y-2 sm:space-y-3 md:space-y-4 flex-1">
+                      <div className="inline-flex items-center gap-2 px-3 py-1 md:px-4 md:py-1.5 rounded-full bg-primary/10 border border-primary/20">
                         <span className="text-xs font-medium text-primary">🔥 You're crushing it!</span>
                       </div>
-                      <h1 className="text-4xl md:text-5xl font-display font-bold">
+                      <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-display font-bold">
                         {getGreeting()}, {getFirstName()}!
                       </h1>
-                      <p className="text-foreground/70 text-lg leading-relaxed max-w-xl">
+                      <p className="text-foreground/70 text-sm sm:text-base md:text-lg leading-relaxed max-w-xl">
                         Ready to make today count? Let's tackle your study goals together 💪
                       </p>
                     </div>
@@ -323,9 +323,9 @@ const Dashboard = () => {
                     </div>
                   </div>
                 </div>
-                {/* Decorative gradient blobs */}
-                <div className="absolute -top-10 -right-10 w-48 h-48 bg-primary/15 rounded-full blur-3xl"></div>
-                <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-secondary/15 rounded-full blur-3xl"></div>
+                {/* Decorative gradient blobs - hidden on mobile */}
+                <div className="absolute -top-10 -right-10 w-48 h-48 bg-primary/15 rounded-full blur-3xl hidden md:block"></div>
+                <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-secondary/15 rounded-full blur-3xl hidden md:block"></div>
               </div>
 
               {/* Canvas-based Dashboard Grid */}
