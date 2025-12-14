@@ -142,7 +142,7 @@ Do NOT include any explanation or commentary - ONLY the JSON.`;
     console.log(`Calling Zenmux API with ${messageContent.length} content parts (${images?.length || 0} images)`);
 
     const response = await fetchWithRetry(
-      'https://api.zenmux.ai/v1/chat/completions',
+      'https://zenmux.ai/api/v1/chat/completions',
       {
         method: "POST",
         headers: { 

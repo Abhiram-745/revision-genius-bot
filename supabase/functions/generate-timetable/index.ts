@@ -1241,7 +1241,7 @@ VERIFICATION BEFORE RESPONDING:
         
         console.log(`Calling Zenmux API (attempt ${retryCount + 1}/${maxRetries + 1})...`);
         const response = await fetch(
-          'https://api.zenmux.ai/v1/chat/completions',
+          'https://zenmux.ai/api/v1/chat/completions',
           {
             method: "POST",
             headers: {
