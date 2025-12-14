@@ -148,26 +148,26 @@ const Groups = () => {
   return (
     <PageTransition>
     <div className="min-h-screen bg-background relative overflow-hidden">
-      {/* Floating background elements */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="floating-blob top-20 -left-32 w-96 h-96 bg-primary/10 animate-float"></div>
-        <div className="floating-blob top-40 right-10 w-[500px] h-[500px] bg-secondary/15 animate-float-delayed"></div>
-        <div className="floating-blob bottom-20 left-1/3 w-80 h-80 bg-accent/10 animate-float-slow"></div>
+      {/* Floating background elements - hidden on mobile */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none hidden md:block">
+        <div className="floating-blob top-20 -left-32 w-64 md:w-96 h-64 md:h-96 bg-primary/10 animate-float"></div>
+        <div className="floating-blob top-40 right-10 w-72 md:w-[500px] h-72 md:h-[500px] bg-secondary/15 animate-float-delayed"></div>
+        <div className="floating-blob bottom-20 left-1/3 w-48 md:w-80 h-48 md:h-80 bg-accent/10 animate-float-slow"></div>
       </div>
 
       <Header />
       
-      <div className="container mx-auto px-4 py-8 relative z-10">
-        <div className="space-y-6">
+      <div className="container mx-auto px-3 sm:px-4 py-4 md:py-8 relative z-10">
+        <div className="space-y-4 md:space-y-6">
           <GroupInvitations />
 
-          <div className="flex justify-between items-center">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
-              <h1 className="text-4xl font-display font-bold gradient-text mb-2">Study Groups</h1>
-              <p className="text-muted-foreground text-lg">Collaborate and learn together</p>
+              <h1 className="text-2xl sm:text-3xl md:text-4xl font-display font-bold gradient-text mb-1 md:mb-2">Study Groups</h1>
+              <p className="text-muted-foreground text-sm md:text-lg">Collaborate and learn together</p>
             </div>
             
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               <CheckAchievementsButton />
               <Button 
                 onClick={() => {
@@ -175,20 +175,22 @@ const Groups = () => {
                   setShowJoinModal(true);
                 }} 
                 variant="outline" 
-                className="gap-2 hover-lift"
+                size="sm"
+                className="gap-2 hover-lift text-xs sm:text-sm"
                 data-tour="join-code"
               >
-                <Search className="w-4 h-4" /> Join with Code
+                <Search className="w-3 h-3 sm:w-4 sm:h-4" /> <span className="hidden xs:inline">Join with</span> Code
               </Button>
               <Button 
                 onClick={() => {
                   handleSectionClick("create-group");
                   setShowCreateModal(true);
                 }} 
-                className="gap-2"
+                size="sm"
+                className="gap-2 text-xs sm:text-sm"
                 data-tour="create-group"
               >
-                <Plus className="h-4 w-4" /> Create Group
+                <Plus className="h-3 w-3 sm:h-4 sm:w-4" /> Create
               </Button>
             </div>
           </div>

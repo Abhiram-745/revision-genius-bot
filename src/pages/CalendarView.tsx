@@ -28,23 +28,24 @@ interface CalendarItem {
   data: any;
 }
 
-const HOUR_HEIGHT = 100; // Increased to 100 pixels per hour for better spacing and visibility
+const HOUR_HEIGHT = 100; // Desktop height
+const MOBILE_HOUR_HEIGHT = 70; // Mobile height
 
-// Calculate position and height based on time
+// Calculate position and height based on time (use MOBILE_HOUR_HEIGHT for responsiveness)
 const getTimePosition = (time: string, startHour: number) => {
   const [hours, minutes] = time.split(':').map(Number);
   const totalMinutes = (hours - startHour) * 60 + minutes;
-  return (totalMinutes / 60) * HOUR_HEIGHT;
+  return (totalMinutes / 60) * MOBILE_HOUR_HEIGHT;
 };
 
 const getSessionHeight = (startTime: string, endTime: string) => {
   const [startHours, startMinutes] = startTime.split(':').map(Number);
   const [endHours, endMinutes] = endTime.split(':').map(Number);
   const durationMinutes = (endHours * 60 + endMinutes) - (startHours * 60 + startMinutes);
-  const calculatedHeight = (durationMinutes / 60) * HOUR_HEIGHT;
-  // Subtract 6px from height to create visual gap between consecutive sessions
-  const visualGap = 6;
-  return Math.max(calculatedHeight - visualGap, 36); // Min height 36px to keep short sessions visible
+  const calculatedHeight = (durationMinutes / 60) * MOBILE_HOUR_HEIGHT;
+  // Subtract 4px from height to create visual gap between consecutive sessions
+  const visualGap = 4;
+  return Math.max(calculatedHeight - visualGap, 28); // Min height 28px for mobile
 };
 
 // Get styles for different item types - unified primary color for all study sessions
@@ -246,17 +247,17 @@ const DroppableDay = ({
   return (
     <div
       ref={setNodeRef}
-      className={`relative flex-1 min-w-[120px] bg-background transition-colors ${
+      className={`relative flex-1 min-w-[80px] sm:min-w-[100px] md:min-w-[120px] bg-background transition-colors ${
         isOver ? "bg-primary/10" : ""
       }`}
-      style={{ height: `${timeSlots.length * HOUR_HEIGHT}px` }}
+      style={{ height: `${timeSlots.length * MOBILE_HOUR_HEIGHT}px` }}
     >
       {/* Time slot lines */}
       {timeSlots.map((_, i) => (
         <div
           key={i}
           className="absolute left-0 right-0 border-t border-border/30"
-          style={{ top: `${i * HOUR_HEIGHT}px` }}
+          style={{ top: `${i * MOBILE_HOUR_HEIGHT}px` }}
         />
       ))}
       
@@ -597,21 +598,22 @@ const CalendarView = () => {
         <GuidedOnboarding />
         <Header />
         
-        <div className="p-4 md:p-6 space-y-5">
+        <div className="p-3 sm:p-4 md:p-6 space-y-3 md:space-y-5">
           {/* Header with navigation */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 md:gap-4">
+            <div className="flex items-center gap-2 md:gap-3">
               <Button
                 variant="ghost"
                 size="icon"
+                className="h-8 w-8 md:h-9 md:w-9"
                 onClick={() => navigate("/timetables")}
               >
-                <ArrowLeft className="h-5 w-5" />
+                <ArrowLeft className="h-4 w-4 md:h-5 md:w-5" />
               </Button>
               <div>
-                <h1 className="text-2xl font-bold">Calendar View</h1>
-                <p className="text-sm text-muted-foreground">
-                  {format(currentWeek, "MMMM d")} - {format(addDays(currentWeek, 6), "MMMM d, yyyy")}
+                <h1 className="text-lg sm:text-xl md:text-2xl font-bold">Calendar View</h1>
+                <p className="text-xs md:text-sm text-muted-foreground">
+                  {format(currentWeek, "MMM d")} - {format(addDays(currentWeek, 6), "MMM d, yyyy")}
                 </p>
               </div>
             </div>
@@ -632,59 +634,61 @@ const CalendarView = () => {
                 </Select>
               )}
               
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-1">
                 <Button
                   variant="outline"
                   size="icon"
+                  className="h-8 w-8 md:h-9 md:w-9"
                   onClick={() => setCurrentWeek(subWeeks(currentWeek, 1))}
                 >
-                  <ChevronLeft className="h-4 w-4" />
+                  <ChevronLeft className="h-3.5 w-3.5 md:h-4 md:w-4" />
                 </Button>
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => setCurrentWeek(startOfWeek(new Date(), { weekStartsOn: 1 }))}
-                  className="min-w-[100px]"
+                  className="min-w-[80px] md:min-w-[100px] text-xs md:text-sm h-8 md:h-9"
                 >
                   {format(currentWeek, "d")} - {format(addDays(currentWeek, 6), "d MMM")}
                 </Button>
                 <Button
                   variant="outline"
                   size="icon"
+                  className="h-8 w-8 md:h-9 md:w-9"
                   onClick={() => setCurrentWeek(addWeeks(currentWeek, 1))}
                 >
-                  <ChevronRight className="h-4 w-4" />
+                  <ChevronRight className="h-3.5 w-3.5 md:h-4 md:w-4" />
                 </Button>
               </div>
             </div>
           </div>
 
-          {/* Legend at the top */}
-          <Card data-tour="calendar-legend" className="bg-card/80 backdrop-blur-sm">
-            <CardContent className="py-3 px-5">
-              <div className="flex flex-wrap items-center gap-4 text-sm">
+          {/* Legend - hidden on mobile, shown on sm+ */}
+          <Card data-tour="calendar-legend" className="bg-card/80 backdrop-blur-sm hidden sm:block">
+            <CardContent className="py-2 md:py-3 px-3 md:px-5">
+              <div className="flex flex-wrap items-center gap-2 md:gap-4 text-xs md:text-sm">
                 <span className="font-semibold text-foreground">Legend:</span>
-                <div className="flex items-center gap-1.5">
-                  <Badge className="bg-primary hover:bg-primary gap-1.5 px-2.5 py-1">
-                    <BookOpen className="h-3 w-3" />
-                    Study Session
+                <div className="flex items-center gap-1">
+                  <Badge className="bg-primary hover:bg-primary gap-1 px-2 py-0.5 text-xs">
+                    <BookOpen className="h-2.5 w-2.5 md:h-3 md:w-3" />
+                    Study
                   </Badge>
                 </div>
-                <div className="flex items-center gap-1.5">
-                  <Badge className="bg-purple-500 hover:bg-purple-500 gap-1.5 px-2.5 py-1">
-                    <FileText className="h-3 w-3" />
+                <div className="flex items-center gap-1">
+                  <Badge className="bg-purple-500 hover:bg-purple-500 gap-1 px-2 py-0.5 text-xs">
+                    <FileText className="h-2.5 w-2.5 md:h-3 md:w-3" />
                     Homework
                   </Badge>
                 </div>
-                <div className="flex items-center gap-1.5">
-                  <Badge className="bg-red-500 hover:bg-red-500 gap-1.5 px-2.5 py-1">
-                    <AlertCircle className="h-3 w-3" />
+                <div className="flex items-center gap-1">
+                  <Badge className="bg-red-500 hover:bg-red-500 gap-1 px-2 py-0.5 text-xs">
+                    <AlertCircle className="h-2.5 w-2.5 md:h-3 md:w-3" />
                     Events
                   </Badge>
                 </div>
-                <div className="flex items-center gap-1.5">
-                  <Badge className="bg-slate-400 hover:bg-slate-400 gap-1.5 px-2.5 py-1">
-                    <Coffee className="h-3 w-3" />
+                <div className="flex items-center gap-1">
+                  <Badge className="bg-slate-400 hover:bg-slate-400 gap-1 px-2 py-0.5 text-xs">
+                    <Coffee className="h-2.5 w-2.5 md:h-3 md:w-3" />
                     Break
                   </Badge>
                 </div>
@@ -696,29 +700,29 @@ const CalendarView = () => {
           <Card className="overflow-hidden shadow-lg" data-tour="time-grid">
             {/* Day Headers */}
             <div className="flex border-b-2 border-border/50 bg-muted/40 sticky top-0 z-20">
-              {/* Time column header - wider */}
-              <div className="w-20 flex-shrink-0 border-r border-border/40 p-3 flex items-center justify-center">
-                <Clock className="h-5 w-5 text-muted-foreground" />
+              {/* Time column header */}
+              <div className="w-12 sm:w-16 md:w-20 flex-shrink-0 border-r border-border/40 p-2 md:p-3 flex items-center justify-center">
+                <Clock className="h-4 w-4 md:h-5 md:w-5 text-muted-foreground" />
               </div>
               {/* Day columns headers with gaps */}
-              <div className="flex flex-1 gap-px bg-border/30">
+              <div className="flex flex-1 gap-px bg-border/30 overflow-x-auto">
                 {weekDays.map((day) => {
                   const isToday = isSameDay(day, new Date());
                   return (
                     <div
                       key={format(day, "yyyy-MM-dd")}
-                      className={`flex-1 min-w-[120px] text-center py-3 px-2 bg-background ${
+                      className={`flex-1 min-w-[80px] sm:min-w-[100px] md:min-w-[120px] text-center py-2 md:py-3 px-1 md:px-2 bg-background ${
                         isToday ? "bg-primary/10" : ""
                       }`}
                     >
-                      <p className={`text-xs font-semibold uppercase tracking-wider ${
+                      <p className={`text-[10px] sm:text-xs font-semibold uppercase tracking-wider ${
                         isToday ? "text-primary" : "text-muted-foreground"
                       }`}>
                         {format(day, "EEE")}
                       </p>
-                      <p className={`text-xl font-bold mt-1 ${
+                      <p className={`text-base sm:text-lg md:text-xl font-bold mt-0.5 md:mt-1 ${
                         isToday 
-                          ? "bg-primary text-primary-foreground rounded-full w-9 h-9 mx-auto flex items-center justify-center" 
+                          ? "bg-primary text-primary-foreground rounded-full w-7 h-7 sm:w-8 sm:h-8 md:w-9 md:h-9 mx-auto flex items-center justify-center" 
                           : ""
                       }`}>
                         {format(day, "d")}
@@ -730,26 +734,26 @@ const CalendarView = () => {
             </div>
 
             {/* Time Grid */}
-            <ScrollArea className="h-[calc(100vh-340px)]">
+            <ScrollArea className="h-[calc(100vh-280px)] sm:h-[calc(100vh-300px)] md:h-[calc(100vh-340px)]">
               <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
                 <div className="flex">
-                  {/* Time axis - wider */}
-                  <div className="w-20 flex-shrink-0 border-r border-border/40 bg-muted/20">
+                  {/* Time axis */}
+                  <div className="w-12 sm:w-16 md:w-20 flex-shrink-0 border-r border-border/40 bg-muted/20">
                     {timeSlots.map((time) => (
                       <div
                         key={time}
-                        className="text-xs font-medium text-muted-foreground text-right pr-3 relative"
-                        style={{ height: `${HOUR_HEIGHT}px` }}
+                        className="text-[10px] sm:text-xs font-medium text-muted-foreground text-right pr-1 sm:pr-2 md:pr-3 relative"
+                        style={{ height: `${MOBILE_HOUR_HEIGHT}px` }}
                       >
-                        <span className="absolute -top-2.5 right-3">
-                          {format(parseISO(`2024-01-01T${time}`), "h a")}
+                        <span className="absolute -top-2 right-1 sm:right-2 md:right-3">
+                          {format(parseISO(`2024-01-01T${time}`), "ha")}
                         </span>
                       </div>
                     ))}
                   </div>
 
                   {/* Day columns with gaps */}
-                  <div className="flex flex-1 gap-px bg-border/30">
+                  <div className="flex flex-1 gap-px bg-border/30 overflow-x-auto">
                     {weekDays.map((day) => (
                       <DroppableDay
                         key={format(day, "yyyy-MM-dd")}
