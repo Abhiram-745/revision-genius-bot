@@ -474,7 +474,7 @@ Return ONLY valid JSON:
             messages: [
               { role: "user", content: `You are an expert study scheduling assistant. Create realistic, balanced schedules that respect student preferences and time constraints. Always return valid JSON.\n\n${prompt}` }
             ],
-            max_tokens: 4096,
+            max_completion_tokens: 4096,
           }),
           signal: controller.signal,
         }
