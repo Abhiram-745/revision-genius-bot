@@ -137,7 +137,7 @@ Be constructive, specific, and focused on GCSE exam success. Return ONLY valid J
           messages: [
             { role: "user", content: `${systemPrompt}\n\n${prompt}` }
           ],
-          max_tokens: 2048,
+          max_completion_tokens: 2048,
         }),
       }
     );

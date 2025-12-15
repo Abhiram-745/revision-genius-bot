@@ -1263,7 +1263,7 @@ CRITICAL JSON REQUIREMENTS:
 TASK:
 ${prompt}` }
               ],
-              max_tokens: 65536,
+              max_completion_tokens: 65536,
             }),
             signal: controller.signal,
           }

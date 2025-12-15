@@ -285,7 +285,7 @@ Return ONLY valid JSON:
           messages: [
             { role: "user", content: `${systemPrompt}\n\n${prompt}` }
           ],
-          max_tokens: 4096,
+          max_completion_tokens: 4096,
         }),
       }
     );
