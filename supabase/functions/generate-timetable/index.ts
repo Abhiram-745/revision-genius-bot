@@ -39,6 +39,30 @@ function attemptJsonRepair(jsonString: string): string {
   return repaired;
 }
 
+// Extract visible assistant text from OpenAI Responses API result
+function extractOpenAIText(result: any): string | undefined {
+  if (!result) return undefined;
+
+  // Some SDKs return this convenience field
+  if (typeof result.output_text === "string" && result.output_text.trim()) {
+    return result.output_text;
+  }
+
+  const output = Array.isArray(result.output) ? result.output : [];
+  for (const item of output) {
+    if (item?.type !== "message" || item?.role !== "assistant") continue;
+
+    // content is usually an array of parts (e.g. [{type:'output_text', text:'...'}])
+    const parts = Array.isArray(item.content) ? item.content : [];
+    for (const p of parts) {
+      const text = p?.text ?? p?.content ?? p?.output_text;
+      if (typeof text === "string" && text.trim()) return text;
+    }
+  }
+
+  return undefined;
+}
+
 // Fuzzy topic matching - allows partial matches to avoid rejecting valid AI-generated topics
 function isValidTopicFuzzy(sessionTopic: string, validTopicNames: Set<string>): boolean {
   const normalize = (str: string) => str.toLowerCase().trim()
@@ -1240,18 +1264,27 @@ VERIFICATION BEFORE RESPONDING:
         }
         
         console.log(`Calling OpenAI API (attempt ${retryCount + 1}/${maxRetries + 1})...`);
+
+        // GPT-5* reasoning models can spend the entire budget on reasoning and return no visible output.
+        // Use the Responses API with low reasoning effort and a controlled output budget.
+        const maxOutputTokens = 8000 + (retryCount * 4000);
+
         const response = await fetch(
-          'https://api.openai.com/v1/chat/completions',
+          "https://api.openai.com/v1/responses",
           {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
-              "Authorization": `Bearer ${OPENAI_API_KEY}`
+              "Authorization": `Bearer ${OPENAI_API_KEY}`,
             },
             body: JSON.stringify({
               model: "gpt-5-nano-2025-08-07",
-              messages: [
-                { role: "user", content: `INSTRUCTIONS: You are an expert educational planner.
+              reasoning: { effort: "low" },
+              max_output_tokens: maxOutputTokens,
+              input: [
+                {
+                  role: "user",
+                  content: `INSTRUCTIONS: You are an expert educational planner.
 
 CRITICAL JSON REQUIREMENTS:
 1. Return ONLY valid JSON - no markdown, no code fences
@@ -1261,23 +1294,23 @@ CRITICAL JSON REQUIREMENTS:
 5. NO trailing commas
 
 TASK:
-${prompt}` }
+${prompt}`,
+                },
               ],
-              max_completion_tokens: 4096,
             }),
             signal: controller.signal,
-          }
+          },
         );
 
         if (!response.ok) {
           const errorText = await response.text();
           console.error("OpenAI API error:", response.status, errorText);
-          
+
           if ((response.status === 503 || response.status === 429) && retryCount < maxRetries) {
             retryCount++;
             continue;
           }
-          
+
           if (response.status === 503) {
             throw new Error("Heavy traffic. Please try again in a few moments.");
           } else if (response.status === 429) {
@@ -1288,6 +1321,35 @@ ${prompt}` }
         }
 
         openaiResult = await response.json();
+
+        const extracted = extractOpenAIText(openaiResult);
+        const status = openaiResult?.status;
+        const incompleteReason = openaiResult?.incomplete_details?.reason;
+
+        console.log("OpenAI response summary:", {
+          status,
+          incompleteReason,
+          hasText: !!(extracted && extracted.trim()),
+          usage: openaiResult?.usage,
+        });
+
+        // If the model ran out of budget during reasoning, it can return NO visible text.
+        // Retry with a larger max_output_tokens budget.
+        if ((!extracted || extracted.trim() === "") && status === "incomplete" && incompleteReason === "max_output_tokens" && retryCount < maxRetries) {
+          retryCount++;
+          continue;
+        }
+
+        if (!extracted || extracted.trim() === "") {
+          if (retryCount < maxRetries) {
+            retryCount++;
+            continue;
+          }
+          throw new Error("AI did not generate a response. Please try again.");
+        }
+
+        // Store extracted text in the same shape used later in the function
+        openaiResult = { extracted_text: extracted };
         break;
       } catch (err) {
         if (err instanceof Error && err.name === 'AbortError') {
@@ -1305,12 +1367,13 @@ ${prompt}` }
     
     clearTimeout(timeoutId);
 
-    console.log("Bytez Gemini raw result:", JSON.stringify(openaiResult, null, 2));
+    console.log("OpenAI raw result keys:", Object.keys(openaiResult ?? {}));
 
     let aiResponse: string | undefined;
-    
-    if (openaiResult.choices?.[0]?.message?.content) {
-      aiResponse = openaiResult.choices[0].message.content;
+
+    // Using Responses API path: we store extracted text in openaiResult.extracted_text
+    if (typeof (openaiResult as any)?.extracted_text === "string") {
+      aiResponse = (openaiResult as any).extracted_text;
     }
 
     if (!aiResponse || aiResponse.trim() === "") {
