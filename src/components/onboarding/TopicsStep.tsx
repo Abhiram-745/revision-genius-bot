@@ -311,9 +311,9 @@ const TopicsStep = ({ subjects, topics, setTopics }: TopicsStepProps) => {
   }, {} as Record<string, Topic[]>);
 
   return (
-    <div className="space-y-4 flex flex-col">
+    <div className="space-y-4">
       {/* Subject Navigation Header */}
-      <div className="space-y-3 flex-shrink-0">
+      <div className="space-y-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Badge variant="secondary" className="text-sm">
@@ -468,7 +468,7 @@ const TopicsStep = ({ subjects, topics, setTopics }: TopicsStepProps) => {
     </Tabs>
 
       {topics.length > 0 && (
-        <div className="space-y-4 pt-6 border-t flex flex-col flex-1 min-h-0">
+        <div className="space-y-4 pt-6 border-t pb-4">
           <div className="flex items-center justify-between">
             <div className="space-y-1">
               <Label className="text-base font-semibold">All Topics</Label>
