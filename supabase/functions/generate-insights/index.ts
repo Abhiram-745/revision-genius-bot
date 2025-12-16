@@ -148,21 +148,21 @@ Format your response as JSON with this structure:
   "overallSummary": "string"
 }`;
 
-    const ZENMUX_API_KEY = Deno.env.get('ZENMUX_API_KEY');
-    if (!ZENMUX_API_KEY) {
-      throw new Error("ZENMUX_API_KEY not configured");
+    const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
+    if (!OPENAI_API_KEY) {
+      throw new Error("OPENAI_API_KEY not configured");
     }
 
-    console.log('Calling Zenmux AI...');
+    console.log('Calling OpenAI API...');
 
-    const response = await fetch('https://zenmux.ai/api/v1/chat/completions', {
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: "POST",
       headers: { 
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${ZENMUX_API_KEY}`,
+        "Authorization": `Bearer ${OPENAI_API_KEY}`,
       },
       body: JSON.stringify({
-        model: "z-ai/glm-4.6v-flash",
+        model: "gpt-5-nano-2025-08-07",
         messages: [
           { 
             role: "system", 

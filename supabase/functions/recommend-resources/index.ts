@@ -20,9 +20,9 @@ serve(async (req) => {
       );
     }
 
-    const ZENMUX_API_KEY = Deno.env.get("ZENMUX_API_KEY");
-    if (!ZENMUX_API_KEY) {
-      console.error("[recommend-resources] ZENMUX_API_KEY not configured");
+    const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
+    if (!OPENAI_API_KEY) {
+      console.error("[recommend-resources] OPENAI_API_KEY not configured");
       return new Response(
         JSON.stringify({ error: "AI service not configured" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -78,14 +78,14 @@ Return a JSON object with this EXACT structure:
 
 Be SPECIFIC to the topic. Don't give generic advice.`;
 
-    const response = await fetch("https://zenmux.ai/api/v1/chat/completions", {
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${ZENMUX_API_KEY}`,
+        Authorization: `Bearer ${OPENAI_API_KEY}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "z-ai/glm-4.6v-flash",
+        model: "gpt-5-nano-2025-08-07",
         messages: [
           { role: "system", content: "You are a UK GCSE study expert. Always return valid JSON. Be specific to the exact topic given." },
           { role: "user", content: prompt }

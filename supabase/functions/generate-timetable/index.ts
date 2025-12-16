@@ -1221,10 +1221,10 @@ VERIFICATION BEFORE RESPONDING:
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 120000);
 
-    const ZENMUX_API_KEY = Deno.env.get('ZENMUX_API_KEY');
+    const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
     
-    if (!ZENMUX_API_KEY) {
-      console.error("ZENMUX_API_KEY not configured");
+    if (!OPENAI_API_KEY) {
+      console.error("OPENAI_API_KEY not configured");
       throw new Error("AI service not configured. Please contact support.");
     }
 
@@ -1239,17 +1239,17 @@ VERIFICATION BEFORE RESPONDING:
           await new Promise(resolve => setTimeout(resolve, retryCount * 2000));
         }
         
-        console.log(`Calling Zenmux API (attempt ${retryCount + 1}/${maxRetries + 1})...`);
+        console.log(`Calling OpenAI API (attempt ${retryCount + 1}/${maxRetries + 1})...`);
         const response = await fetch(
-          'https://zenmux.ai/api/v1/chat/completions',
+          'https://api.openai.com/v1/chat/completions',
           {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
-              "Authorization": `Bearer ${ZENMUX_API_KEY}`
+              "Authorization": `Bearer ${OPENAI_API_KEY}`
             },
             body: JSON.stringify({
-              model: "z-ai/glm-4.6v-flash",
+              model: "gpt-5-nano-2025-08-07",
               messages: [
                 { role: "user", content: `INSTRUCTIONS: You are an expert educational planner.
 
@@ -1271,7 +1271,7 @@ ${prompt}` }
 
         if (!response.ok) {
           const errorText = await response.text();
-          console.error("Zenmux API error:", response.status, errorText);
+          console.error("OpenAI API error:", response.status, errorText);
           
           if ((response.status === 503 || response.status === 429) && retryCount < maxRetries) {
             retryCount++;
