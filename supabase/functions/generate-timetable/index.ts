@@ -1169,8 +1169,8 @@ TIMETABLE PERIOD: ${startDate} to ${endDate}
 5. Add ${finalBreakDuration}-min breaks between sessions
 6. NEVER schedule during ⛔ BLOCKED event times
 7. Events are NOT study topics - do NOT add them as sessions
-8. Fill all available free time productively
-9. Give EXTRA sessions to topics marked as historical struggles
+8. Aim for ~${preferences.daily_study_hours} hours/day of STUDY (exclude breaks). Don’t over-schedule once all topics + homework are covered.
+9. Give EXTRA sessions to topics marked as historical struggles (2+ sessions total)
 10. If time is limited, use shorter ${finalSessionDuration}-min sessions to fit ALL topics
 
 **OUTPUT FORMAT (JSON only, no markdown):**
@@ -1263,7 +1263,7 @@ CRITICAL JSON REQUIREMENTS:
 TASK:
 ${prompt}` }
               ],
-              max_completion_tokens: 16384,
+              max_completion_tokens: 4096,
             }),
             signal: controller.signal,
           }
