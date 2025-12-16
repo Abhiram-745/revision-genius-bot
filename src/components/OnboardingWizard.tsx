@@ -183,139 +183,141 @@ const OnboardingWizard = ({ onComplete, onCancel }: OnboardingWizardProps) => {
     : "no-exam";
 
   return (
-    <>
-      <WizardTour currentStep={step} />
-      <Card className="w-full max-w-3xl mx-auto shadow-lg flex flex-col h-[calc(100vh-1rem)] sm:h-[calc(100vh-2rem)] max-h-[95vh]">
-        <CardHeader className="flex-shrink-0 pb-2 sm:pb-4 px-4 sm:px-6">
-          <div className="space-y-2">
-            <div className="flex items-center justify-between text-xs sm:text-sm text-muted-foreground">
-              <span>Step {step} of {totalSteps}</span>
-              <span>{Math.round(progress)}% Complete</span>
+    <div className="fixed inset-0 z-50 bg-background/95 backdrop-blur-sm overflow-y-auto">
+      <div className="min-h-full flex items-start justify-center py-4 px-2 sm:py-8 sm:px-4">
+        <WizardTour currentStep={step} />
+        <Card className="w-full max-w-3xl shadow-lg flex flex-col max-h-[calc(100vh-2rem)] sm:max-h-[calc(100vh-4rem)]">
+          <CardHeader className="flex-shrink-0 pb-2 sm:pb-4 px-4 sm:px-6">
+            <div className="space-y-2">
+              <div className="flex items-center justify-between text-xs sm:text-sm text-muted-foreground">
+                <span>Step {step} of {totalSteps}</span>
+                <span>{Math.round(progress)}% Complete</span>
+              </div>
+              <Progress value={progress} className="h-2" />
             </div>
-            <Progress value={progress} className="h-2" />
-          </div>
-          <CardTitle className="text-lg sm:text-xl md:text-2xl">{stepTitles[step - 1]}</CardTitle>
-          <CardDescription className="text-xs sm:text-sm">
-            {step === 1 && "Add the subjects you're taking and select the study mode for each"}
-            {step === 2 && "Tell us which topics you're currently studying"}
-            {step === 3 && "Select topics you find difficult and tell us why"}
-            {step === 4 && "When are your tests scheduled?"}
-            {step === 5 && "Set your study preferences"}
-            {step === 6 && "Add any homework assignments to include in your timetable"}
-            {step === 7 && "Choose when your timetable should start and end"}
-            {step === 8 && "Review and generate your personalized timetable"}
-          </CardDescription>
-        </CardHeader>
-        
-        {/* Scrollable content area */}
-        <CardContent className="flex-1 overflow-y-auto min-h-0 px-4 sm:px-6 pb-4">
-          <div className="space-y-4 pr-1">
-            {step === 1 && (
-              <div data-tour="subjects-step">
-                <SubjectsStep subjects={subjects} setSubjects={setSubjects} />
-              </div>
-            )}
-            {step === 2 && (
-              <div data-tour="topics-step">
-                <TopicsStep subjects={subjects} topics={topics} setTopics={setTopics} />
-              </div>
-            )}
-            {step === 3 && (
-              <div data-tour="difficult-topics-step">
-                <DifficultTopicsStep 
-                  subjects={subjects} 
-                  topics={topics}
-                  setTopics={setTopics}
-                  onAnalysisComplete={setTopicAnalysis}
-                  onSkip={handleNext}
-                />
-              </div>
-            )}
-            {step === 4 && !subjects.every(s => s.mode === "no-exam") && (
-              <div data-tour="test-dates-step">
-                <TestDatesStep subjects={subjects} testDates={testDates} setTestDates={setTestDates} />
-              </div>
-            )}
-            {step === 5 && (
-              <div data-tour="preferences-step">
-                <PreferencesStep preferences={preferences} setPreferences={setPreferences} />
-              </div>
-            )}
-            {step === 6 && (
-              <div data-tour="homework-step">
-                <HomeworkStep subjects={subjects} homeworks={homeworks} setHomeworks={setHomeworks} />
-              </div>
-            )}
-            {step === 7 && (
-              <div data-tour="dates-step">
-                <TimetableDatesStep
-                  timetableName={timetableName}
-                  setTimetableName={setTimetableName}
-                  startDate={startDate}
-                  setStartDate={setStartDate}
-                  endDate={endDate}
-                  setEndDate={setEndDate}
-                />
-              </div>
-            )}
-            {step === 8 && (
-              <div data-tour="generate-step">
-                <GenerateStep
-                  subjects={subjects}
-                  topics={topics}
-                  testDates={testDates}
-                  preferences={preferences}
-                  homeworks={homeworks}
-                  topicAnalysis={topicAnalysis}
-                  timetableMode={timetableMode}
-                  timetableName={timetableName}
-                  startDate={startDate}
-                  endDate={endDate}
-                  onComplete={handleComplete}
-                />
-              </div>
-            )}
-          </div>
-        </CardContent>
-
-        {/* Fixed footer with navigation buttons */}
-        <div className="flex-shrink-0 border-t bg-card px-4 sm:px-6 py-4">
-          {step !== 3 ? (
-            <div className="flex justify-between">
-              <Button
-                variant="outline"
-                onClick={handleBack}
-              >
-                Back
-              </Button>
-              {step < totalSteps && (
-                <Button
-                  onClick={handleNext}
-                  className="bg-gradient-primary hover:opacity-90"
-                  disabled={
-                    (step === 1 && subjects.length === 0) ||
-                    (step === 2 && topics.length === 0) ||
-                    (step === 4 && !subjects.every(s => s.mode === "no-exam") && testDates.length === 0) ||
-                    (step === 7 && (!startDate || !endDate || !timetableName.trim()))
-                  }
-                >
-                  Next
-                </Button>
+            <CardTitle className="text-lg sm:text-xl md:text-2xl">{stepTitles[step - 1]}</CardTitle>
+            <CardDescription className="text-xs sm:text-sm">
+              {step === 1 && "Add the subjects you're taking and select the study mode for each"}
+              {step === 2 && "Tell us which topics you're currently studying"}
+              {step === 3 && "Select topics you find difficult and tell us why"}
+              {step === 4 && "When are your tests scheduled?"}
+              {step === 5 && "Set your study preferences"}
+              {step === 6 && "Add any homework assignments to include in your timetable"}
+              {step === 7 && "Choose when your timetable should start and end"}
+              {step === 8 && "Review and generate your personalized timetable"}
+            </CardDescription>
+          </CardHeader>
+          
+          {/* Scrollable content area */}
+          <CardContent className="flex-1 overflow-y-auto min-h-0 px-4 sm:px-6 pb-4">
+            <div className="space-y-4 pr-1">
+              {step === 1 && (
+                <div data-tour="subjects-step">
+                  <SubjectsStep subjects={subjects} setSubjects={setSubjects} />
+                </div>
+              )}
+              {step === 2 && (
+                <div data-tour="topics-step">
+                  <TopicsStep subjects={subjects} topics={topics} setTopics={setTopics} />
+                </div>
+              )}
+              {step === 3 && (
+                <div data-tour="difficult-topics-step">
+                  <DifficultTopicsStep 
+                    subjects={subjects} 
+                    topics={topics}
+                    setTopics={setTopics}
+                    onAnalysisComplete={setTopicAnalysis}
+                    onSkip={handleNext}
+                  />
+                </div>
+              )}
+              {step === 4 && !subjects.every(s => s.mode === "no-exam") && (
+                <div data-tour="test-dates-step">
+                  <TestDatesStep subjects={subjects} testDates={testDates} setTestDates={setTestDates} />
+                </div>
+              )}
+              {step === 5 && (
+                <div data-tour="preferences-step">
+                  <PreferencesStep preferences={preferences} setPreferences={setPreferences} />
+                </div>
+              )}
+              {step === 6 && (
+                <div data-tour="homework-step">
+                  <HomeworkStep subjects={subjects} homeworks={homeworks} setHomeworks={setHomeworks} />
+                </div>
+              )}
+              {step === 7 && (
+                <div data-tour="dates-step">
+                  <TimetableDatesStep
+                    timetableName={timetableName}
+                    setTimetableName={setTimetableName}
+                    startDate={startDate}
+                    setStartDate={setStartDate}
+                    endDate={endDate}
+                    setEndDate={setEndDate}
+                  />
+                </div>
+              )}
+              {step === 8 && (
+                <div data-tour="generate-step">
+                  <GenerateStep
+                    subjects={subjects}
+                    topics={topics}
+                    testDates={testDates}
+                    preferences={preferences}
+                    homeworks={homeworks}
+                    topicAnalysis={topicAnalysis}
+                    timetableMode={timetableMode}
+                    timetableName={timetableName}
+                    startDate={startDate}
+                    endDate={endDate}
+                    onComplete={handleComplete}
+                  />
+                </div>
               )}
             </div>
-          ) : (
-            <div className="flex justify-start">
-              <Button
-                variant="outline"
-                onClick={handleBack}
-              >
-                Back
-              </Button>
-            </div>
-          )}
-        </div>
-      </Card>
-    </>
+          </CardContent>
+
+          {/* Fixed footer with navigation buttons */}
+          <div className="flex-shrink-0 border-t bg-card px-4 sm:px-6 py-4">
+            {step !== 3 ? (
+              <div className="flex justify-between">
+                <Button
+                  variant="outline"
+                  onClick={handleBack}
+                >
+                  Back
+                </Button>
+                {step < totalSteps && (
+                  <Button
+                    onClick={handleNext}
+                    className="bg-gradient-primary hover:opacity-90"
+                    disabled={
+                      (step === 1 && subjects.length === 0) ||
+                      (step === 2 && topics.length === 0) ||
+                      (step === 4 && !subjects.every(s => s.mode === "no-exam") && testDates.length === 0) ||
+                      (step === 7 && (!startDate || !endDate || !timetableName.trim()))
+                    }
+                  >
+                    Next
+                  </Button>
+                )}
+              </div>
+            ) : (
+              <div className="flex justify-start">
+                <Button
+                  variant="outline"
+                  onClick={handleBack}
+                >
+                  Back
+                </Button>
+              </div>
+            )}
+          </div>
+        </Card>
+      </div>
+    </div>
   );
 };
 
