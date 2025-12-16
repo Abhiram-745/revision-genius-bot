@@ -28,6 +28,8 @@ import { TopicResourcesPanel } from "@/components/TopicResourcesPanel";
 import { TopicReflectionDialog } from "@/components/TopicReflectionDialog";
 import { SessionReflectionDialog } from "@/components/SessionReflectionDialog";
 import { SessionTimer } from "@/components/SessionTimer";
+import { PracticeTypeDialog } from "@/components/PracticeTypeDialog";
+import { BlurtAIPracticeSession } from "@/components/BlurtAIPracticeSession";
 import { StudyInsightsPanel } from "@/components/StudyInsightsPanel";
 import { ShareTimetableDialog } from "@/components/ShareTimetableDialog";
 import { DailyInsightsPanel } from "@/components/DailyInsightsPanel";
@@ -82,6 +84,16 @@ const TimetableView = () => {
     session: TimetableSession;
   } | null>(null);
   const [timerSession, setTimerSession] = useState<{
+    date: string;
+    index: number;
+    session: TimetableSession;
+  } | null>(null);
+  const [practiceTypeSession, setPracticeTypeSession] = useState<{
+    date: string;
+    index: number;
+    session: TimetableSession;
+  } | null>(null);
+  const [blurtSession, setBlurtSession] = useState<{
     date: string;
     index: number;
     session: TimetableSession;
@@ -578,7 +590,7 @@ const TimetableView = () => {
                                     size="sm"
                                     variant="default"
                                     data-tour={idx === 0 ? "session-start-btn" : undefined}
-                                    onClick={() => setTimerSession({ date, index: originalIdx, session })}
+                                    onClick={() => setPracticeTypeSession({ date, index: originalIdx, session })}
                                   >
                                     Start
                                   </Button>
@@ -750,6 +762,40 @@ const TimetableView = () => {
           onOpenChange={setShowShareDialog}
           timetableId={timetable.id}
           timetableName={timetable.name}
+        />
+      )}
+
+      {/* Practice Type Selection Dialog */}
+      {practiceTypeSession && (
+        <PracticeTypeDialog
+          open={!!practiceTypeSession}
+          onOpenChange={(open) => !open && setPracticeTypeSession(null)}
+          subject={practiceTypeSession.session.subject}
+          topic={practiceTypeSession.session.topic}
+          onSelectBlurtAI={() => {
+            setBlurtSession(practiceTypeSession);
+            setPracticeTypeSession(null);
+          }}
+          onSelectOther={() => {
+            setTimerSession(practiceTypeSession);
+            setPracticeTypeSession(null);
+          }}
+        />
+      )}
+
+      {/* Blurt AI Practice Session */}
+      {blurtSession && (
+        <BlurtAIPracticeSession
+          open={!!blurtSession}
+          onOpenChange={(open) => !open && setBlurtSession(null)}
+          subject={blurtSession.session.subject}
+          topic={blurtSession.session.topic}
+          plannedDurationMinutes={blurtSession.session.duration}
+          timetableTopics={timetable.topics}
+          onComplete={async () => {
+            await toggleSessionComplete(blurtSession.date, blurtSession.index);
+            setBlurtSession(null);
+          }}
         />
       )}
 

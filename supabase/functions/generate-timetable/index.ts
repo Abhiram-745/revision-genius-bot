@@ -1241,20 +1241,21 @@ VERIFICATION BEFORE RESPONDING:
       );
     }
 
-    // Add timeout - 180 seconds for complex timetable generation
+    // Add timeout - 90 seconds (Gemini is much faster than GPT-5)
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 180000);
+    const timeoutId = setTimeout(() => controller.abort(), 90000);
 
-    const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
+    // Use Lovable AI Gateway with google/gemini-2.5-flash (faster, no reasoning overhead)
+    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
     
-    if (!OPENAI_API_KEY) {
-      console.error("OPENAI_API_KEY not configured");
+    if (!LOVABLE_API_KEY) {
+      console.error("LOVABLE_API_KEY not configured");
       throw new Error("AI service not configured. Please contact support.");
     }
 
-    let openaiResult;
+    let aiResponse: string = "";
     let retryCount = 0;
-    const maxRetries = 3;
+    const maxRetries = 2;
     
     while (retryCount <= maxRetries) {
       try {
@@ -1263,38 +1264,27 @@ VERIFICATION BEFORE RESPONDING:
           await new Promise(resolve => setTimeout(resolve, retryCount * 2000));
         }
         
-        console.log(`Calling OpenAI API (attempt ${retryCount + 1}/${maxRetries + 1})...`);
-
-        // GPT-5* reasoning models can spend the entire budget on reasoning and return no visible output.
-        // Use the Responses API with low reasoning effort and a controlled output budget.
-        const maxOutputTokens = 8000 + (retryCount * 4000);
+        console.log(`Calling Lovable AI Gateway (attempt ${retryCount + 1}/${maxRetries + 1})...`);
 
         const response = await fetch(
-          "https://api.openai.com/v1/responses",
+          "https://ai.gateway.lovable.dev/v1/chat/completions",
           {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
-              "Authorization": `Bearer ${OPENAI_API_KEY}`,
+              "Authorization": `Bearer ${LOVABLE_API_KEY}`,
             },
             body: JSON.stringify({
-              model: "gpt-5-nano-2025-08-07",
-              reasoning: { effort: "low" },
-              max_output_tokens: maxOutputTokens,
-              input: [
+              model: "google/gemini-2.5-flash",
+              max_completion_tokens: 8000,
+              messages: [
+                {
+                  role: "system",
+                  content: `You are an expert educational planner. Return ONLY valid JSON - no markdown, no code fences. Start with { and end with }. Keep topic names SHORT (max 50 chars). Ensure ALL braces and brackets are properly closed. NO trailing commas.`
+                },
                 {
                   role: "user",
-                  content: `INSTRUCTIONS: You are an expert educational planner.
-
-CRITICAL JSON REQUIREMENTS:
-1. Return ONLY valid JSON - no markdown, no code fences
-2. Start with { and end with }
-3. Keep topic names SHORT (max 50 characters)
-4. Ensure ALL braces and brackets are properly closed
-5. NO trailing commas
-
-TASK:
-${prompt}`,
+                  content: prompt,
                 },
               ],
             }),
@@ -1304,43 +1294,30 @@ ${prompt}`,
 
         if (!response.ok) {
           const errorText = await response.text();
-          console.error("OpenAI API error:", response.status, errorText);
+          console.error("Lovable AI Gateway error:", response.status, errorText);
 
-          if ((response.status === 503 || response.status === 429) && retryCount < maxRetries) {
+          if (response.status === 429) {
+            if (retryCount < maxRetries) {
+              retryCount++;
+              continue;
+            }
+            throw new Error("Rate limit exceeded. Please wait and try again.");
+          } else if (response.status === 402) {
+            throw new Error("AI credits exhausted. Please add credits to continue.");
+          } else if (response.status === 503 && retryCount < maxRetries) {
             retryCount++;
             continue;
-          }
-
-          if (response.status === 503) {
-            throw new Error("Heavy traffic. Please try again in a few moments.");
-          } else if (response.status === 429) {
-            throw new Error("Too many requests. Please wait and try again.");
           } else {
             throw new Error(`AI request failed: ${response.status}`);
           }
         }
 
-        openaiResult = await response.json();
+        const result = await response.json();
+        const content = result.choices?.[0]?.message?.content;
 
-        const extracted = extractOpenAIText(openaiResult);
-        const status = openaiResult?.status;
-        const incompleteReason = openaiResult?.incomplete_details?.reason;
+        console.log("Lovable AI response received, length:", content?.length || 0);
 
-        console.log("OpenAI response summary:", {
-          status,
-          incompleteReason,
-          hasText: !!(extracted && extracted.trim()),
-          usage: openaiResult?.usage,
-        });
-
-        // If the model ran out of budget during reasoning, it can return NO visible text.
-        // Retry with a larger max_output_tokens budget.
-        if ((!extracted || extracted.trim() === "") && status === "incomplete" && incompleteReason === "max_output_tokens" && retryCount < maxRetries) {
-          retryCount++;
-          continue;
-        }
-
-        if (!extracted || extracted.trim() === "") {
+        if (!content || content.trim() === "") {
           if (retryCount < maxRetries) {
             retryCount++;
             continue;
@@ -1348,8 +1325,7 @@ ${prompt}`,
           throw new Error("AI did not generate a response. Please try again.");
         }
 
-        // Store extracted text in the same shape used later in the function
-        openaiResult = { extracted_text: extracted };
+        aiResponse = content;
         break;
       } catch (err) {
         if (err instanceof Error && err.name === 'AbortError') {
@@ -1367,21 +1343,7 @@ ${prompt}`,
     
     clearTimeout(timeoutId);
 
-    console.log("OpenAI raw result keys:", Object.keys(openaiResult ?? {}));
-
-    let aiResponse: string | undefined;
-
-    // Using Responses API path: we store extracted text in openaiResult.extracted_text
-    if (typeof (openaiResult as any)?.extracted_text === "string") {
-      aiResponse = (openaiResult as any).extracted_text;
-    }
-
-    if (!aiResponse || aiResponse.trim() === "") {
-      console.error("Empty AI response");
-      throw new Error("AI did not generate a response. Please try again.");
-    }
-
-    console.log("Extracted AI response (first 300 chars):", aiResponse.substring(0, 300));
+    console.log("AI response (first 300 chars):", aiResponse.substring(0, 300));
 
     let scheduleData;
     let jsonString = aiResponse.trim();
