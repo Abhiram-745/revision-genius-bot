@@ -1217,9 +1217,9 @@ VERIFICATION BEFORE RESPONDING:
       );
     }
 
-    // Add timeout
+    // Add timeout - 180 seconds for complex timetable generation
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 120000);
+    const timeoutId = setTimeout(() => controller.abort(), 180000);
 
     const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
     
@@ -1263,7 +1263,7 @@ CRITICAL JSON REQUIREMENTS:
 TASK:
 ${prompt}` }
               ],
-              max_completion_tokens: 65536,
+              max_completion_tokens: 16384,
             }),
             signal: controller.signal,
           }
