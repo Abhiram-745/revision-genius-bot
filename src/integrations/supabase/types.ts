@@ -83,6 +83,36 @@ export type Database = {
         }
         Relationships: []
       }
+      blurt_ai_sessions: {
+        Row: {
+          blurt_content: Json | null
+          created_at: string | null
+          id: string
+          last_used_at: string | null
+          subject_name: string
+          topic_name: string
+          user_id: string
+        }
+        Insert: {
+          blurt_content?: Json | null
+          created_at?: string | null
+          id?: string
+          last_used_at?: string | null
+          subject_name: string
+          topic_name: string
+          user_id: string
+        }
+        Update: {
+          blurt_content?: Json | null
+          created_at?: string | null
+          id?: string
+          last_used_at?: string | null
+          subject_name?: string
+          topic_name?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       email_verifications: {
         Row: {
           attempts: number | null
