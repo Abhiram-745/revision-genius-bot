@@ -131,26 +131,26 @@ Do NOT include any explanation or commentary - ONLY the JSON.`;
       }
     }
 
-    // Using Zenmux API with z-ai/glm-4.6v-flash for image extraction
-    const ZENMUX_API_KEY = Deno.env.get('ZENMUX_API_KEY');
+    // Using OpenAI API with gpt-5-nano for image extraction
+    const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
     
-    if (!ZENMUX_API_KEY) {
-      console.error("ZENMUX_API_KEY not configured");
+    if (!OPENAI_API_KEY) {
+      console.error("OPENAI_API_KEY not configured");
       throw new Error("AI service not configured. Please contact support.");
     }
 
-    console.log(`Calling Zenmux API with ${messageContent.length} content parts (${images?.length || 0} images)`);
+    console.log(`Calling OpenAI API with ${messageContent.length} content parts (${images?.length || 0} images)`);
 
     const response = await fetchWithRetry(
-      'https://zenmux.ai/api/v1/chat/completions',
+      'https://api.openai.com/v1/chat/completions',
       {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${ZENMUX_API_KEY}`
+          "Authorization": `Bearer ${OPENAI_API_KEY}`
         },
         body: JSON.stringify({
-          model: "z-ai/glm-4.6v-flash",
+          model: "gpt-5-nano-2025-08-07",
           messages: [
             { role: "user", content: messageContent }
           ],

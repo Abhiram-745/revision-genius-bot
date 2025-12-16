@@ -454,23 +454,23 @@ Return ONLY valid JSON:
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 45000);
 
-    const ZENMUX_API_KEY = Deno.env.get('ZENMUX_API_KEY');
-    if (!ZENMUX_API_KEY) {
-      throw new Error("ZENMUX_API_KEY not configured");
+    const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
+    if (!OPENAI_API_KEY) {
+      throw new Error("OPENAI_API_KEY not configured");
     }
 
     let openaiResult;
     try {
       const response = await fetchWithRetry(
-        'https://zenmux.ai/api/v1/chat/completions',
+        'https://api.openai.com/v1/chat/completions',
         {
           method: "POST",
           headers: { 
             "Content-Type": "application/json",
-            "Authorization": `Bearer ${ZENMUX_API_KEY}`,
+            "Authorization": `Bearer ${OPENAI_API_KEY}`,
           },
           body: JSON.stringify({
-            model: "z-ai/glm-4.6v-flash",
+            model: "gpt-5-nano-2025-08-07",
             messages: [
               { role: "user", content: `You are an expert study scheduling assistant. Create realistic, balanced schedules that respect student preferences and time constraints. Always return valid JSON.\n\n${prompt}` }
             ],
