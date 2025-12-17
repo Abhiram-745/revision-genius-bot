@@ -44,7 +44,7 @@ export const BlurtAIPracticeSession = ({
     .map(t => t.name) || [topic];
 
   // Build iframe URL with topic data
-  const blurtAIUrl = `https://blurtaigcseo.vercel.app/?subject=${encodeURIComponent(subject)}&topic=${encodeURIComponent(topic)}&topics=${encodeURIComponent(subjectTopics.join(','))}`;
+  const blurtAIUrl = `https://blurtaigcsee.vercel.app/?subject=${encodeURIComponent(subject)}&topic=${encodeURIComponent(topic)}&topics=${encodeURIComponent(subjectTopics.join(','))}`;
 
   useEffect(() => {
     if (open && !isRunning) {
