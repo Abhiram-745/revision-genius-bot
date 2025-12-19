@@ -312,6 +312,26 @@ const Header = ({ onNewTimetable }: HeaderProps) => {
         <span className="font-medium">AI Insights</span>
       </Button>
 
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() => {
+          navigate("/blurt-ai");
+          onItemClick?.();
+        }}
+        className={`justify-start gap-3 w-full px-3 py-3 rounded-xl transition-all ${
+          isActivePath("/blurt-ai") 
+            ? "bg-gradient-to-r from-secondary/20 to-primary/20 text-secondary font-semibold border border-secondary/30" 
+            : "hover:bg-secondary/10 border border-transparent hover:border-secondary/20"
+        }`}
+      >
+        <Sparkles className="h-5 w-5 text-secondary" />
+        <span className="font-medium">BlurtAI</span>
+        <Badge variant="secondary" className="ml-auto text-[10px] px-1.5 py-0 bg-secondary/20 text-secondary border-secondary/30">
+          NEW
+        </Badge>
+      </Button>
+
       {isAdmin && (
         <Button
           variant="ghost"

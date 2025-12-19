@@ -25,7 +25,7 @@ const eventSchema = z.object({
   startTime: z.string().optional(),
   endDate: z.string().optional(),
   endTime: z.string().optional(),
-  recurrenceRule: z.enum(["none", "daily", "weekly", "monthly"]),
+  recurrenceRule: z.enum(["none", "daily", "every-2-days", "weekly", "biweekly", "every-3-weeks", "monthly"]),
   recurrenceEndDate: z.string().optional(),
 }).refine((data) => {
   if (data.recurrenceRule !== "none" && !data.recurrenceEndDate) {
@@ -142,8 +142,14 @@ export const EventsWidget = () => {
 
       if (rule === "daily") {
         currentStart = addDays(currentStart, 1);
+      } else if (rule === "every-2-days") {
+        currentStart = addDays(currentStart, 2);
       } else if (rule === "weekly") {
         currentStart = addWeeks(currentStart, 1);
+      } else if (rule === "biweekly") {
+        currentStart = addWeeks(currentStart, 2);
+      } else if (rule === "every-3-weeks") {
+        currentStart = addWeeks(currentStart, 3);
       } else if (rule === "monthly") {
         currentStart = addMonths(currentStart, 1);
       } else {
@@ -694,7 +700,10 @@ export const EventsWidget = () => {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="daily">Daily</SelectItem>
+                <SelectItem value="every-2-days">Every 2 days</SelectItem>
                 <SelectItem value="weekly">Weekly</SelectItem>
+                <SelectItem value="biweekly">Every 2 weeks</SelectItem>
+                <SelectItem value="every-3-weeks">Every 3 weeks</SelectItem>
                 <SelectItem value="monthly">Monthly</SelectItem>
               </SelectContent>
             </Select>

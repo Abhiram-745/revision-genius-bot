@@ -14,11 +14,11 @@ import Events from "@/pages/Events";
 import Homework from "@/pages/Homework";
 import TestScores from "@/pages/TestScores";
 import AIInsights from "@/pages/AIInsights";
+import BlurtAI from "@/pages/BlurtAI";
 import Reflections from "@/pages/Reflections";
 import NotFound from "@/pages/NotFound";
 import ImportAccount from "@/pages/ImportAccount";
 import Admin from "@/pages/Admin";
-
 export const AnimatedRoutes = () => {
   const location = useLocation();
 
@@ -38,6 +38,7 @@ export const AnimatedRoutes = () => {
         <Route path="/homework" element={<Homework />} />
         <Route path="/test-scores" element={<TestScores />} />
         <Route path="/ai-insights" element={<AIInsights />} />
+        <Route path="/blurt-ai" element={<BlurtAI />} />
         <Route path="/reflections" element={<Reflections />} />
         <Route path="/timetable/:id" element={<TimetableView />} />
         <Route path="/import-account" element={<ImportAccount />} />

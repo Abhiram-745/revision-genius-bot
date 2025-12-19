@@ -4,14 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
-import TimetableModeStep, { TimetableMode } from "./onboarding/TimetableModeStep";
-import SubjectsStep from "./onboarding/SubjectsStep";
-import TopicsStep from "./onboarding/TopicsStep";
-import DifficultTopicsStep from "./onboarding/DifficultTopicsStep";
-import TestDatesStep from "./onboarding/TestDatesStep";
-import PreferencesStep from "./onboarding/PreferencesStep";
-import HomeworkStep, { Homework } from "./onboarding/HomeworkStep";
-import TimetableDatesStep from "./onboarding/TimetableDatesStep";
+import QuickSetupStep from "./onboarding/QuickSetupStep";
+import SmartTopicsStep from "./onboarding/SmartTopicsStep";
+import SmartConfigStep from "./onboarding/SmartConfigStep";
 import GenerateStep from "./onboarding/GenerateStep";
 import WizardTour from "./tours/WizardTour";
 
@@ -105,7 +100,7 @@ const OnboardingWizard = ({ onComplete, onCancel }: OnboardingWizardProps) => {
   const [topicAnalysis, setTopicAnalysis] = useState<any>(savedProgress?.topicAnalysis || null);
   const [testDates, setTestDates] = useState<TestDate[]>(savedProgress?.testDates || []);
   const [preferences, setPreferences] = useState<StudyPreferences>(savedProgress?.preferences || defaultPreferences);
-  const [homeworks, setHomeworks] = useState<Homework[]>(savedProgress?.homeworks || []);
+  const [homeworks, setHomeworks] = useState<any[]>(savedProgress?.homeworks || []);
   const [timetableName, setTimetableName] = useState(savedProgress?.timetableName || "My Study Timetable");
   const [startDate, setStartDate] = useState(savedProgress?.startDate || "");
   const [endDate, setEndDate] = useState(savedProgress?.endDate || "");
@@ -137,17 +132,12 @@ const OnboardingWizard = ({ onComplete, onCancel }: OnboardingWizardProps) => {
     onComplete();
   };
 
-  const totalSteps = 8;
+  const totalSteps = 4;
   const progress = (step / totalSteps) * 100;
 
   const handleNext = () => {
     if (step < totalSteps) {
-      // Skip test dates step if all subjects are no-exam mode
-      if (step === 3 && subjects.every(s => s.mode === "no-exam")) {
-        setStep(step + 2); // Skip step 4 (test dates)
-      } else {
-        setStep(step + 1);
-      }
+      setStep(step + 1);
     }
   };
 
@@ -155,24 +145,22 @@ const OnboardingWizard = ({ onComplete, onCancel }: OnboardingWizardProps) => {
     if (step === 1 && onCancel) {
       onCancel();
     } else if (step > 1) {
-      // Skip test dates step if all subjects are no-exam mode when going back
-      if (step === 5 && subjects.every(s => s.mode === "no-exam")) {
-        setStep(step - 2); // Skip step 4 (test dates)
-      } else {
-        setStep(step - 1);
-      }
+      setStep(step - 1);
     }
   };
 
   const stepTitles = [
-    "Your GCSE Subjects",
-    "Topics You're Studying",
-    "Topics You Find Difficult",
-    "Upcoming Test Dates",
-    "Study Preferences",
-    "Homework Assignments",
-    "Timetable Period",
+    "Your Subjects",
+    "Topics & Confidence",
+    "Schedule & Preferences",
     "Generate Timetable",
+  ];
+
+  const stepDescriptions = [
+    "Add the subjects you're studying - click to quickly add or customize each one",
+    "Add your topics and rate how confident you feel about each one",
+    "Set your exam dates, study schedule, and preferences",
+    "Review and generate your personalized AI study timetable",
   ];
 
   // Get timetableMode based on subjects - prioritize most urgent
@@ -181,6 +169,19 @@ const OnboardingWizard = ({ onComplete, onCancel }: OnboardingWizardProps) => {
     : subjects.some(s => s.mode === "long-term-exam")
     ? "long-term-exam"
     : "no-exam";
+
+  const canProceed = () => {
+    switch (step) {
+      case 1:
+        return subjects.length > 0;
+      case 2:
+        return topics.length > 0;
+      case 3:
+        return startDate && endDate && timetableName.trim();
+      default:
+        return true;
+    }
+  };
 
   return (
     <div className="fixed inset-0 z-50 bg-background/95 backdrop-blur-sm overflow-y-auto">
@@ -197,14 +198,7 @@ const OnboardingWizard = ({ onComplete, onCancel }: OnboardingWizardProps) => {
             </div>
             <CardTitle className="text-lg sm:text-xl md:text-2xl">{stepTitles[step - 1]}</CardTitle>
             <CardDescription className="text-xs sm:text-sm">
-              {step === 1 && "Add the subjects you're taking and select the study mode for each"}
-              {step === 2 && "Tell us which topics you're currently studying"}
-              {step === 3 && "Select topics you find difficult and tell us why"}
-              {step === 4 && "When are your tests scheduled?"}
-              {step === 5 && "Set your study preferences"}
-              {step === 6 && "Add any homework assignments to include in your timetable"}
-              {step === 7 && "Choose when your timetable should start and end"}
-              {step === 8 && "Review and generate your personalized timetable"}
+              {stepDescriptions[step - 1]}
             </CardDescription>
           </CardHeader>
           
@@ -213,43 +207,22 @@ const OnboardingWizard = ({ onComplete, onCancel }: OnboardingWizardProps) => {
             <div className="space-y-4 pr-1">
               {step === 1 && (
                 <div data-tour="subjects-step">
-                  <SubjectsStep subjects={subjects} setSubjects={setSubjects} />
+                  <QuickSetupStep subjects={subjects} setSubjects={setSubjects} />
                 </div>
               )}
               {step === 2 && (
                 <div data-tour="topics-step">
-                  <TopicsStep subjects={subjects} topics={topics} setTopics={setTopics} />
+                  <SmartTopicsStep subjects={subjects} topics={topics} setTopics={setTopics} />
                 </div>
               )}
               {step === 3 && (
-                <div data-tour="difficult-topics-step">
-                  <DifficultTopicsStep 
-                    subjects={subjects} 
-                    topics={topics}
-                    setTopics={setTopics}
-                    onAnalysisComplete={setTopicAnalysis}
-                    onSkip={handleNext}
-                  />
-                </div>
-              )}
-              {step === 4 && !subjects.every(s => s.mode === "no-exam") && (
-                <div data-tour="test-dates-step">
-                  <TestDatesStep subjects={subjects} testDates={testDates} setTestDates={setTestDates} />
-                </div>
-              )}
-              {step === 5 && (
-                <div data-tour="preferences-step">
-                  <PreferencesStep preferences={preferences} setPreferences={setPreferences} />
-                </div>
-              )}
-              {step === 6 && (
-                <div data-tour="homework-step">
-                  <HomeworkStep subjects={subjects} homeworks={homeworks} setHomeworks={setHomeworks} />
-                </div>
-              )}
-              {step === 7 && (
-                <div data-tour="dates-step">
-                  <TimetableDatesStep
+                <div data-tour="config-step">
+                  <SmartConfigStep
+                    subjects={subjects}
+                    testDates={testDates}
+                    setTestDates={setTestDates}
+                    preferences={preferences}
+                    setPreferences={setPreferences}
                     timetableName={timetableName}
                     setTimetableName={setTimetableName}
                     startDate={startDate}
@@ -259,7 +232,7 @@ const OnboardingWizard = ({ onComplete, onCancel }: OnboardingWizardProps) => {
                   />
                 </div>
               )}
-              {step === 8 && (
+              {step === 4 && (
                 <div data-tour="generate-step">
                   <GenerateStep
                     subjects={subjects}
@@ -281,39 +254,23 @@ const OnboardingWizard = ({ onComplete, onCancel }: OnboardingWizardProps) => {
 
           {/* Fixed footer with navigation buttons */}
           <div className="flex-shrink-0 border-t bg-card px-4 sm:px-6 py-4">
-            {step !== 3 ? (
-              <div className="flex justify-between">
+            <div className="flex justify-between">
+              <Button
+                variant="outline"
+                onClick={handleBack}
+              >
+                Back
+              </Button>
+              {step < totalSteps && (
                 <Button
-                  variant="outline"
-                  onClick={handleBack}
+                  onClick={handleNext}
+                  className="bg-gradient-primary hover:opacity-90"
+                  disabled={!canProceed()}
                 >
-                  Back
+                  Next
                 </Button>
-                {step < totalSteps && (
-                  <Button
-                    onClick={handleNext}
-                    className="bg-gradient-primary hover:opacity-90"
-                    disabled={
-                      (step === 1 && subjects.length === 0) ||
-                      (step === 2 && topics.length === 0) ||
-                      (step === 4 && !subjects.every(s => s.mode === "no-exam") && testDates.length === 0) ||
-                      (step === 7 && (!startDate || !endDate || !timetableName.trim()))
-                    }
-                  >
-                    Next
-                  </Button>
-                )}
-              </div>
-            ) : (
-              <div className="flex justify-start">
-                <Button
-                  variant="outline"
-                  onClick={handleBack}
-                >
-                  Back
-                </Button>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </Card>
       </div>
