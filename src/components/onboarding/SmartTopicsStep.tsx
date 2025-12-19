@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Slider } from "@/components/ui/slider";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Sparkles, Plus, X, Upload, Loader2, Brain, ChevronDown, ChevronUp } from "lucide-react";
+import { Sparkles, Plus, X, Upload, Loader2, Brain, ChevronDown, ChevronUp, FileText, Image, File } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Subject, Topic } from "../OnboardingWizard";
@@ -26,6 +26,8 @@ const SmartTopicsStep = ({ subjects, topics, setTopics }: SmartTopicsStepProps) 
   const [manualTopic, setManualTopic] = useState("");
   const [selectedSubject, setSelectedSubject] = useState(subjects[0]?.id || "");
   const [expandedSubjects, setExpandedSubjects] = useState<string[]>(subjects.map(s => s.id || ""));
+  const [isDragging, setIsDragging] = useState(false);
+  const [uploadedFile, setUploadedFile] = useState<{ name: string; type: string } | null>(null);
 
   const handleAIParse = async () => {
     if (!pasteContent.trim()) {
@@ -103,17 +105,121 @@ const SmartTopicsStep = ({ subjects, topics, setTopics }: SmartTopicsStepProps) 
     return "text-red-500";
   };
 
+  // Document upload handlers
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  }, []);
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  }, []);
+
+  const processFile = async (file: File) => {
+    const validTypes = [
+      'image/png', 'image/jpeg', 'image/jpg', 'image/webp',
+      'application/pdf',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+    ];
+
+    if (!validTypes.includes(file.type)) {
+      toast.error("Unsupported file type. Please upload PNG, JPG, PDF, or DOCX files.");
+      return;
+    }
+
+    setIsProcessing(true);
+    setUploadedFile({ name: file.name, type: file.type });
+
+    try {
+      // Convert file to base64
+      const base64 = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          const result = reader.result as string;
+          resolve(result.split(',')[1]); // Remove data URL prefix
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+
+      const isImage = file.type.startsWith('image/');
+      
+      const { data, error } = await supabase.functions.invoke("parse-topics", {
+        body: { 
+          content: isImage ? `Extract topics from this ${file.type} image file named "${file.name}"` : `Extract topics from this document: ${file.name}`,
+          subjects: subjects.map(s => ({ id: s.id, name: s.name, exam_board: s.exam_board })),
+          images: isImage ? [{ data: base64, mimeType: file.type }] : undefined,
+          documentBase64: !isImage ? base64 : undefined,
+          documentType: file.type,
+          documentName: file.name,
+        },
+      });
+
+      if (error) throw error;
+
+      if (data?.topics && Array.isArray(data.topics)) {
+        const newTopics = data.topics.map((t: any) => ({
+          id: `topic-${Date.now()}-${Math.random()}`,
+          subject_id: t.subject_id || subjects[0]?.id,
+          name: t.name,
+          confidence: 50,
+        }));
+        setTopics([...topics, ...newTopics]);
+        toast.success(`Extracted ${newTopics.length} topics from ${file.name}`);
+      } else {
+        toast.error("No topics found in the document");
+      }
+    } catch (error) {
+      console.error("Error processing file:", error);
+      toast.error("Failed to extract topics from document. Try the text input instead.");
+    } finally {
+      setIsProcessing(false);
+      setUploadedFile(null);
+    }
+  };
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+
+    const files = e.dataTransfer.files;
+    if (files.length > 0) {
+      processFile(files[0]);
+    }
+  }, [subjects, topics]);
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files && files.length > 0) {
+      processFile(files[0]);
+    }
+  };
+
+  const getFileIcon = (type: string) => {
+    if (type.startsWith('image/')) return <Image className="w-8 h-8 text-blue-500" />;
+    if (type === 'application/pdf') return <FileText className="w-8 h-8 text-red-500" />;
+    return <File className="w-8 h-8 text-primary" />;
+  };
+
   return (
     <div className="space-y-4">
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="ai" className="gap-2">
             <Sparkles className="w-4 h-4" />
             AI Import
           </TabsTrigger>
+          <TabsTrigger value="document" className="gap-2">
+            <Upload className="w-4 h-4" />
+            Document
+          </TabsTrigger>
           <TabsTrigger value="manual" className="gap-2">
             <Plus className="w-4 h-4" />
-            Manual Add
+            Manual
           </TabsTrigger>
         </TabsList>
 
@@ -150,6 +256,68 @@ const SmartTopicsStep = ({ subjects, topics, setTopics }: SmartTopicsStepProps) 
                   </>
                 )}
               </Button>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="document" className="space-y-4 mt-4">
+          <Card className={`border-2 border-dashed transition-colors ${
+            isDragging ? "border-primary bg-primary/5" : "border-muted-foreground/25"
+          }`}>
+            <CardContent className="p-6">
+              <div
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
+                className="flex flex-col items-center justify-center text-center space-y-4"
+              >
+                {isProcessing ? (
+                  <>
+                    <div className="p-4 rounded-full bg-primary/10">
+                      <Loader2 className="w-8 h-8 text-primary animate-spin" />
+                    </div>
+                    <div className="space-y-1">
+                      <p className="font-medium">Processing {uploadedFile?.name}...</p>
+                      <p className="text-xs text-muted-foreground">Extracting topics with AI</p>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="p-4 rounded-full bg-muted">
+                      <Upload className="w-8 h-8 text-muted-foreground" />
+                    </div>
+                    <div className="space-y-1">
+                      <p className="font-medium">Drag & drop your document</p>
+                      <p className="text-xs text-muted-foreground">
+                        Upload an exam spec, checklist, or screenshot
+                      </p>
+                    </div>
+                    <div className="flex flex-wrap justify-center gap-2 text-xs text-muted-foreground">
+                      <Badge variant="outline" className="gap-1">
+                        <Image className="w-3 h-3" /> PNG, JPG
+                      </Badge>
+                      <Badge variant="outline" className="gap-1">
+                        <FileText className="w-3 h-3" /> PDF
+                      </Badge>
+                      <Badge variant="outline" className="gap-1">
+                        <File className="w-3 h-3" /> DOCX
+                      </Badge>
+                    </div>
+                    <label className="cursor-pointer">
+                      <input
+                        type="file"
+                        accept=".pdf,.png,.jpg,.jpeg,.webp,.docx"
+                        onChange={handleFileSelect}
+                        className="hidden"
+                      />
+                      <Button variant="outline" className="pointer-events-none">
+                        <Upload className="w-4 h-4 mr-2" />
+                        Choose File
+                      </Button>
+                    </label>
+                  </>
+                )}
+              </div>
             </CardContent>
           </Card>
         </TabsContent>

@@ -6,6 +6,7 @@ import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
 import QuickSetupStep from "./onboarding/QuickSetupStep";
 import SmartTopicsStep from "./onboarding/SmartTopicsStep";
+import SubjectPriorityStep, { SubjectPriority } from "./onboarding/SubjectPriorityStep";
 import SmartConfigStep from "./onboarding/SmartConfigStep";
 import GenerateStep from "./onboarding/GenerateStep";
 import WizardTour from "./tours/WizardTour";
@@ -52,6 +53,7 @@ export interface StudyPreferences {
   break_duration: number;
   session_duration: number;
   duration_mode: "fixed" | "flexible";
+  flexibleTimings?: boolean;
   aiNotes?: string;
   study_before_school?: boolean;
   study_during_lunch?: boolean;
@@ -77,6 +79,7 @@ const defaultPreferences: StudyPreferences = {
   break_duration: 15,
   session_duration: 45,
   duration_mode: "flexible",
+  flexibleTimings: false,
 };
 
 const loadSavedProgress = () => {
@@ -104,6 +107,7 @@ const OnboardingWizard = ({ onComplete, onCancel }: OnboardingWizardProps) => {
   const [timetableName, setTimetableName] = useState(savedProgress?.timetableName || "My Study Timetable");
   const [startDate, setStartDate] = useState(savedProgress?.startDate || "");
   const [endDate, setEndDate] = useState(savedProgress?.endDate || "");
+  const [subjectPriorities, setSubjectPriorities] = useState<SubjectPriority[]>(savedProgress?.subjectPriorities || []);
 
   // Save progress to localStorage whenever state changes
   const saveProgress = useCallback(() => {
@@ -118,9 +122,10 @@ const OnboardingWizard = ({ onComplete, onCancel }: OnboardingWizardProps) => {
       timetableName,
       startDate,
       endDate,
+      subjectPriorities,
     };
     localStorage.setItem(WIZARD_STORAGE_KEY, JSON.stringify(progress));
-  }, [step, subjects, topics, topicAnalysis, testDates, preferences, homeworks, timetableName, startDate, endDate]);
+  }, [step, subjects, topics, topicAnalysis, testDates, preferences, homeworks, timetableName, startDate, endDate, subjectPriorities]);
 
   useEffect(() => {
     saveProgress();
@@ -132,7 +137,7 @@ const OnboardingWizard = ({ onComplete, onCancel }: OnboardingWizardProps) => {
     onComplete();
   };
 
-  const totalSteps = 4;
+  const totalSteps = 5;
   const progress = (step / totalSteps) * 100;
 
   const handleNext = () => {
@@ -152,6 +157,7 @@ const OnboardingWizard = ({ onComplete, onCancel }: OnboardingWizardProps) => {
   const stepTitles = [
     "Your Subjects",
     "Topics & Confidence",
+    "Subject Priority",
     "Schedule & Preferences",
     "Generate Timetable",
   ];
@@ -159,6 +165,7 @@ const OnboardingWizard = ({ onComplete, onCancel }: OnboardingWizardProps) => {
   const stepDescriptions = [
     "Add the subjects you're studying - click to quickly add or customize each one",
     "Add your topics and rate your confidence (optional - you can skip this step)",
+    "Set how much time to dedicate to each subject",
     "Set your exam dates, study schedule, and preferences",
     "Review and generate your personalized AI study timetable",
   ];
@@ -177,6 +184,8 @@ const OnboardingWizard = ({ onComplete, onCancel }: OnboardingWizardProps) => {
       case 2:
         return true; // Topics are optional
       case 3:
+        return true; // Priorities are optional
+      case 4:
         return startDate && endDate && timetableName.trim();
       default:
         return true;
@@ -216,6 +225,16 @@ const OnboardingWizard = ({ onComplete, onCancel }: OnboardingWizardProps) => {
                 </div>
               )}
               {step === 3 && (
+                <div data-tour="priority-step">
+                  <SubjectPriorityStep
+                    subjects={subjects}
+                    topics={topics}
+                    subjectPriorities={subjectPriorities}
+                    setSubjectPriorities={setSubjectPriorities}
+                  />
+                </div>
+              )}
+              {step === 4 && (
                 <div data-tour="config-step">
                   <SmartConfigStep
                     subjects={subjects}
@@ -232,7 +251,7 @@ const OnboardingWizard = ({ onComplete, onCancel }: OnboardingWizardProps) => {
                   />
                 </div>
               )}
-              {step === 4 && (
+              {step === 5 && (
                 <div data-tour="generate-step">
                   <GenerateStep
                     subjects={subjects}
@@ -246,6 +265,7 @@ const OnboardingWizard = ({ onComplete, onCancel }: OnboardingWizardProps) => {
                     startDate={startDate}
                     endDate={endDate}
                     onComplete={handleComplete}
+                    subjectPriorities={subjectPriorities}
                   />
                 </div>
               )}
