@@ -511,7 +511,7 @@ Return ONLY valid JSON:
     }
 
     if (!responseText || responseText.trim() === "") {
-      console.error('Empty AI response. Raw result:', JSON.stringify(openaiResult, null, 2));
+      console.error('Empty AI response. Raw result:', JSON.stringify(aiResult, null, 2));
       throw new Error('AI did not generate a response. Please try again.');
     }
 
@@ -521,8 +521,8 @@ Return ONLY valid JSON:
       responseText = jsonMatch[1];
     }
 
-    const aiResult = JSON.parse(responseText);
-    console.log('AI generated schedule:', aiResult);
+    const parsedSchedule = JSON.parse(responseText);
+    console.log('AI generated schedule:', parsedSchedule);
 
     // Validate and clean the schedule with TIME WINDOW ENFORCEMENT
     const [windowStartHour, windowStartMin] = effectiveStartTime.split(':').map(Number);
@@ -533,7 +533,7 @@ Return ONLY valid JSON:
     console.log(`Time window validation: ${effectiveStartTime} (${windowStartMins} mins) to ${effectiveEndTime} (${windowEndMins} mins)`);
     
     let removedCount = 0;
-    const validatedSchedule = (aiResult.schedule || []).map((session: any) => {
+    const validatedSchedule = (parsedSchedule.schedule || []).map((session: any) => {
       const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
       let sessionTime = session.time || '09:00';
       
