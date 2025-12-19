@@ -92,7 +92,7 @@ const SubjectsStep = ({ subjects, setSubjects }: SubjectsStepProps) => {
             <SelectTrigger className="bg-background">
               <SelectValue placeholder="Select a subject" />
             </SelectTrigger>
-            <SelectContent className="bg-popover z-50 max-h-[200px]">
+            <SelectContent className="bg-popover z-[200] max-h-[200px]">
               {GCSE_SUBJECTS.map((subject) => (
                 <SelectItem key={subject} value={subject}>
                   {subject}
@@ -107,7 +107,7 @@ const SubjectsStep = ({ subjects, setSubjects }: SubjectsStepProps) => {
             <SelectTrigger className="bg-background">
               <SelectValue placeholder="Select exam board" />
             </SelectTrigger>
-            <SelectContent className="bg-popover z-50">
+            <SelectContent className="bg-popover z-[200]">
               {EXAM_BOARDS.map((board) => (
                 <SelectItem key={board} value={board}>
                   {board}

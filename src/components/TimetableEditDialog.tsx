@@ -257,8 +257,8 @@ export const TimetableEditDialog = ({
           Edit & Regenerate
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-3xl max-h-[85vh] flex flex-col">
-        <DialogHeader>
+      <DialogContent className="max-w-3xl h-[85vh] flex flex-col overflow-hidden p-0">
+        <DialogHeader className="px-6 pt-6 pb-4 flex-shrink-0">
           <DialogTitle>Edit Timetable Configuration</DialogTitle>
           <DialogDescription>
             Add or modify subjects, topics, test dates, and preferences. Then regenerate your
@@ -266,75 +266,94 @@ export const TimetableEditDialog = ({
           </DialogDescription>
         </DialogHeader>
 
-        <Tabs defaultValue="dates" className="w-full flex-1 flex flex-col min-h-0">
-          <TabsList className="grid w-full grid-cols-7 flex-shrink-0">
-            <TabsTrigger value="dates">Dates</TabsTrigger>
-            <TabsTrigger value="subjects">Subjects</TabsTrigger>
-            <TabsTrigger value="topics">Topics</TabsTrigger>
-            <TabsTrigger value="tests">Tests</TabsTrigger>
-            <TabsTrigger value="homework">Homework</TabsTrigger>
-            <TabsTrigger value="preferences">Preferences</TabsTrigger>
-            <TabsTrigger value="timing">Timing</TabsTrigger>
-          </TabsList>
+        <div className="flex-1 min-h-0 px-6 relative">
+          {/* Generation Progress Overlay */}
+          {isRegenerating && generationStage && (
+            <div className="absolute inset-0 z-50 bg-background/95 backdrop-blur-sm flex items-center justify-center animate-fade-in">
+              <div className="w-full max-w-md">
+                <GenerationProgress currentStage={generationStage} />
+              </div>
+            </div>
+          )}
 
-          <div className="flex-1 mt-4 min-h-0">
-            <TabsContent value="dates" className="mt-0 h-full">
-              <ScrollArea className="h-[50vh] pr-4">
-                <TimetableDatesEditStep
-                  startDate={editStartDate}
-                  setStartDate={setEditStartDate}
-                  endDate={editEndDate}
-                  setEndDate={setEditEndDate}
-                />
-              </ScrollArea>
-            </TabsContent>
+          <Tabs defaultValue="dates" className="h-full flex flex-col">
+            <TabsList className="grid w-full grid-cols-7 flex-shrink-0">
+              <TabsTrigger value="dates">Dates</TabsTrigger>
+              <TabsTrigger value="subjects">Subjects</TabsTrigger>
+              <TabsTrigger value="topics">Topics</TabsTrigger>
+              <TabsTrigger value="tests">Tests</TabsTrigger>
+              <TabsTrigger value="homework">Homework</TabsTrigger>
+              <TabsTrigger value="preferences">Preferences</TabsTrigger>
+              <TabsTrigger value="timing">Timing</TabsTrigger>
+            </TabsList>
 
-            <TabsContent value="subjects" className="mt-0 h-full">
-              <ScrollArea className="h-[50vh] pr-4">
-                <SubjectsStep subjects={subjects} setSubjects={setSubjects} />
-              </ScrollArea>
-            </TabsContent>
+            <div className="flex-1 min-h-0 mt-4">
+              <TabsContent value="dates" className="mt-0 h-full data-[state=active]:flex data-[state=active]:flex-col">
+                <ScrollArea className="flex-1">
+                  <div className="pr-4 pb-4">
+                    <TimetableDatesEditStep
+                      startDate={editStartDate}
+                      setStartDate={setEditStartDate}
+                      endDate={editEndDate}
+                      setEndDate={setEditEndDate}
+                    />
+                  </div>
+                </ScrollArea>
+              </TabsContent>
 
-            <TabsContent value="topics" className="mt-0 h-full">
-              <ScrollArea className="h-[50vh] pr-4">
-                <TopicsEditStep subjects={subjects} topics={topics} setTopics={setTopics} />
-              </ScrollArea>
-            </TabsContent>
+              <TabsContent value="subjects" className="mt-0 h-full data-[state=active]:flex data-[state=active]:flex-col">
+                <ScrollArea className="flex-1">
+                  <div className="pr-4 pb-4">
+                    <SubjectsStep subjects={subjects} setSubjects={setSubjects} />
+                  </div>
+                </ScrollArea>
+              </TabsContent>
 
-            <TabsContent value="tests" className="mt-0 h-full">
-              <ScrollArea className="h-[50vh] pr-4">
-                <TestDatesStep subjects={subjects} testDates={testDates} setTestDates={setTestDates} />
-              </ScrollArea>
-            </TabsContent>
+              <TabsContent value="topics" className="mt-0 h-full data-[state=active]:flex data-[state=active]:flex-col">
+                <ScrollArea className="flex-1">
+                  <div className="pr-4 pb-4">
+                    <TopicsEditStep subjects={subjects} topics={topics} setTopics={setTopics} />
+                  </div>
+                </ScrollArea>
+              </TabsContent>
 
-            <TabsContent value="homework" className="mt-0 h-full">
-              <ScrollArea className="h-[50vh] pr-4">
-                <HomeworkEditStep subjects={subjects} />
-              </ScrollArea>
-            </TabsContent>
+              <TabsContent value="tests" className="mt-0 h-full data-[state=active]:flex data-[state=active]:flex-col">
+                <ScrollArea className="flex-1">
+                  <div className="pr-4 pb-4">
+                    <TestDatesStep subjects={subjects} testDates={testDates} setTestDates={setTestDates} />
+                  </div>
+                </ScrollArea>
+              </TabsContent>
 
-            <TabsContent value="preferences" className="mt-0 h-full">
-              <ScrollArea className="h-[50vh] pr-4">
-                <PreferencesStep preferences={preferences} setPreferences={setPreferences} />
-              </ScrollArea>
-            </TabsContent>
+              <TabsContent value="homework" className="mt-0 h-full data-[state=active]:flex data-[state=active]:flex-col">
+                <ScrollArea className="flex-1">
+                  <div className="pr-4 pb-4">
+                    <HomeworkEditStep subjects={subjects} />
+                  </div>
+                </ScrollArea>
+              </TabsContent>
 
-            <TabsContent value="timing" className="mt-0 h-full">
-              <ScrollArea className="h-[50vh] pr-4">
-                <TimingStep preferences={preferences} setPreferences={setPreferences} />
-              </ScrollArea>
-            </TabsContent>
-          </div>
-        </Tabs>
+              <TabsContent value="preferences" className="mt-0 h-full data-[state=active]:flex data-[state=active]:flex-col">
+                <ScrollArea className="flex-1">
+                  <div className="pr-4 pb-4">
+                    <PreferencesStep preferences={preferences} setPreferences={setPreferences} />
+                  </div>
+                </ScrollArea>
+              </TabsContent>
 
-        {/* Generation Progress - shows during regeneration */}
-        {isRegenerating && generationStage && (
-          <div className="mt-4 animate-fade-in">
-            <GenerationProgress currentStage={generationStage} />
-          </div>
-        )}
+              <TabsContent value="timing" className="mt-0 h-full data-[state=active]:flex data-[state=active]:flex-col">
+                <ScrollArea className="flex-1">
+                  <div className="pr-4 pb-4">
+                    <TimingStep preferences={preferences} setPreferences={setPreferences} />
+                  </div>
+                </ScrollArea>
+              </TabsContent>
+            </div>
+          </Tabs>
+        </div>
 
-        <div className="flex justify-end gap-2 pt-4">
+        {/* Sticky Footer */}
+        <div className="flex justify-end gap-2 px-6 py-4 border-t bg-background flex-shrink-0">
           <Button variant="outline" onClick={() => setOpen(false)} disabled={isRegenerating}>
             Cancel
           </Button>
