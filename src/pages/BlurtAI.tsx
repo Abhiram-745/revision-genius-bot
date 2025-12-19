@@ -1,16 +1,87 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ArrowLeft, Brain, Sparkles, Target, Zap, BookOpen, ExternalLink } from "lucide-react";
 import Header from "@/components/Header";
 import PageTransition from "@/components/PageTransition";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/context/AuthContext";
+
+interface TopicData {
+  subject: string;
+  topic: string;
+}
 
 const BlurtAI = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [isIframeLoaded, setIsIframeLoaded] = useState(false);
+  const [topics, setTopics] = useState<TopicData[]>([]);
+  const [selectedTopic, setSelectedTopic] = useState<string>("");
+
+  // Fetch user topics from timetables
+  useEffect(() => {
+    const fetchTopics = async () => {
+      if (!user) return;
+
+      try {
+        const { data: timetables, error } = await supabase
+          .from("timetables")
+          .select("topics, subjects")
+          .eq("user_id", user.id)
+          .order("created_at", { ascending: false })
+          .limit(1);
+
+        if (error) throw error;
+
+        if (timetables && timetables.length > 0) {
+          const timetable = timetables[0];
+          const topicsList: TopicData[] = [];
+
+          // Extract topics with their subject names
+          if (timetable.topics && Array.isArray(timetable.topics)) {
+            const subjects = (timetable.subjects as any[]) || [];
+            
+            (timetable.topics as any[]).forEach((topic: any) => {
+              const subject = subjects.find((s: any) => s.id === topic.subject_id);
+              if (topic.name && subject?.name) {
+                topicsList.push({
+                  subject: subject.name,
+                  topic: topic.name,
+                });
+              }
+            });
+          }
+
+          setTopics(topicsList);
+        }
+      } catch (err) {
+        console.error("Error fetching topics:", err);
+      }
+    };
+
+    fetchTopics();
+  }, [user]);
+
+  // Build iframe URL with selected topic
+  const getIframeUrl = () => {
+    const baseUrl = "https://blurtaigcsee.vercel.app";
+    if (selectedTopic) {
+      const topicData = topics.find(t => `${t.subject}: ${t.topic}` === selectedTopic);
+      if (topicData) {
+        const params = new URLSearchParams({
+          subject: topicData.subject,
+          topic: topicData.topic,
+        });
+        return `${baseUrl}?${params.toString()}`;
+      }
+    }
+    return baseUrl;
+  };
 
   const features = [
     {
@@ -149,6 +220,38 @@ const BlurtAI = () => {
             ))}
           </motion.div>
 
+          {/* Topic Selector */}
+          {topics.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.25 }}
+            >
+              <Card className="bg-card/50 border-border/50">
+                <CardContent className="p-4">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                    <div className="flex items-center gap-2">
+                      <BookOpen className="w-4 h-4 text-primary" />
+                      <span className="text-sm font-medium text-foreground">Quick Start with Your Topics:</span>
+                    </div>
+                    <Select value={selectedTopic} onValueChange={setSelectedTopic}>
+                      <SelectTrigger className="w-full sm:w-[280px]">
+                        <SelectValue placeholder="Select a topic to practice" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {topics.map((t, i) => (
+                          <SelectItem key={i} value={`${t.subject}: ${t.topic}`}>
+                            {t.subject}: {t.topic}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+          )}
+
           {/* BlurtAI Iframe */}
           <motion.div
             id="blurtai-iframe"
@@ -162,9 +265,14 @@ const BlurtAI = () => {
                 <div className="flex items-center gap-2">
                   <Brain className="w-4 h-4 text-secondary" />
                   <span className="text-sm font-medium text-foreground">BlurtAI Practice Session</span>
+                  {selectedTopic && (
+                    <Badge variant="outline" className="text-xs">
+                      {selectedTopic}
+                    </Badge>
+                  )}
                 </div>
                 <a
-                  href="https://blurtaigcsee.vercel.app"
+                  href={getIframeUrl()}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors"
@@ -184,7 +292,8 @@ const BlurtAI = () => {
                   </div>
                 )}
                 <iframe
-                  src="https://blurtaigcsee.vercel.app"
+                  key={selectedTopic} // Force reload when topic changes
+                  src={getIframeUrl()}
                   className="w-full h-full border-0"
                   title="BlurtAI Practice Session"
                   onLoad={() => setIsIframeLoaded(true)}

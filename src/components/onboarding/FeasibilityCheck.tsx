@@ -122,10 +122,11 @@ const FeasibilityCheck = ({ result }: FeasibilityCheckProps) => {
               result.difference >= 0 ? "text-secondary" : "text-destructive"
             }`}
           >
-            {result.difference > 0 ? "+" : ""}
-            {result.difference}h
+            {result.difference >= 0 ? `+${result.difference}` : `${Math.abs(result.difference)} short`}h
           </div>
-          <div className="text-xs text-muted-foreground mt-1">Difference</div>
+          <div className="text-xs text-muted-foreground mt-1">
+            {result.difference >= 0 ? "Buffer Time" : "Extra Needed"}
+          </div>
         </div>
       </div>
 

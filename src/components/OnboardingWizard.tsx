@@ -158,7 +158,7 @@ const OnboardingWizard = ({ onComplete, onCancel }: OnboardingWizardProps) => {
 
   const stepDescriptions = [
     "Add the subjects you're studying - click to quickly add or customize each one",
-    "Add your topics and rate how confident you feel about each one",
+    "Add your topics and rate your confidence (optional - you can skip this step)",
     "Set your exam dates, study schedule, and preferences",
     "Review and generate your personalized AI study timetable",
   ];
@@ -175,7 +175,7 @@ const OnboardingWizard = ({ onComplete, onCancel }: OnboardingWizardProps) => {
       case 1:
         return subjects.length > 0;
       case 2:
-        return topics.length > 0;
+        return true; // Topics are optional
       case 3:
         return startDate && endDate && timetableName.trim();
       default:
