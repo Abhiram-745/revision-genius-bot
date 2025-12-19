@@ -65,18 +65,20 @@ serve(async (req) => {
   }
 
   try {
-  const { text, subjectName, images } = await req.json();
-  
-  console.log('Received request:', {
-    hasText: !!text,
-    textPreview: text?.substring?.(0, 100) ?? 'N/A',
-    subjectName,
-    imagesCount: images?.length ?? 0,
-    imagesType: Array.isArray(images) ? 'array' : typeof images,
-    firstImagePreview: typeof images?.[0] === 'string' ? images[0].substring(0, 80) : JSON.stringify(images?.[0])?.substring(0, 80)
-  });
+    const { text, subjectName, images, extractionMode = "exact" } = await req.json();
+    
+    console.log('Received request:', {
+      hasText: !!text,
+      textPreview: text?.substring?.(0, 100) ?? 'N/A',
+      subjectName,
+      imagesCount: images?.length ?? 0,
+      extractionMode,
+      imagesType: Array.isArray(images) ? 'array' : typeof images,
+      firstImagePreview: typeof images?.[0] === 'string' ? images[0].substring(0, 80) : JSON.stringify(images?.[0])?.substring(0, 80)
+    });
 
-    const systemPrompt = `You are a precise OCR and text extraction assistant. Your job is to read text from images EXACTLY as written.
+    // Different prompts based on extraction mode
+    const exactModePrompt = `You are a precise OCR and text extraction assistant. Your job is to read text from images EXACTLY as written.
 
 STRICT RULES:
 1. READ the actual text visible in the image - use OCR to extract what is written
@@ -86,6 +88,7 @@ STRICT RULES:
 5. If you see numbered items (1, 2, 3...) or bullet points, extract each one exactly
 6. If you see checkboxes or tick marks, extract the text next to each one
 7. Ignore headers like "Topics to revise" or "Checklist" - only extract the actual topic items
+8. Extract EVERY single topic/item you can see - do not skip any
 
 OUTPUT FORMAT - Return ONLY this JSON structure:
 {
@@ -97,22 +100,55 @@ OUTPUT FORMAT - Return ONLY this JSON structure:
 
 Do NOT include any explanation or commentary - ONLY the JSON.`;
 
+    const generalModePrompt = `You are an educational content analyzer. Your job is to identify the KEY CONCEPTS and LEARNING TOPICS from educational materials.
+
+RULES:
+1. Identify the main concepts, theories, and topics being taught
+2. Create clear, concise topic names (not verbatim text)
+3. Group related content into single, meaningful topics
+4. Focus on what students need to learn and understand
+5. Ignore administrative text, dates, teacher names, etc.
+6. Create topic names that would make sense as study items
+7. Each topic should be a distinct concept worth studying
+8. Use proper capitalization and clear wording
+
+EXAMPLES of good topic extraction:
+- "Photosynthesis and Light Reactions" (not "Page 15 - photosynthesis stuff")
+- "Newton's Laws of Motion" (not "slide 3")
+- "World War II Causes" (not "watch video about WW2")
+
+OUTPUT FORMAT - Return ONLY this JSON structure:
+{
+  "topics": [
+    {"name": "Clear Topic Name"},
+    {"name": "Another Topic Name"}
+  ]
+}
+
+Do NOT include any explanation or commentary - ONLY the JSON.`;
+
+    const systemPrompt = extractionMode === "exact" ? exactModePrompt : generalModePrompt;
+
     // Build multimodal message content
     const messageContent: any[] = [];
     
     // Add instruction and subject context
     let textContent = `${systemPrompt}\n\nSubject: ${subjectName}\n\n`;
     if (text) {
-      textContent += `Extract topics from this text:\n${text}`;
+      textContent += extractionMode === "exact" 
+        ? `Extract ALL topics from this exactly as written:\n${text}`
+        : `Identify the key learning topics from this content:\n${text}`;
     } else if (images && Array.isArray(images) && images.length > 0) {
-      textContent += `IMPORTANT: Carefully read and extract ALL text items/topics visible in this image. Use OCR to read every single line of text that represents a topic or item to study.`;
+      textContent += extractionMode === "exact"
+        ? `IMPORTANT: Carefully read and extract ALL text items/topics visible in this image EXACTLY as written. Copy every single line of text that represents a topic or item to study.`
+        : `IMPORTANT: Analyze this educational material and identify the key concepts and learning topics. Create clear, concise topic names based on the content.`;
     }
     
     messageContent.push({ type: "text", text: textContent });
     
     // Add images if provided
     if (images && Array.isArray(images) && images.length > 0) {
-      console.log(`Processing ${images.length} image(s) for topic extraction`);
+      console.log(`Processing ${images.length} image(s) for topic extraction (mode: ${extractionMode})`);
       
       let imagesAdded = 0;
       for (const imageData of images) {
@@ -162,7 +198,7 @@ Do NOT include any explanation or commentary - ONLY the JSON.`;
       throw new Error("AI service not configured. Please contact support.");
     }
 
-    console.log(`Calling Lovable AI with ${messageContent.length} content parts (${images?.length || 0} images)`);
+    console.log(`Calling Lovable AI with ${messageContent.length} content parts (${images?.length || 0} images, mode: ${extractionMode})`);
 
     const response = await fetchWithRetry(
       'https://ai.gateway.lovable.dev/v1/chat/completions',
