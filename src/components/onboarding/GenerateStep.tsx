@@ -360,6 +360,22 @@ const GenerateStep = ({
       // Increment usage counter and invalidate cache
       await incrementUsage("timetable_creation", queryClient);
 
+      // Send push notification
+      try {
+        await supabase.functions.invoke('send-push-notification', {
+          body: {
+            user_id: user.id,
+            title: '🎉 Timetable Ready!',
+            body: `Your "${timetableName}" timetable has been generated successfully.`,
+            tag: 'timetable-complete',
+            data: { url: '/timetables' }
+          }
+        });
+      } catch (notifError) {
+        console.log('Push notification skipped:', notifError);
+        // Don't fail the whole process if notification fails
+      }
+
       // Trigger celebration!
       triggerConfetti('complete');
       toast.success("Timetable generated successfully!");
