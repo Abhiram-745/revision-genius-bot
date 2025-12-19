@@ -158,13 +158,14 @@ serve(async (req) => {
       .eq('user_id', user.id)
       .single();
 
-    // Fetch events for tomorrow (all instances)
+    // Fetch events that overlap with tomorrow (including multi-day events)
+    // An event overlaps if it starts before end of tomorrow AND ends after start of tomorrow
     const { data: tomorrowEvents } = await supabase
       .from('events')
       .select('*')
       .eq('user_id', user.id)
-      .gte('start_time', `${validTomorrowDate}T00:00:00`)
-      .lte('end_time', `${validTomorrowDate}T23:59:59`)
+      .lte('start_time', `${validTomorrowDate}T23:59:59`)
+      .gte('end_time', `${validTomorrowDate}T00:00:00`)
       .order('start_time', { ascending: true });
 
     // Deduplicate events by unique combination of time and title (not ID)

@@ -569,19 +569,46 @@ serve(async (req) => {
       }
     });
     
-    // Build events by date map
+    // Build events by date map - handle multi-day events by adding to all days they span
     const eventsByDate = new Map<string, Array<{ startTime: Date; endTime: Date; title: string }>>();
     events.forEach((event: any) => {
-      const eventDate = new Date(event.start_time);
-      const dateKey = eventDate.toISOString().split('T')[0];
-      if (!eventsByDate.has(dateKey)) {
-        eventsByDate.set(dateKey, []);
+      const eventStart = new Date(event.start_time);
+      const eventEnd = new Date(event.end_time);
+      
+      // Iterate through each day the event spans
+      const currentDay = new Date(eventStart);
+      currentDay.setHours(0, 0, 0, 0);
+      
+      const endDay = new Date(eventEnd);
+      endDay.setHours(0, 0, 0, 0);
+      
+      while (currentDay <= endDay) {
+        const dateKey = currentDay.toISOString().split('T')[0];
+        
+        if (!eventsByDate.has(dateKey)) {
+          eventsByDate.set(dateKey, []);
+        }
+        
+        // Calculate effective start/end times for this specific day
+        const dayStart = new Date(currentDay);
+        dayStart.setHours(0, 0, 0, 0);
+        const dayEnd = new Date(currentDay);
+        dayEnd.setHours(23, 59, 59, 999);
+        
+        // Effective start: max of event start and day start
+        const effectiveStart = eventStart > dayStart ? eventStart : dayStart;
+        // Effective end: min of event end and day end
+        const effectiveEnd = eventEnd < dayEnd ? eventEnd : dayEnd;
+        
+        eventsByDate.get(dateKey)!.push({
+          startTime: new Date(effectiveStart),
+          endTime: new Date(effectiveEnd),
+          title: event.title,
+        });
+        
+        // Move to next day
+        currentDay.setDate(currentDay.getDate() + 1);
       }
-      eventsByDate.get(dateKey)!.push({
-        startTime: new Date(event.start_time),
-        endTime: new Date(event.end_time),
-        title: event.title,
-      });
     });
     
     // Calculate free slots for each day in the timetable range
