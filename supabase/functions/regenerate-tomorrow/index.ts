@@ -454,27 +454,26 @@ Return ONLY valid JSON:
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 45000);
 
-    const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
-    if (!OPENAI_API_KEY) {
-      throw new Error("OPENAI_API_KEY not configured");
+    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+    if (!LOVABLE_API_KEY) {
+      throw new Error("LOVABLE_API_KEY not configured");
     }
 
-    let openaiResult;
+    let aiResult;
     try {
       const response = await fetchWithRetry(
-        'https://api.openai.com/v1/chat/completions',
+        'https://ai.gateway.lovable.dev/v1/chat/completions',
         {
           method: "POST",
           headers: { 
             "Content-Type": "application/json",
-            "Authorization": `Bearer ${OPENAI_API_KEY}`,
+            "Authorization": `Bearer ${LOVABLE_API_KEY}`,
           },
           body: JSON.stringify({
-            model: "gpt-5-nano-2025-08-07",
+            model: "openai/gpt-5-nano",
             messages: [
               { role: "user", content: `You are an expert study scheduling assistant. Create realistic, balanced schedules that respect student preferences and time constraints. Always return valid JSON.\n\n${prompt}` }
             ],
-            max_completion_tokens: 4096,
           }),
           signal: controller.signal,
         }
@@ -482,11 +481,17 @@ Return ONLY valid JSON:
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error("OpenAI API error:", response.status, errorText);
-        throw new Error(`OpenAI API request failed: ${response.status}`);
+        console.error("Lovable AI error:", response.status, errorText);
+        if (response.status === 429) {
+          throw new Error("Rate limit exceeded. Please try again later.");
+        }
+        if (response.status === 402) {
+          throw new Error("AI credits exhausted. Please add credits to continue.");
+        }
+        throw new Error(`AI request failed: ${response.status}`);
       }
 
-      openaiResult = await response.json();
+      aiResult = await response.json();
     } catch (fetchError) {
       clearTimeout(timeoutId);
       if (fetchError instanceof Error && fetchError.name === 'AbortError') {
@@ -497,12 +502,12 @@ Return ONLY valid JSON:
 
     clearTimeout(timeoutId);
 
-    console.log('OpenAI response:', JSON.stringify(openaiResult, null, 2));
+    console.log('Lovable AI response:', JSON.stringify(aiResult, null, 2));
 
-    // Extract content from OpenAI response
+    // Extract content from response
     let responseText: string | undefined;
-    if (openaiResult.choices?.[0]?.message?.content) {
-      responseText = openaiResult.choices[0].message.content;
+    if (aiResult.choices?.[0]?.message?.content) {
+      responseText = aiResult.choices[0].message.content;
     }
 
     if (!responseText || responseText.trim() === "") {

@@ -35,7 +35,7 @@ async function fetchWithRetry(url: string, options: RequestInit, retries = MAX_R
         } else if (response.status === 429) {
           throw new Error("Too many requests. Please wait a moment and try again.");
         } else if (response.status === 402) {
-          throw new Error("AI service credits exhausted. Please contact support.");
+          throw new Error("AI service credits exhausted. Please add credits to continue.");
         }
         
         throw new Error(`AI request failed with status ${response.status}`);
@@ -115,51 +115,64 @@ Be constructive, specific, and focused on GCSE exam success. Return ONLY valid J
   "recommendations": ["recommendation 1", "recommendation 2", ...]
 }`;
 
-    console.log("Calling AI for test score analysis...");
+    console.log("Calling Lovable AI for test score analysis...");
 
     const systemPrompt = "You are an expert GCSE tutor analyzing student test performance. Provide specific, actionable feedback. Always return valid JSON.";
 
-    const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
-    if (!OPENAI_API_KEY) {
-      throw new Error("OPENAI_API_KEY not configured");
+    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+    if (!LOVABLE_API_KEY) {
+      throw new Error("LOVABLE_API_KEY not configured");
     }
 
     const response = await fetchWithRetry(
-      'https://api.openai.com/v1/chat/completions',
+      'https://ai.gateway.lovable.dev/v1/chat/completions',
       {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${OPENAI_API_KEY}`,
+          "Authorization": `Bearer ${LOVABLE_API_KEY}`,
         },
         body: JSON.stringify({
-          model: "gpt-5-nano-2025-08-07",
+          model: "openai/gpt-5-nano",
           messages: [
             { role: "user", content: `${systemPrompt}\n\n${prompt}` }
           ],
-          max_completion_tokens: 2048,
         }),
       }
     );
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("OpenAI API error:", response.status, errorText);
-      throw new Error(`OpenAI API request failed: ${response.status}`);
+      console.error("Lovable AI error:", response.status, errorText);
+      
+      if (response.status === 429) {
+        return new Response(JSON.stringify({ error: "Rate limit exceeded. Please try again later." }), {
+          status: 429,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      if (response.status === 402) {
+        return new Response(JSON.stringify({ error: "AI credits exhausted. Please add credits to continue." }), {
+          status: 402,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      
+      throw new Error(`AI request failed: ${response.status}`);
     }
 
-    const openaiResult = await response.json();
-    console.log("OpenAI response:", JSON.stringify(openaiResult, null, 2));
+    const aiResult = await response.json();
+    console.log("Lovable AI response:", JSON.stringify(aiResult, null, 2));
 
-    // Extract content from OpenAI response
+    // Extract content from response
     let responseText: string | undefined;
-    if (openaiResult.choices?.[0]?.message?.content) {
-      responseText = openaiResult.choices[0].message.content;
+    if (aiResult.choices?.[0]?.message?.content) {
+      responseText = aiResult.choices[0].message.content;
     }
 
     if (!responseText || responseText.trim() === "") {
-      console.error("Empty AI response. Raw result:", JSON.stringify(openaiResult, null, 2));
-      throw new Error("AI did not generate a response. Please try again.");
+      console.error('Empty AI response. Raw result:', JSON.stringify(aiResult, null, 2));
+      throw new Error('AI did not generate a response. Please try again.');
     }
 
     // Extract JSON from markdown if present

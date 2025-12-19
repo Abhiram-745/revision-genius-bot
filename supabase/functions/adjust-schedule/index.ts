@@ -34,7 +34,7 @@ async function fetchWithRetry(url: string, options: RequestInit, retries = MAX_R
         } else if (response.status === 429) {
           throw new Error("Too many requests. Please wait a moment and try again.");
         } else if (response.status === 402) {
-          throw new Error("AI service credits exhausted. Please contact support.");
+          throw new Error("AI service credits exhausted. Please add credits to continue.");
         }
         
         throw new Error(`AI request failed with status ${response.status}`);
@@ -267,46 +267,59 @@ Return ONLY valid JSON:
 
     const systemPrompt = 'You are an expert study scheduling assistant. Always return valid JSON.';
 
-    const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
-    if (!OPENAI_API_KEY) {
-      throw new Error("OPENAI_API_KEY not configured");
+    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+    if (!LOVABLE_API_KEY) {
+      throw new Error("LOVABLE_API_KEY not configured");
     }
 
     const response = await fetchWithRetry(
-      'https://api.openai.com/v1/chat/completions',
+      'https://ai.gateway.lovable.dev/v1/chat/completions',
       {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${OPENAI_API_KEY}`,
+          "Authorization": `Bearer ${LOVABLE_API_KEY}`,
         },
         body: JSON.stringify({
-          model: "gpt-5-nano-2025-08-07",
+          model: "openai/gpt-5-nano",
           messages: [
             { role: "user", content: `${systemPrompt}\n\n${prompt}` }
           ],
-          max_completion_tokens: 4096,
         }),
       }
     );
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("OpenAI API error:", response.status, errorText);
-      throw new Error(`OpenAI API request failed: ${response.status}`);
+      console.error("Lovable AI error:", response.status, errorText);
+      
+      if (response.status === 429) {
+        return new Response(JSON.stringify({ error: "Rate limit exceeded. Please try again later." }), {
+          status: 429,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      if (response.status === 402) {
+        return new Response(JSON.stringify({ error: "AI credits exhausted. Please add credits to continue." }), {
+          status: 402,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      
+      throw new Error(`AI request failed: ${response.status}`);
     }
 
-    const openaiResult = await response.json();
-    console.log('OpenAI response:', JSON.stringify(openaiResult, null, 2));
+    const aiResult = await response.json();
+    console.log('Lovable AI response:', JSON.stringify(aiResult, null, 2));
 
-    // Extract content from OpenAI response
+    // Extract content from response
     let responseText: string | undefined;
-    if (openaiResult.choices?.[0]?.message?.content) {
-      responseText = openaiResult.choices[0].message.content;
+    if (aiResult.choices?.[0]?.message?.content) {
+      responseText = aiResult.choices[0].message.content;
     }
 
     if (!responseText || responseText.trim() === "") {
-      console.error('Empty AI response. Raw result:', JSON.stringify(openaiResult, null, 2));
+      console.error('Empty AI response. Raw result:', JSON.stringify(aiResult, null, 2));
       throw new Error('AI did not generate a response. Please try again.');
     }
 
@@ -316,15 +329,15 @@ Return ONLY valid JSON:
       responseText = jsonMatch[1];
     }
 
-    const aiResult = JSON.parse(responseText);
-    console.log('AI scheduling result:', aiResult);
+    const result = JSON.parse(responseText);
+    console.log('AI scheduling result:', result);
 
     // Apply the changes
     const updatedSchedule = { ...schedule };
     
     // First, remove sessions if requested
-    if (aiResult.sessionsToRemove) {
-      Object.entries(aiResult.sessionsToRemove).forEach(([date, indices]: [string, any]) => {
+    if (result.sessionsToRemove) {
+      Object.entries(result.sessionsToRemove).forEach(([date, indices]: [string, any]) => {
         if (updatedSchedule[date]) {
           // Sort indices in reverse to remove from end first
           const sortedIndices = (indices as number[]).sort((a, b) => b - a);
@@ -336,8 +349,8 @@ Return ONLY valid JSON:
     }
     
     // Then, add rescheduled sessions at specified times
-    if (aiResult.rescheduledSessions) {
-      Object.entries(aiResult.rescheduledSessions).forEach(([date, sessions]: [string, any]) => {
+    if (result.rescheduledSessions) {
+      Object.entries(result.rescheduledSessions).forEach(([date, sessions]: [string, any]) => {
         if (!updatedSchedule[date]) {
           updatedSchedule[date] = [];
         }
@@ -420,9 +433,9 @@ Return ONLY valid JSON:
 
     return new Response(JSON.stringify({
       success: true,
-      rescheduledSessions: aiResult.rescheduledSessions,
-      summary: aiResult.summary || 'Schedule updated successfully',
-      reasoning: aiResult.reasoning,
+      rescheduledSessions: result.rescheduledSessions,
+      summary: result.summary || 'Schedule updated successfully',
+      reasoning: result.reasoning,
       updatedSchedule
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
