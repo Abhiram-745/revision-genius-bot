@@ -14,6 +14,7 @@ import { calculateFeasibility, FeasibilityResult } from "@/utils/feasibilityCalc
 import { useQueryClient } from "@tanstack/react-query";
 import GenerationProgress from "./GenerationProgress";
 import { triggerConfetti } from "@/utils/celebrations";
+import { SubjectPriority } from "./SubjectPriorityStep";
 
 interface GenerateStepProps {
   subjects: Subject[];
@@ -27,6 +28,7 @@ interface GenerateStepProps {
   startDate?: string;
   endDate?: string;
   onComplete: () => void;
+  subjectPriorities?: SubjectPriority[];
 }
 
 const GenerateStep = ({
@@ -41,6 +43,7 @@ const GenerateStep = ({
   startDate: initialStartDate,
   endDate: initialEndDate,
   onComplete,
+  subjectPriorities = [],
 }: GenerateStepProps) => {
   const queryClient = useQueryClient();
   const [loading, setLoading] = useState(false);
@@ -311,6 +314,11 @@ const GenerateStep = ({
             startDate,
             endDate,
             timetableMode,
+            subjectPriorities: subjectPriorities.map(sp => ({
+              ...sp,
+              subjectId: subjectIdMap[sp.subjectId] || sp.subjectId,
+            })),
+            flexibleTimings: preferences.flexibleTimings || false,
           },
         }
       );

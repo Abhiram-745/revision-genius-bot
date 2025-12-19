@@ -7,7 +7,7 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Calendar, Clock, Plus, X, Sparkles, CalendarDays } from "lucide-react";
+import { Calendar, Clock, Plus, X, Sparkles, CalendarDays, Wand2, Info } from "lucide-react";
 import { format, addDays, addWeeks, differenceInDays } from "date-fns";
 import { Subject, TestDate, StudyPreferences, DayTimeSlot } from "../OnboardingWizard";
 
@@ -80,6 +80,10 @@ const SmartConfigStep = ({
     const newSlots = [...preferences.day_time_slots];
     newSlots[dayIndex] = { ...newSlots[dayIndex], enabled: !newSlots[dayIndex].enabled };
     setPreferences({ ...preferences, day_time_slots: newSlots });
+  };
+
+  const toggleFlexibleTimings = () => {
+    setPreferences({ ...preferences, flexibleTimings: !preferences.flexibleTimings });
   };
 
   const hasExams = subjects.some(s => s.mode !== "no-exam");
@@ -202,58 +206,92 @@ const SmartConfigStep = ({
               <Clock className="w-5 h-5" />
               <Label className="font-medium">Study Preferences</Label>
             </div>
-            <Badge variant="outline" className="text-xs gap-1">
-              <Sparkles className="w-3 h-3" />
-              AI suggested: {suggestedHours}h/day
-            </Badge>
+            {!preferences.flexibleTimings && (
+              <Badge variant="outline" className="text-xs gap-1">
+                <Sparkles className="w-3 h-3" />
+                AI suggested: {suggestedHours}h/day
+              </Badge>
+            )}
           </div>
 
-          {/* Daily Hours */}
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <Label className="text-sm">Daily study hours</Label>
-              <span className="text-sm font-medium">{preferences.daily_study_hours}h</span>
+          {/* Flexible AI Timing Toggle */}
+          <div className="flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-secondary/10 to-primary/10 border border-secondary/20">
+            <div className="space-y-0.5">
+              <div className="flex items-center gap-2">
+                <Wand2 className="w-4 h-4 text-secondary" />
+                <Label className="font-medium text-sm">AI-Optimized Timing</Label>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Let AI choose optimal session lengths based on your strengths & weaknesses
+              </p>
             </div>
-            <Slider
-              value={[preferences.daily_study_hours]}
-              onValueChange={([val]) => setPreferences({ ...preferences, daily_study_hours: val })}
-              min={0.5}
-              max={6}
-              step={0.5}
+            <Switch
+              checked={preferences.flexibleTimings || false}
+              onCheckedChange={toggleFlexibleTimings}
             />
           </div>
 
-          {/* Session Duration */}
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <Label className="text-sm">Session length</Label>
-              <span className="text-sm font-medium">{preferences.session_duration} min</span>
+          {preferences.flexibleTimings && (
+            <div className="flex items-start gap-2 p-3 rounded-lg bg-secondary/5 border border-secondary/20">
+              <Info className="w-4 h-4 text-secondary mt-0.5 flex-shrink-0" />
+              <p className="text-xs text-muted-foreground">
+                AI will automatically adjust session durations based on your topic confidence levels — 
+                spending more time on weak areas and shorter sessions for topics you're confident in.
+              </p>
             </div>
-            <Slider
-              value={[preferences.session_duration]}
-              onValueChange={([val]) => setPreferences({ ...preferences, session_duration: val })}
-              min={15}
-              max={90}
-              step={5}
-            />
-          </div>
+          )}
 
-          {/* Break Duration */}
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <Label className="text-sm">Break between sessions</Label>
-              <span className="text-sm font-medium">{preferences.break_duration} min</span>
-            </div>
-            <Slider
-              value={[preferences.break_duration]}
-              onValueChange={([val]) => setPreferences({ ...preferences, break_duration: val })}
-              min={5}
-              max={30}
-              step={5}
-            />
-          </div>
+          {/* Manual controls - hidden when flexible */}
+          {!preferences.flexibleTimings && (
+            <>
+              {/* Daily Hours */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label className="text-sm">Daily study hours</Label>
+                  <span className="text-sm font-medium">{preferences.daily_study_hours}h</span>
+                </div>
+                <Slider
+                  value={[preferences.daily_study_hours]}
+                  onValueChange={([val]) => setPreferences({ ...preferences, daily_study_hours: val })}
+                  min={0.5}
+                  max={6}
+                  step={0.5}
+                />
+              </div>
 
-          {/* Study Days */}
+              {/* Session Duration */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label className="text-sm">Session length</Label>
+                  <span className="text-sm font-medium">{preferences.session_duration} min</span>
+                </div>
+                <Slider
+                  value={[preferences.session_duration]}
+                  onValueChange={([val]) => setPreferences({ ...preferences, session_duration: val })}
+                  min={15}
+                  max={90}
+                  step={5}
+                />
+              </div>
+
+              {/* Break Duration */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label className="text-sm">Break between sessions</Label>
+                  <span className="text-sm font-medium">{preferences.break_duration} min</span>
+                </div>
+                <Slider
+                  value={[preferences.break_duration]}
+                  onValueChange={([val]) => setPreferences({ ...preferences, break_duration: val })}
+                  min={5}
+                  max={30}
+                  step={5}
+                />
+              </div>
+            </>
+          )}
+
+          {/* Study Days - always visible */}
           <div className="space-y-2">
             <Label className="text-sm">Study days</Label>
             <div className="flex flex-wrap gap-2">
