@@ -34,7 +34,7 @@ async function fetchWithRetry(url: string, options: RequestInit, retries = MAX_R
         } else if (response.status === 429) {
           throw new Error("Too many requests. Please wait a moment and try again.");
         } else if (response.status === 402) {
-          throw new Error("AI service credits exhausted. Please contact support.");
+          throw new Error("AI service credits exhausted. Please add credits to continue.");
         }
         
         throw new Error(`AI request failed with status ${response.status}`);
@@ -100,21 +100,21 @@ Return ONLY valid JSON in this format:
   ]
 }`;
 
-    const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
-    if (!OPENAI_API_KEY) {
-      throw new Error("OPENAI_API_KEY not configured");
+    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+    if (!LOVABLE_API_KEY) {
+      throw new Error("LOVABLE_API_KEY not configured");
     }
 
     const response = await fetchWithRetry(
-      'https://api.openai.com/v1/chat/completions',
+      'https://ai.gateway.lovable.dev/v1/chat/completions',
       {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${OPENAI_API_KEY}`,
+          "Authorization": `Bearer ${LOVABLE_API_KEY}`,
         },
         body: JSON.stringify({
-          model: "gpt-5-nano-2025-08-07",
+          model: "openai/gpt-5-nano",
           messages: [
             { role: "user", content: `${systemPrompt}\n\nAnalyze these GCSE topics that the user finds difficult and assign priority scores:\n\n${topicsList}` }
           ],
@@ -127,13 +127,13 @@ Return ONLY valid JSON in this format:
       console.error("AI gateway error:", response.status, errorText);
       
       if (response.status === 429) {
-        return new Response(JSON.stringify({ error: "Rate limit exceeded. Please try again in a moment." }), {
+        return new Response(JSON.stringify({ error: "Rate limit exceeded. Please try again later." }), {
           status: 429,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }
       if (response.status === 402) {
-        return new Response(JSON.stringify({ error: "AI credits exhausted. Please contact support." }), {
+        return new Response(JSON.stringify({ error: "AI credits exhausted. Please add credits to continue." }), {
           status: 402,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });

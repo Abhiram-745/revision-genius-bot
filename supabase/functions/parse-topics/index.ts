@@ -34,7 +34,7 @@ async function fetchWithRetry(url: string, options: RequestInit, retries = MAX_R
         } else if (response.status === 429) {
           throw new Error("Too many requests. Please wait a moment and try again.");
         } else if (response.status === 402) {
-          throw new Error("AI service credits exhausted. Please contact support.");
+          throw new Error("AI service credits exhausted. Please add credits to continue.");
         }
         
         throw new Error(`AI request failed with status ${response.status}`);
@@ -101,7 +101,7 @@ Do NOT include any explanation or commentary - ONLY the JSON.`;
     
     messageContent.push({ type: "text", text: textContent });
     
-    // Add images if provided (Gemini 2.0 Flash supports vision)
+    // Add images if provided
     if (images && Array.isArray(images) && images.length > 0) {
       console.log(`Processing ${images.length} image(s) for topic extraction`);
       
@@ -131,26 +131,25 @@ Do NOT include any explanation or commentary - ONLY the JSON.`;
       }
     }
 
-    // Using OpenAI API with gpt-5-nano for image extraction
-    const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
+    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
     
-    if (!OPENAI_API_KEY) {
-      console.error("OPENAI_API_KEY not configured");
+    if (!LOVABLE_API_KEY) {
+      console.error("LOVABLE_API_KEY not configured");
       throw new Error("AI service not configured. Please contact support.");
     }
 
-    console.log(`Calling OpenAI API with ${messageContent.length} content parts (${images?.length || 0} images)`);
+    console.log(`Calling Lovable AI with ${messageContent.length} content parts (${images?.length || 0} images)`);
 
     const response = await fetchWithRetry(
-      'https://api.openai.com/v1/chat/completions',
+      'https://ai.gateway.lovable.dev/v1/chat/completions',
       {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${OPENAI_API_KEY}`
+          "Authorization": `Bearer ${LOVABLE_API_KEY}`
         },
         body: JSON.stringify({
-          model: "gpt-5-nano-2025-08-07",
+          model: "openai/gpt-5-nano",
           messages: [
             { role: "user", content: messageContent }
           ],
@@ -163,13 +162,13 @@ Do NOT include any explanation or commentary - ONLY the JSON.`;
       console.error("AI gateway error:", response.status, errorText);
       
       if (response.status === 429) {
-        return new Response(JSON.stringify({ error: "Rate limit exceeded. Please try again in a moment." }), {
+        return new Response(JSON.stringify({ error: "Rate limit exceeded. Please try again later." }), {
           status: 429,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }
       if (response.status === 402) {
-        return new Response(JSON.stringify({ error: "AI credits exhausted. Please contact support." }), {
+        return new Response(JSON.stringify({ error: "AI credits exhausted. Please add credits to continue." }), {
           status: 402,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
@@ -178,17 +177,17 @@ Do NOT include any explanation or commentary - ONLY the JSON.`;
       throw new Error(`AI gateway request failed: ${response.status}`);
     }
 
-    const openaiResult = await response.json();
-    console.log('Zenmux response:', JSON.stringify(openaiResult, null, 2));
+    const aiResult = await response.json();
+    console.log('Lovable AI response:', JSON.stringify(aiResult, null, 2));
 
     // Extract content from response
     let responseText: string | undefined;
-    if (openaiResult.choices?.[0]?.message?.content) {
-      responseText = openaiResult.choices[0].message.content;
+    if (aiResult.choices?.[0]?.message?.content) {
+      responseText = aiResult.choices[0].message.content;
     }
 
     if (!responseText || responseText.trim() === "") {
-      console.error('Empty AI response. Raw result:', JSON.stringify(openaiResult, null, 2));
+      console.error('Empty AI response. Raw result:', JSON.stringify(aiResult, null, 2));
       throw new Error('AI did not generate a response. Please try again.');
     }
 
