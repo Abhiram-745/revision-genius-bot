@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { MessageSquare, Plus, X, Upload, Loader2, FileText, Image, File } from "lucide-react";
+import { MessageSquare, Plus, X, Upload, Loader2, Image, ClipboardList, BookOpen, Check } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Subject, Topic } from "../OnboardingWizard";
@@ -19,6 +19,8 @@ interface SmartTopicsStepProps {
   setTopics: (topics: Topic[]) => void;
 }
 
+type ExtractionMode = "exact" | "general";
+
 const SmartTopicsStep = ({ subjects, topics, setTopics }: SmartTopicsStepProps) => {
   const [activeTab, setActiveTab] = useState("upload");
   const [isProcessing, setIsProcessing] = useState(false);
@@ -26,6 +28,7 @@ const SmartTopicsStep = ({ subjects, topics, setTopics }: SmartTopicsStepProps) 
   const [selectedSubject, setSelectedSubject] = useState(subjects[0]?.id || subjects[0]?.name || "");
   const [isDragging, setIsDragging] = useState(false);
   const [uploadedFile, setUploadedFile] = useState<{ name: string; type: string } | null>(null);
+  const [extractionMode, setExtractionMode] = useState<ExtractionMode>("exact");
 
   const handleAddManualTopic = () => {
     if (!manualTopic.trim() || !selectedSubject) return;
@@ -105,14 +108,18 @@ const SmartTopicsStep = ({ subjects, topics, setTopics }: SmartTopicsStepProps) 
         console.log('Sending to parse-topics:', { 
           subjectName: subject.name, 
           imagesCount: images.length,
-          imagePreview: images[0].substring(0, 80)
+          imagePreview: images[0].substring(0, 80),
+          extractionMode
         });
         
         const { data, error } = await supabase.functions.invoke("parse-topics", {
           body: { 
-            text: `Extract all topics from this exam specification image for ${subject.name}. List every topic you can see.`,
+            text: extractionMode === "exact" 
+              ? `Extract all topics EXACTLY as written in this image for ${subject.name}. Copy every topic word-for-word.`
+              : `Identify the main concepts and learning topics from this educational material for ${subject.name}.`,
             subjectName: subject.name,
             images: images,
+            extractionMode: extractionMode,
           },
         });
 
@@ -147,7 +154,7 @@ const SmartTopicsStep = ({ subjects, topics, setTopics }: SmartTopicsStepProps) 
       if (extractedCount > 0) {
         toast.success(`Extracted ${extractedCount} topics from ${file.name}!`);
       } else {
-        toast.warning("No topics found in the image. Try a clearer screenshot of an exam specification.");
+        toast.warning("No topics found in the image. Try a clearer screenshot.");
       }
     } catch (error) {
       console.error("Error processing file:", error);
@@ -167,7 +174,7 @@ const SmartTopicsStep = ({ subjects, topics, setTopics }: SmartTopicsStepProps) 
     if (files.length > 0) {
       processFile(files[0]);
     }
-  }, [subjects, topics]);
+  }, [subjects, topics, extractionMode]);
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -199,6 +206,75 @@ const SmartTopicsStep = ({ subjects, topics, setTopics }: SmartTopicsStepProps) 
 
             {/* Upload Tab */}
             <TabsContent value="upload" className="space-y-4">
+              {/* Extraction Mode Selection */}
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">How should we extract topics?</Label>
+                <div className="grid grid-cols-2 gap-3">
+                  {/* Exact Topics Mode */}
+                  <button
+                    type="button"
+                    onClick={() => setExtractionMode("exact")}
+                    className={`relative p-4 rounded-lg border-2 text-left transition-all ${
+                      extractionMode === "exact"
+                        ? "border-primary bg-primary/5"
+                        : "border-muted hover:border-muted-foreground/50"
+                    }`}
+                  >
+                    {extractionMode === "exact" && (
+                      <div className="absolute top-2 right-2 w-5 h-5 rounded-full bg-primary flex items-center justify-center">
+                        <Check className="w-3 h-3 text-primary-foreground" />
+                      </div>
+                    )}
+                    <div className="flex items-center gap-2 mb-2">
+                      <ClipboardList className="w-5 h-5 text-primary" />
+                      <span className="font-medium">Exact Topics</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground mb-2">
+                      Best for:
+                    </p>
+                    <ul className="text-xs text-muted-foreground space-y-0.5">
+                      <li>• Exam specifications</li>
+                      <li>• Topic checklists</li>
+                    </ul>
+                    <p className="text-xs text-muted-foreground mt-2 italic">
+                      Extracts exactly as written
+                    </p>
+                  </button>
+
+                  {/* General Topics Mode */}
+                  <button
+                    type="button"
+                    onClick={() => setExtractionMode("general")}
+                    className={`relative p-4 rounded-lg border-2 text-left transition-all ${
+                      extractionMode === "general"
+                        ? "border-primary bg-primary/5"
+                        : "border-muted hover:border-muted-foreground/50"
+                    }`}
+                  >
+                    {extractionMode === "general" && (
+                      <div className="absolute top-2 right-2 w-5 h-5 rounded-full bg-primary flex items-center justify-center">
+                        <Check className="w-3 h-3 text-primary-foreground" />
+                      </div>
+                    )}
+                    <div className="flex items-center gap-2 mb-2">
+                      <BookOpen className="w-5 h-5 text-primary" />
+                      <span className="font-medium">General Topics</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground mb-2">
+                      Best for:
+                    </p>
+                    <ul className="text-xs text-muted-foreground space-y-0.5">
+                      <li>• Lesson presentations</li>
+                      <li>• Study notes</li>
+                    </ul>
+                    <p className="text-xs text-muted-foreground mt-2 italic">
+                      Extracts concepts from content
+                    </p>
+                  </button>
+                </div>
+              </div>
+
+              {/* File Upload Area */}
               <Card className={`border-2 border-dashed transition-colors ${
                 isDragging ? "border-primary bg-primary/5" : "border-muted-foreground/25"
               }`}>
@@ -216,7 +292,9 @@ const SmartTopicsStep = ({ subjects, topics, setTopics }: SmartTopicsStepProps) 
                         </div>
                         <div className="space-y-1">
                           <p className="font-medium">Processing {uploadedFile?.name}...</p>
-                          <p className="text-xs text-muted-foreground">Extracting topics with AI</p>
+                          <p className="text-xs text-muted-foreground">
+                            Extracting topics ({extractionMode === "exact" ? "exact mode" : "general mode"})
+                          </p>
                         </div>
                       </>
                     ) : (
@@ -227,7 +305,9 @@ const SmartTopicsStep = ({ subjects, topics, setTopics }: SmartTopicsStepProps) 
                         <div className="space-y-1">
                           <p className="font-medium">Drag & drop your document</p>
                           <p className="text-xs text-muted-foreground">
-                            Upload an exam spec, checklist, or screenshot
+                            {extractionMode === "exact" 
+                              ? "Upload an exam spec or checklist image"
+                              : "Upload lesson slides or notes image"}
                           </p>
                         </div>
                         <div className="flex flex-wrap justify-center gap-2 text-xs text-muted-foreground">
@@ -235,9 +315,6 @@ const SmartTopicsStep = ({ subjects, topics, setTopics }: SmartTopicsStepProps) 
                             <Image className="w-3 h-3" /> PNG, JPG
                           </Badge>
                         </div>
-                        <p className="text-xs text-muted-foreground">
-                          Take a screenshot of your exam specification for best results
-                        </p>
                         <label className="cursor-pointer">
                           <input
                             type="file"
