@@ -68,7 +68,7 @@ const GenerationProgress = ({ currentStage }: GenerationProgressProps) => {
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: index * 0.1 }}
               className={`
-                flex items-start gap-3 p-3 rounded-lg transition-all
+                relative flex items-start gap-3 p-3 rounded-lg transition-all overflow-hidden
                 ${isCurrent ? "bg-primary/10 border border-primary/20" : ""}
                 ${isCompleted ? "opacity-75" : ""}
                 ${isPending ? "opacity-50" : ""}

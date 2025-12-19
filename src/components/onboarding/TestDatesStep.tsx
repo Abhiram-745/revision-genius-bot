@@ -51,7 +51,7 @@ const TestDatesStep = ({ subjects, testDates, setTestDates }: TestDatesStepProps
             <SelectTrigger>
               <SelectValue placeholder="Choose a subject" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="bg-popover z-[200]">
               {subjects.map((subject, index) => (
                 <SelectItem key={index} value={index.toString()}>
                   {subject.name}
