@@ -52,6 +52,7 @@ const QuickSetupStep = ({ subjects, setSubjects }: QuickSetupStepProps) => {
   const [customSubject, setCustomSubject] = useState("");
   const [selectedBoard, setSelectedBoard] = useState("AQA");
   const [selectedMode, setSelectedMode] = useState<Subject["mode"]>("long-term-exam");
+  const [quickAddMode, setQuickAddMode] = useState<Subject["mode"]>("long-term-exam");
 
   const handleAddSubject = () => {
     const subjectName = selectedSubject === "custom" ? customSubject.trim() : selectedSubject;
@@ -73,27 +74,55 @@ const QuickSetupStep = ({ subjects, setSubjects }: QuickSetupStepProps) => {
     setSubjects(subjects.filter((_, i) => i !== index));
   };
 
-  const handleQuickAdd = (subjectName: string) => {
-    if (subjects.some(s => s.name.toLowerCase() === subjectName.toLowerCase())) return;
+  const handleQuickToggle = (subjectName: string) => {
+    const existingIndex = subjects.findIndex(s => s.name.toLowerCase() === subjectName.toLowerCase());
     
-    const newSubject: Subject = {
-      id: `subject-${Date.now()}`,
-      name: subjectName,
-      exam_board: "AQA",
-      mode: "long-term-exam",
-    };
-    setSubjects([...subjects, newSubject]);
+    if (existingIndex !== -1) {
+      // Remove if already added
+      setSubjects(subjects.filter((_, i) => i !== existingIndex));
+    } else {
+      // Add with selected quick-add mode
+      const newSubject: Subject = {
+        id: `subject-${Date.now()}`,
+        name: subjectName,
+        exam_board: "AQA",
+        mode: quickAddMode,
+      };
+      setSubjects([...subjects, newSubject]);
+    }
   };
 
   const getModeInfo = (mode: Subject["mode"]) => {
     return STUDY_MODES.find(m => m.id === mode) || STUDY_MODES[1];
   };
 
+  const quickAddModeInfo = getModeInfo(quickAddMode);
+
   return (
     <div className="space-y-6">
       {/* Quick Add Popular Subjects */}
       <div className="space-y-3">
-        <Label className="text-sm font-medium">Quick Add Popular Subjects</Label>
+        <div className="flex items-center justify-between">
+          <Label className="text-sm font-medium">Quick Add Popular Subjects</Label>
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-muted-foreground">Default mode:</span>
+            <Select value={quickAddMode} onValueChange={(v) => setQuickAddMode(v as Subject["mode"])}>
+              <SelectTrigger className="h-7 w-[130px] text-xs">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {STUDY_MODES.map((mode) => (
+                  <SelectItem key={mode.id} value={mode.id}>
+                    <span className="flex items-center gap-1">
+                      <mode.icon className="w-3 h-3" />
+                      {mode.label}
+                    </span>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
         <div className="flex flex-wrap gap-2">
           {POPULAR_SUBJECTS.slice(0, 10).map((subject) => {
             const isAdded = subjects.some(s => s.name.toLowerCase() === subject.toLowerCase());
@@ -103,12 +132,12 @@ const QuickSetupStep = ({ subjects, setSubjects }: QuickSetupStepProps) => {
                 variant={isAdded ? "default" : "outline"}
                 className={`cursor-pointer transition-all ${
                   isAdded 
-                    ? "bg-primary/20 text-primary border-primary/30" 
+                    ? "bg-primary/20 text-primary border-primary/30 hover:bg-destructive/20 hover:text-destructive hover:border-destructive/30" 
                     : "hover:bg-primary/10 hover:border-primary/30"
                 }`}
-                onClick={() => !isAdded && handleQuickAdd(subject)}
+                onClick={() => handleQuickToggle(subject)}
               >
-                {isAdded ? "✓" : "+"} {subject}
+                {isAdded ? "✕" : "+"} {subject}
               </Badge>
             );
           })}
