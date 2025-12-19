@@ -14,6 +14,9 @@ interface TestDatesStepProps {
 }
 
 const TestDatesStep = ({ subjects, testDates, setTestDates }: TestDatesStepProps) => {
+  // Filter out subjects with no-exam mode
+  const examSubjects = subjects.filter(s => (s as any).mode !== "no-exam");
+  
   const [selectedSubject, setSelectedSubject] = useState("");
   const [testDate, setTestDate] = useState("");
   const [testType, setTestType] = useState("");
@@ -42,6 +45,20 @@ const TestDatesStep = ({ subjects, testDates, setTestDates }: TestDatesStepProps
     return subject?.name || "";
   };
 
+  // If all subjects are no-exam, show a message
+  if (examSubjects.length === 0) {
+    return (
+      <div className="text-center p-6 space-y-2">
+        <p className="text-muted-foreground">
+          No exam dates needed — all your subjects are in "No Exam" mode.
+        </p>
+        <p className="text-sm text-muted-foreground">
+          You can continue to the next step.
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="space-y-4">
@@ -52,11 +69,14 @@ const TestDatesStep = ({ subjects, testDates, setTestDates }: TestDatesStepProps
               <SelectValue placeholder="Choose a subject" />
             </SelectTrigger>
             <SelectContent className="bg-popover z-[200]">
-              {subjects.map((subject, index) => (
-                <SelectItem key={index} value={index.toString()}>
-                  {subject.name}
-                </SelectItem>
-              ))}
+              {examSubjects.map((subject, index) => {
+                const originalIndex = subjects.findIndex(s => s.name === subject.name);
+                return (
+                  <SelectItem key={originalIndex} value={originalIndex.toString()}>
+                    {subject.name}
+                  </SelectItem>
+                );
+              })}
             </SelectContent>
           </Select>
         </div>

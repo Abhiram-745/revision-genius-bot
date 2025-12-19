@@ -105,20 +105,19 @@ Do NOT include any explanation or commentary - ONLY the JSON.`;
     if (images && Array.isArray(images) && images.length > 0) {
       console.log(`Processing ${images.length} image(s) for topic extraction`);
       
+      let imagesAdded = 0;
       for (const imageData of images) {
+        console.log(`Image data type: ${typeof imageData}, prefix: ${typeof imageData === 'string' ? imageData.substring(0, 30) : 'N/A'}`);
+        
         if (typeof imageData === 'string' && imageData.startsWith('data:')) {
-          // Parse base64 data URL
-          const matches = imageData.match(/^data:([^;]+);base64,(.+)$/);
-          if (matches) {
-            const mimeType = matches[1];
-            const base64Data = matches[2];
-            messageContent.push({
-              type: "image_url",
-              image_url: {
-                url: `data:${mimeType};base64,${base64Data}`
-              }
-            });
-          }
+          // Full data URL - use directly
+          messageContent.push({
+            type: "image_url",
+            image_url: {
+              url: imageData
+            }
+          });
+          imagesAdded++;
         } else if (typeof imageData === 'string' && (imageData.startsWith('http://') || imageData.startsWith('https://'))) {
           // Direct URL
           messageContent.push({
@@ -127,8 +126,24 @@ Do NOT include any explanation or commentary - ONLY the JSON.`;
               url: imageData
             }
           });
+          imagesAdded++;
+        } else if (typeof imageData === 'object' && imageData !== null && 'data' in imageData) {
+          // Legacy format: { data: base64, type: mimeType } - convert to data URL
+          const obj = imageData as { data: string; type: string };
+          const dataUrl = `data:${obj.type};base64,${obj.data}`;
+          messageContent.push({
+            type: "image_url",
+            image_url: {
+              url: dataUrl
+            }
+          });
+          imagesAdded++;
+          console.log(`Converted legacy image format to data URL`);
+        } else {
+          console.warn(`Unsupported image format:`, typeof imageData);
         }
       }
+      console.log(`Successfully added ${imagesAdded} images to message content`);
     }
 
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');

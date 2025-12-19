@@ -86,13 +86,10 @@ const SmartTopicsStep = ({ subjects, topics, setTopics }: SmartTopicsStepProps) 
     setUploadedFile({ name: file.name, type: file.type });
 
     try {
-      // Convert file to base64
-      const base64 = await new Promise<string>((resolve, reject) => {
+      // Convert file to full data URL (edge function expects data URL strings)
+      const dataUrl = await new Promise<string>((resolve, reject) => {
         const reader = new FileReader();
-        reader.onload = () => {
-          const result = reader.result as string;
-          resolve(result.split(',')[1]); // Remove data URL prefix
-        };
+        reader.onload = () => resolve(reader.result as string);
         reader.onerror = reject;
         reader.readAsDataURL(file);
       });
@@ -106,7 +103,7 @@ const SmartTopicsStep = ({ subjects, topics, setTopics }: SmartTopicsStepProps) 
         const { data, error } = await supabase.functions.invoke("parse-topics", {
           body: { 
             subjectName: subject.name,
-            images: isImage ? [{ data: base64, type: file.type }] : undefined,
+            images: isImage ? [dataUrl] : undefined,
           },
         });
 
