@@ -1615,6 +1615,31 @@ VERIFICATION BEFORE RESPONDING:
       throw validationError;
     }
 
+    // Send push notification for successful timetable generation
+    try {
+      const supabaseUrl = Deno.env.get('SUPABASE_URL');
+      if (supabaseUrl) {
+        await fetch(`${supabaseUrl}/functions/v1/send-push-notification`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${Deno.env.get('SUPABASE_ANON_KEY')}`
+          },
+          body: JSON.stringify({
+            user_id: user.id,
+            title: 'Timetable Ready! 📚',
+            body: 'Your AI-powered study timetable has been generated successfully.',
+            tag: 'timetable-generated',
+            data: { url: '/timetables' }
+          })
+        });
+        console.log('Push notification sent for timetable generation');
+      }
+    } catch (pushError) {
+      console.error('Error sending push notification:', pushError);
+      // Don't fail the request if push fails
+    }
+
     return new Response(JSON.stringify(scheduleData), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

@@ -35,6 +35,7 @@ import { useUserRole, useUsageLimits } from "@/hooks/useUserRole";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import VistaraLogo from "./VistaraLogo";
+import { NotificationToggle } from "./NotificationToggle";
 
 interface HeaderProps {
   onNewTimetable?: () => void;
@@ -585,6 +586,9 @@ const Header = ({ onNewTimetable }: HeaderProps) => {
                 <span className="font-semibold text-sm">New Timetable</span>
               </Button>
             )}
+
+            {/* Notification Toggle */}
+            <NotificationToggle />
 
             {/* Mobile/Tablet Menu Button - Shows on screens smaller than lg */}
             <Sheet open={showMobileMenu} onOpenChange={setShowMobileMenu}>
