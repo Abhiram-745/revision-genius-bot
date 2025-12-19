@@ -65,7 +65,16 @@ serve(async (req) => {
   }
 
   try {
-    const { text, subjectName, images } = await req.json();
+  const { text, subjectName, images } = await req.json();
+  
+  console.log('Received request:', {
+    hasText: !!text,
+    textPreview: text?.substring?.(0, 100) ?? 'N/A',
+    subjectName,
+    imagesCount: images?.length ?? 0,
+    imagesType: Array.isArray(images) ? 'array' : typeof images,
+    firstImagePreview: typeof images?.[0] === 'string' ? images[0].substring(0, 80) : JSON.stringify(images?.[0])?.substring(0, 80)
+  });
 
     const systemPrompt = `You are a precise OCR and text extraction assistant. Your job is to read text from images EXACTLY as written.
 
@@ -164,7 +173,7 @@ Do NOT include any explanation or commentary - ONLY the JSON.`;
           "Authorization": `Bearer ${LOVABLE_API_KEY}`
         },
         body: JSON.stringify({
-          model: "openai/gpt-5-nano",
+          model: "google/gemini-2.5-flash",
           messages: [
             { role: "user", content: messageContent }
           ],

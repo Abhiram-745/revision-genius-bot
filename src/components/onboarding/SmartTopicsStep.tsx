@@ -66,14 +66,11 @@ const SmartTopicsStep = ({ subjects, topics, setTopics }: SmartTopicsStepProps) 
   }, []);
 
   const processFile = async (file: File) => {
-    const validTypes = [
-      'image/png', 'image/jpeg', 'image/jpg', 'image/webp',
-      'application/pdf',
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-    ];
-
-    if (!validTypes.includes(file.type)) {
-      toast.error("Unsupported file type. Please upload PNG, JPG, PDF, or DOCX files.");
+    const isImage = file.type.startsWith('image/');
+    
+    // Currently only support images for topic extraction
+    if (!isImage) {
+      toast.error("Topic extraction currently supports images only (PNG, JPG). Please take a screenshot of your document.");
       return;
     }
 
@@ -86,33 +83,47 @@ const SmartTopicsStep = ({ subjects, topics, setTopics }: SmartTopicsStepProps) 
     setUploadedFile({ name: file.name, type: file.type });
 
     try {
-      // Convert file to full data URL (edge function expects data URL strings)
+      // Convert file to full data URL
       const dataUrl = await new Promise<string>((resolve, reject) => {
         const reader = new FileReader();
-        reader.onload = () => resolve(reader.result as string);
+        reader.onload = () => {
+          const result = reader.result as string;
+          console.log('Image data URL created:', result.substring(0, 100));
+          resolve(result);
+        };
         reader.onerror = reject;
         reader.readAsDataURL(file);
       });
 
-      const isImage = file.type.startsWith('image/');
+      const images = [dataUrl];
+      let extractedCount = 0;
       
       // Process for each subject
       for (const subject of subjects) {
         const subjectId = subject.id || subject.name;
         
+        console.log('Sending to parse-topics:', { 
+          subjectName: subject.name, 
+          imagesCount: images.length,
+          imagePreview: images[0].substring(0, 80)
+        });
+        
         const { data, error } = await supabase.functions.invoke("parse-topics", {
           body: { 
+            text: `Extract all topics from this exam specification image for ${subject.name}. List every topic you can see.`,
             subjectName: subject.name,
-            images: isImage ? [dataUrl] : undefined,
+            images: images,
           },
         });
+
+        console.log('parse-topics response:', { data, error });
 
         if (error) {
           console.error("Parse error for", subject.name, error);
           continue;
         }
 
-        if (data?.topics && Array.isArray(data.topics)) {
+        if (data?.topics && Array.isArray(data.topics) && data.topics.length > 0) {
           const newTopics: Topic[] = data.topics.map((t: any) => ({
             id: `topic-${Date.now()}-${Math.random()}`,
             subject_id: subjectId,
@@ -128,11 +139,16 @@ const SmartTopicsStep = ({ subjects, topics, setTopics }: SmartTopicsStepProps) 
 
           if (uniqueNewTopics.length > 0) {
             setTopics([...topics, ...uniqueNewTopics]);
+            extractedCount += uniqueNewTopics.length;
           }
         }
       }
 
-      toast.success(`Topics extracted from ${file.name}!`);
+      if (extractedCount > 0) {
+        toast.success(`Extracted ${extractedCount} topics from ${file.name}!`);
+      } else {
+        toast.warning("No topics found in the image. Try a clearer screenshot of an exam specification.");
+      }
     } catch (error) {
       console.error("Error processing file:", error);
       toast.error("Failed to extract topics from document");
@@ -218,17 +234,14 @@ const SmartTopicsStep = ({ subjects, topics, setTopics }: SmartTopicsStepProps) 
                           <Badge variant="outline" className="gap-1">
                             <Image className="w-3 h-3" /> PNG, JPG
                           </Badge>
-                          <Badge variant="outline" className="gap-1">
-                            <FileText className="w-3 h-3" /> PDF
-                          </Badge>
-                          <Badge variant="outline" className="gap-1">
-                            <File className="w-3 h-3" /> DOCX
-                          </Badge>
                         </div>
+                        <p className="text-xs text-muted-foreground">
+                          Take a screenshot of your exam specification for best results
+                        </p>
                         <label className="cursor-pointer">
                           <input
                             type="file"
-                            accept=".pdf,.png,.jpg,.jpeg,.webp,.docx"
+                            accept=".png,.jpg,.jpeg,.webp"
                             onChange={handleFileSelect}
                             className="hidden"
                           />
