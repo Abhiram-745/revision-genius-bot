@@ -19,14 +19,34 @@ const MIN_SESSION_DURATION = 25;
 function attemptJsonRepair(jsonString: string): string {
   let repaired = jsonString.trim();
   
+  // Remove any trailing incomplete content before fixing brackets
+  // Find the last complete session object by looking for the pattern "}," or "}]"
+  const lastCompleteSessionMatch = repaired.match(/.*(\}\s*,|\}\s*\])/s);
+  if (lastCompleteSessionMatch) {
+    const lastGoodIndex = repaired.lastIndexOf(lastCompleteSessionMatch[1]);
+    if (lastGoodIndex > 0 && lastGoodIndex < repaired.length - 10) {
+      // Check if there's incomplete content after the last good session
+      const afterLast = repaired.substring(lastGoodIndex + lastCompleteSessionMatch[1].length).trim();
+      if (afterLast && !afterLast.startsWith('"') && !afterLast.startsWith('{') && !afterLast.startsWith('}')) {
+        repaired = repaired.substring(0, lastGoodIndex + lastCompleteSessionMatch[1].length);
+      }
+    }
+  }
+  
+  // Remove trailing incomplete patterns
+  repaired = repaired.replace(/,\s*"[^"]*$/, ''); // trailing key without value
+  repaired = repaired.replace(/,\s*"[^"]*":\s*$/, ''); // trailing key with colon
+  repaired = repaired.replace(/,\s*"[^"]*":\s*"[^"]*$/, ''); // incomplete string value
+  repaired = repaired.replace(/,\s*"[^"]*":\s*\{[^}]*$/, ''); // incomplete object
+  repaired = repaired.replace(/,\s*\{[^}]*$/, ''); // incomplete object in array
+  repaired = repaired.replace(/,\s*$/, ''); // trailing comma
+  
   const openBraces = (repaired.match(/{/g) || []).length;
   const closeBraces = (repaired.match(/}/g) || []).length;
   const openBrackets = (repaired.match(/\[/g) || []).length;
   const closeBrackets = (repaired.match(/]/g) || []).length;
   
-  const lastCompletePattern = /,\s*"[^"]*$|,\s*$/;
-  repaired = repaired.replace(lastCompletePattern, '');
-  
+  // Close arrays first, then objects
   for (let i = 0; i < openBrackets - closeBrackets; i++) {
     repaired += ']';
   }
@@ -34,6 +54,7 @@ function attemptJsonRepair(jsonString: string): string {
     repaired += '}';
   }
   
+  // Remove trailing commas before closing brackets/braces
   repaired = repaired.replace(/,(\s*[}\]])/g, '$1');
   
   return repaired;
@@ -1276,11 +1297,11 @@ VERIFICATION BEFORE RESPONDING:
             },
             body: JSON.stringify({
               model: "google/gemini-2.5-flash",
-              max_completion_tokens: 8000,
+              max_completion_tokens: 16000,
               messages: [
                 {
                   role: "system",
-                  content: `You are an expert educational planner. Return ONLY valid JSON - no markdown, no code fences. Start with { and end with }. Keep topic names SHORT (max 50 chars). Ensure ALL braces and brackets are properly closed. NO trailing commas.`
+                  content: `You are an expert educational planner. Return ONLY valid JSON - no markdown, no code fences. Start with { and end with }. Keep topic names SHORT (max 50 chars). Keep session notes BRIEF (max 30 chars). Ensure ALL braces and brackets are properly closed. NO trailing commas. CRITICAL: Complete the ENTIRE JSON response.`
                 },
                 {
                   role: "user",
@@ -1344,6 +1365,7 @@ VERIFICATION BEFORE RESPONDING:
     clearTimeout(timeoutId);
 
     console.log("AI response (first 300 chars):", aiResponse.substring(0, 300));
+    console.log("AI response (last 300 chars):", aiResponse.substring(Math.max(0, aiResponse.length - 300)));
 
     let scheduleData;
     let jsonString = aiResponse.trim();
@@ -1363,15 +1385,31 @@ VERIFICATION BEFORE RESPONDING:
       console.log("✓ JSON parsed successfully");
     } catch (firstParseError) {
       console.log("First parse failed, attempting JSON repair...");
+      console.log("Parse error:", firstParseError);
       
       const repairedJson = attemptJsonRepair(jsonString);
+      console.log("Repaired JSON (last 200 chars):", repairedJson.substring(Math.max(0, repairedJson.length - 200)));
       
       try {
         scheduleData = JSON.parse(repairedJson);
         console.log("✓ JSON repair successful!");
       } catch (repairError) {
         console.error("JSON repair failed:", repairError);
-        throw new Error("AI generated incomplete response. Please try again.");
+        
+        // Final attempt: try to extract partial schedule
+        const scheduleMatch = repairedJson.match(/"schedule"\s*:\s*\{([\s\S]*)/);
+        if (scheduleMatch) {
+          try {
+            const partialSchedule = attemptJsonRepair('{"schedule":{' + scheduleMatch[1]);
+            scheduleData = JSON.parse(partialSchedule);
+            console.log("✓ Partial schedule recovery successful!");
+          } catch (partialError) {
+            console.error("Partial recovery failed:", partialError);
+            throw new Error("AI generated incomplete response. Please try again.");
+          }
+        } else {
+          throw new Error("AI generated incomplete response. Please try again.");
+        }
       }
     }
 
