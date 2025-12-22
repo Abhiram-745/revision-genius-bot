@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
 import Header from "@/components/Header";
@@ -225,7 +225,7 @@ const AIInsights = () => {
                 </div>
               </div>
 
-              {timetables.length > 1 && (
+              {timetables.length > 0 && (
                 <Select value={selectedTimetableId || ""} onValueChange={setSelectedTimetableId}>
                   <SelectTrigger className="w-[200px]">
                     <SelectValue placeholder="Select timetable" />
@@ -239,7 +239,7 @@ const AIInsights = () => {
               )}
             </div>
 
-            <Tabs defaultValue="overview" className="w-full">
+            <Tabs defaultValue={new URLSearchParams(location.search).get('tab') || "overview"} className="w-full">
               <TabsList className="grid w-full grid-cols-4 mb-6">
                 <TabsTrigger value="overview" className="gap-2">
                   <TrendingUp className="h-4 w-4 hidden sm:inline" />
