@@ -444,11 +444,20 @@ const Header = ({ onNewTimetable }: HeaderProps) => {
             <Button 
               variant="ghost" 
               size="sm" 
-              onClick={() => navigate("/blurt-ai")} 
-              className={`text-sm font-medium transition-all px-2.5 ${isActivePath("/blurt-ai") ? "bg-secondary/15 text-secondary" : "hover:bg-secondary/10"}`}
+              onClick={() => navigate("/practice")} 
+              className={`text-sm font-medium transition-all px-2.5 ${isActivePath("/practice") || isActivePath("/blurt-ai") || isActivePath("/savemyexams") || isActivePath("/pmt") || isActivePath("/quizlet") || isActivePath("/gradlify") ? "bg-secondary/15 text-secondary" : "hover:bg-secondary/10"}`}
             >
               <Sparkles className="h-4 w-4 mr-1 text-secondary" />
-              BlurtAI
+              Practice
+            </Button>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => navigate("/revision-apps")} 
+              className={`text-sm font-medium transition-all px-2.5 ${isActivePath("/revision-apps") ? "bg-primary/15 text-primary" : ""}`}
+            >
+              <BookOpen className="h-4 w-4 mr-1" />
+              Revision Apps
             </Button>
             
             {/* These items show directly on xl+ screens */}
@@ -550,11 +559,11 @@ const Header = ({ onNewTimetable }: HeaderProps) => {
                   Insights
                 </DropdownMenuItem>
                 <DropdownMenuItem 
-                  onClick={() => navigate("/savemyexams")} 
-                  className={`cursor-pointer ${isActivePath("/savemyexams") ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400" : ""}`}
+                  onClick={() => navigate("/revision-apps")} 
+                  className={`cursor-pointer ${isActivePath("/revision-apps") ? "bg-primary/10 text-primary" : ""}`}
                 >
-                  <BookOpen className="h-4 w-4 mr-2 text-emerald-600" />
-                  SaveMyExams
+                  <BookOpen className="h-4 w-4 mr-2" />
+                  Revision Apps
                 </DropdownMenuItem>
                 {isAdmin && (
                   <DropdownMenuItem 
