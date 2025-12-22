@@ -21,6 +21,10 @@ import NotFound from "@/pages/NotFound";
 import ImportAccount from "@/pages/ImportAccount";
 import Admin from "@/pages/Admin";
 import SaveMyExams from "@/pages/SaveMyExams";
+import Practice from "@/pages/Practice";
+import PMT from "@/pages/PMT";
+import Quizlet from "@/pages/Quizlet";
+
 export const AnimatedRoutes = () => {
   const location = useLocation();
 
@@ -42,6 +46,9 @@ export const AnimatedRoutes = () => {
         <Route path="/ai-insights" element={<AIInsights />} />
         <Route path="/blurt-ai" element={<BlurtAI />} />
         <Route path="/savemyexams" element={<SaveMyExams />} />
+        <Route path="/practice" element={<Practice />} />
+        <Route path="/pmt" element={<PMT />} />
+        <Route path="/quizlet" element={<Quizlet />} />
         <Route path="/activity" element={<Activity />} />
         <Route path="/reflections" element={<Reflections />} />
         <Route path="/timetable/:id" element={<TimetableView />} />

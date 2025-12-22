@@ -316,37 +316,20 @@ const Header = ({ onNewTimetable }: HeaderProps) => {
         variant="ghost"
         size="sm"
         onClick={() => {
-          navigate("/blurt-ai");
+          navigate("/practice");
           onItemClick?.();
         }}
         className={`justify-start gap-3 w-full px-3 py-3 rounded-xl transition-all ${
-          isActivePath("/blurt-ai") 
+          isActivePath("/practice") || isActivePath("/blurt-ai") || isActivePath("/savemyexams") || isActivePath("/pmt") || isActivePath("/quizlet")
             ? "bg-gradient-to-r from-secondary/20 to-primary/20 text-secondary font-semibold border border-secondary/30" 
             : "hover:bg-secondary/10 border border-transparent hover:border-secondary/20"
         }`}
       >
         <Sparkles className="h-5 w-5 text-secondary" />
-        <span className="font-medium">BlurtAI</span>
+        <span className="font-medium">Practice</span>
         <Badge variant="secondary" className="ml-auto text-[10px] px-1.5 py-0 bg-secondary/20 text-secondary border-secondary/30">
           NEW
         </Badge>
-      </Button>
-
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={() => {
-          navigate("/savemyexams");
-          onItemClick?.();
-        }}
-        className={`justify-start gap-3 w-full px-3 py-3 rounded-xl transition-all ${
-          isActivePath("/savemyexams") 
-            ? "bg-gradient-to-r from-emerald-500/20 to-teal-500/20 text-emerald-700 dark:text-emerald-400 font-semibold border border-emerald-500/30" 
-            : "hover:bg-emerald-500/10 border border-transparent hover:border-emerald-500/20"
-        }`}
-      >
-        <BookOpen className="h-5 w-5 text-emerald-600" />
-        <span className="font-medium">SaveMyExams</span>
       </Button>
 
       {isAdmin && (
