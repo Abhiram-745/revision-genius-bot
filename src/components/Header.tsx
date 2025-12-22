@@ -309,7 +309,7 @@ const Header = ({ onNewTimetable }: HeaderProps) => {
         }`}
       >
         <Brain className="h-5 w-5 text-primary" />
-        <span className="font-medium">AI Insights</span>
+        <span className="font-medium">Insights</span>
       </Button>
 
       <Button
@@ -495,7 +495,7 @@ const Header = ({ onNewTimetable }: HeaderProps) => {
               className={`hidden 2xl:flex text-sm font-medium transition-all ${isActivePath("/ai-insights") ? "bg-primary/15 text-primary" : ""}`}
             >
               <Brain className="h-4 w-4 mr-1.5" />
-              AI Insights
+              Insights
             </Button>
             {isAdmin && (
               <Button 
@@ -552,7 +552,7 @@ const Header = ({ onNewTimetable }: HeaderProps) => {
                   className={`cursor-pointer ${isActivePath("/ai-insights") ? "bg-primary/10 text-primary" : ""}`}
                 >
                   <Brain className="h-4 w-4 mr-2" />
-                  AI Insights
+                  Insights
                 </DropdownMenuItem>
                 {isAdmin && (
                   <DropdownMenuItem 
