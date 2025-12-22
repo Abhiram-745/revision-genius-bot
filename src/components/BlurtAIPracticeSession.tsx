@@ -6,6 +6,7 @@ import { X, Clock, CheckCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { triggerConfetti } from "@/utils/celebrations";
+import { SessionFeedbackDialog, SessionFeedback } from "@/components/SessionFeedbackDialog";
 
 interface BlurtAIPracticeSessionProps {
   open: boolean;
@@ -32,6 +33,11 @@ interface BlurtActivityData {
   totalKeywords?: number;
   sessionType?: string;
   activityLog?: any[];
+  confidenceLevel?: number;
+  accuracyPercentage?: number;
+  mistakeTypes?: string[];
+  conceptsMastered?: string[];
+  conceptsStruggling?: string[];
 }
 
 export const BlurtAIPracticeSession = ({
@@ -48,9 +54,11 @@ export const BlurtAIPracticeSession = ({
   const [isRunning, setIsRunning] = useState(false);
   const [sessionId] = useState(() => crypto.randomUUID());
   const [activityReceived, setActivityReceived] = useState(false);
+  const [showFeedback, setShowFeedback] = useState(false);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
   const sessionStartRef = useRef<Date | null>(null);
+  const savedSessionIdRef = useRef<string | null>(null);
 
   const totalSeconds = plannedDurationMinutes * 60;
   const progress = Math.min((elapsedSeconds / totalSeconds) * 100, 100);
@@ -77,8 +85,8 @@ export const BlurtAIPracticeSession = ({
           return;
         }
 
-        // Save activity to database
-        const { error } = await supabase.from('blurt_activity_logs').insert([{
+        // Save activity to database with enhanced tracking fields
+        const { data: insertedData, error } = await supabase.from('blurt_activity_logs').insert([{
           user_id: user.id,
           session_id: data.sessionId || sessionId,
           subject_name: data.subject || subject,
@@ -92,10 +100,16 @@ export const BlurtAIPracticeSession = ({
           total_keywords: data.totalKeywords || 0,
           session_type: data.sessionType || 'practice',
           raw_data: data as any,
-        }]);
+          confidence_level: data.confidenceLevel || null,
+          accuracy_percentage: data.accuracyPercentage || null,
+          mistake_types: data.mistakeTypes || [],
+          concepts_mastered: data.conceptsMastered || [],
+          concepts_struggling: data.conceptsStruggling || [],
+        }]).select('id').single();
 
         if (error) throw error;
 
+        savedSessionIdRef.current = insertedData?.id || null;
         setActivityReceived(true);
         toast.success('Activity data received from BlurtAI!');
         triggerConfetti('success');
@@ -177,26 +191,23 @@ export const BlurtAIPracticeSession = ({
     }
     setIsRunning(false);
     
-    if (!activityReceived) {
-      // Save session even without BlurtAI data
-      saveManualSession();
-    }
-    
     triggerConfetti('success');
     toast.success("Time's up! Great study session!");
     
-    setTimeout(() => {
-      onComplete();
-      onOpenChange(false);
-    }, 2000);
+    // Show feedback dialog if no activity received from BlurtAI
+    if (!activityReceived) {
+      setShowFeedback(true);
+    } else {
+      finishSession();
+    }
   };
 
-  const saveManualSession = async () => {
+  const saveManualSession = async (feedback?: SessionFeedback) => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
     try {
-      await supabase.from('blurt_activity_logs').insert({
+      const { data: insertedData } = await supabase.from('blurt_activity_logs').insert({
         user_id: user.id,
         session_id: sessionId,
         subject_name: subject,
@@ -206,10 +217,68 @@ export const BlurtAIPracticeSession = ({
         duration_seconds: elapsedSeconds,
         session_type: 'practice',
         raw_data: { manual: true },
-      });
+        confidence_level: feedback?.confidenceLevel || null,
+        mistake_types: feedback?.mistakeTypes || [],
+        concepts_mastered: feedback?.conceptsMastered || [],
+        concepts_struggling: feedback?.conceptsStruggling || [],
+      }).select('id').single();
+
+      savedSessionIdRef.current = insertedData?.id || null;
     } catch (err) {
       console.error('Error saving manual session:', err);
     }
+  };
+
+  const updateSessionWithFeedback = async (feedback: SessionFeedback) => {
+    if (!savedSessionIdRef.current) return;
+
+    try {
+      await supabase
+        .from('blurt_activity_logs')
+        .update({
+          confidence_level: feedback.confidenceLevel,
+          mistake_types: feedback.mistakeTypes,
+          concepts_mastered: feedback.conceptsMastered,
+          concepts_struggling: feedback.conceptsStruggling,
+        })
+        .eq('id', savedSessionIdRef.current);
+    } catch (err) {
+      console.error('Error updating session with feedback:', err);
+    }
+  };
+
+  const handleFeedbackSubmit = async (feedback: SessionFeedback) => {
+    if (activityReceived && savedSessionIdRef.current) {
+      // Update existing session with feedback
+      await updateSessionWithFeedback(feedback);
+    } else {
+      // Save manual session with feedback
+      await saveManualSession(feedback);
+    }
+    toast.success('Feedback saved!');
+    setShowFeedback(false);
+    finishSession();
+  };
+
+  const handleFeedbackSkip = async () => {
+    if (!activityReceived) {
+      await saveManualSession();
+    }
+    setShowFeedback(false);
+    finishSession();
+  };
+
+  const finishSession = () => {
+    onComplete();
+    onOpenChange(false);
+    resetState();
+  };
+
+  const resetState = () => {
+    setElapsedSeconds(0);
+    setActivityReceived(false);
+    setShowFeedback(false);
+    savedSessionIdRef.current = null;
   };
 
   const handleClose = async () => {
@@ -219,15 +288,13 @@ export const BlurtAIPracticeSession = ({
     }
     setIsRunning(false);
     
-    if (elapsedSeconds > 60 && !activityReceived) {
-      // Save session even without BlurtAI data
-      await saveManualSession();
-      onComplete();
+    // If studied for more than 60 seconds, show feedback
+    if (elapsedSeconds > 60) {
+      setShowFeedback(true);
+    } else {
+      onOpenChange(false);
+      resetState();
     }
-    
-    setElapsedSeconds(0);
-    setActivityReceived(false);
-    onOpenChange(false);
   };
 
   const formatTime = (seconds: number) => {
@@ -237,51 +304,64 @@ export const BlurtAIPracticeSession = ({
   };
 
   return (
-    <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-6xl h-[90vh] p-0 flex flex-col">
-        {/* Timer header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b bg-background/95 backdrop-blur-sm">
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2">
-              <Clock className="w-5 h-5 text-primary" />
-              <span className="font-mono text-2xl font-bold text-primary">
-                {formatTime(remainingSeconds)}
-              </span>
-              <span className="text-sm text-muted-foreground">remaining</span>
-            </div>
-            <div className="w-48">
-              <Progress value={progress} className="h-2" />
-            </div>
-            {activityReceived && (
-              <div className="flex items-center gap-1 text-green-500">
-                <CheckCircle className="w-4 h-4" />
-                <span className="text-xs">Activity synced</span>
+    <>
+      <Dialog open={open && !showFeedback} onOpenChange={handleClose}>
+        <DialogContent className="max-w-6xl h-[90vh] p-0 flex flex-col">
+          {/* Timer header */}
+          <div className="flex items-center justify-between px-4 py-3 border-b bg-background/95 backdrop-blur-sm">
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
+                <Clock className="w-5 h-5 text-primary" />
+                <span className="font-mono text-2xl font-bold text-primary">
+                  {formatTime(remainingSeconds)}
+                </span>
+                <span className="text-sm text-muted-foreground">remaining</span>
               </div>
-            )}
+              <div className="w-48">
+                <Progress value={progress} className="h-2" />
+              </div>
+              {activityReceived && (
+                <div className="flex items-center gap-1 text-green-500">
+                  <CheckCircle className="w-4 h-4" />
+                  <span className="text-xs">Activity synced</span>
+                </div>
+              )}
+            </div>
+            
+            <div className="flex items-center gap-4">
+              <div className="text-right">
+                <p className="font-semibold text-sm">{subject}</p>
+                <p className="text-xs text-muted-foreground">{topic}</p>
+              </div>
+              <Button variant="ghost" size="icon" onClick={handleClose}>
+                <X className="w-5 h-5" />
+              </Button>
+            </div>
           </div>
           
-          <div className="flex items-center gap-4">
-            <div className="text-right">
-              <p className="font-semibold text-sm">{subject}</p>
-              <p className="text-xs text-muted-foreground">{topic}</p>
-            </div>
-            <Button variant="ghost" size="icon" onClick={handleClose}>
-              <X className="w-5 h-5" />
-            </Button>
+          {/* Blurt AI iframe */}
+          <div className="flex-1 overflow-hidden">
+            <iframe
+              ref={iframeRef}
+              src={blurtAIUrl}
+              className="w-full h-full border-0"
+              title="Blurt AI Practice"
+              allow="microphone; camera"
+            />
           </div>
-        </div>
-        
-        {/* Blurt AI iframe */}
-        <div className="flex-1 overflow-hidden">
-          <iframe
-            ref={iframeRef}
-            src={blurtAIUrl}
-            className="w-full h-full border-0"
-            title="Blurt AI Practice"
-            allow="microphone; camera"
-          />
-        </div>
-      </DialogContent>
-    </Dialog>
+        </DialogContent>
+      </Dialog>
+
+      {/* Post-session feedback dialog */}
+      <SessionFeedbackDialog
+        open={showFeedback}
+        onOpenChange={setShowFeedback}
+        subject={subject}
+        topic={topic}
+        durationSeconds={elapsedSeconds}
+        onSubmit={handleFeedbackSubmit}
+        onSkip={handleFeedbackSkip}
+      />
+    </>
   );
 };
