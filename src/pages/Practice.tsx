@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Brain, Sparkles, Target, Clock, TrendingUp, BookOpen, GraduationCap, Layers, ExternalLink } from "lucide-react";
+import { ArrowLeft, Brain, Sparkles, Target, Clock, TrendingUp, BookOpen, GraduationCap, Layers, ExternalLink, Calculator } from "lucide-react";
 import Header from "@/components/Header";
 import PageTransition from "@/components/PageTransition";
 import { supabase } from "@/integrations/supabase/client";
@@ -98,6 +98,17 @@ const Practice = () => {
       badge: "Flashcards",
       badgeColor: "bg-indigo-500/20 text-indigo-600 border-indigo-500/30",
       recommended: "Recommended for vocabulary practice",
+    },
+    {
+      id: "gradlify",
+      name: "Gradlify",
+      description: "Interactive maths practice with step-by-step solutions. Perfect for GCSE and A-Level maths revision.",
+      icon: <Calculator className="w-8 h-8 text-orange-500" />,
+      gradient: "from-orange-500/20 via-orange-500/10 to-amber-500/10",
+      route: "/gradlify",
+      badge: "Maths",
+      badgeColor: "bg-orange-500/20 text-orange-600 border-orange-500/30",
+      recommended: "Recommended for maths",
     },
   ];
 

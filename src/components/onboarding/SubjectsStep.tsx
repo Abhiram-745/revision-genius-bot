@@ -1,12 +1,15 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { X, Plus, Calendar, Clock, BookOpen } from "lucide-react";
+import { X, Plus, Calendar, Clock, BookOpen, Languages } from "lucide-react";
 import { Subject } from "../OnboardingWizard";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Switch } from "@/components/ui/switch";
+import { Slider } from "@/components/ui/slider";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 interface SubjectsStepProps {
   subjects: Subject[];
@@ -26,6 +29,11 @@ const GCSE_SUBJECTS = [
   "French",
   "Spanish",
   "German",
+  "Mandarin Chinese",
+  "Italian",
+  "Latin",
+  "Japanese",
+  "Arabic",
   "Computer Science",
   "Business Studies",
   "Economics",
@@ -38,6 +46,17 @@ const GCSE_SUBJECTS = [
   "Physical Education",
   "Food Technology",
   "Design & Technology",
+];
+
+const LANGUAGE_SUBJECTS = [
+  "French",
+  "Spanish",
+  "German",
+  "Mandarin Chinese",
+  "Italian",
+  "Latin",
+  "Japanese",
+  "Arabic",
 ];
 
 const EXAM_BOARDS = [
@@ -53,23 +72,71 @@ const SubjectsStep = ({ subjects, setSubjects }: SubjectsStepProps) => {
   const [subjectName, setSubjectName] = useState("");
   const [examBoard, setExamBoard] = useState("");
   const [mode, setMode] = useState<"short-term-exam" | "long-term-exam" | "no-exam">("long-term-exam");
+  const [isLanguage, setIsLanguage] = useState(false);
+  const [languageFocus, setLanguageFocus] = useState({
+    vocabulary: 30,
+    grammar: 30,
+    reading: 20,
+    listening: 10,
+    speaking: 10,
+  });
+
+  // Auto-detect language subjects
+  useEffect(() => {
+    if (subjectName && LANGUAGE_SUBJECTS.includes(subjectName)) {
+      setIsLanguage(true);
+    } else {
+      setIsLanguage(false);
+    }
+  }, [subjectName]);
 
   const addSubject = () => {
     if (subjectName.trim() && examBoard.trim()) {
-      setSubjects([...subjects, { 
+      const newSubject: Subject = {
         id: crypto.randomUUID(),
-        name: subjectName, 
+        name: subjectName,
         exam_board: examBoard,
-        mode: mode
-      }]);
+        mode: mode,
+      };
+
+      // Add language focus if it's a language subject
+      if (isLanguage) {
+        (newSubject as any).subject_type = "language";
+        (newSubject as any).language_focus = languageFocus;
+      }
+
+      setSubjects([...subjects, newSubject]);
       setSubjectName("");
       setExamBoard("");
       setMode("long-term-exam");
+      setIsLanguage(false);
+      setLanguageFocus({
+        vocabulary: 30,
+        grammar: 30,
+        reading: 20,
+        listening: 10,
+        speaking: 10,
+      });
     }
   };
 
   const removeSubject = (index: number) => {
     setSubjects(subjects.filter((_, i) => i !== index));
+  };
+
+  const handleLanguageFocusChange = (key: keyof typeof languageFocus, value: number) => {
+    const newFocus = { ...languageFocus, [key]: value };
+    // Normalize to 100%
+    const total = Object.values(newFocus).reduce((a, b) => a + b, 0);
+    if (total !== 100) {
+      const diff = 100 - total;
+      const otherKeys = Object.keys(newFocus).filter(k => k !== key) as (keyof typeof languageFocus)[];
+      if (otherKeys.length > 0) {
+        const adjustKey = otherKeys[0];
+        newFocus[adjustKey] = Math.max(0, newFocus[adjustKey] + diff);
+      }
+    }
+    setLanguageFocus(newFocus);
   };
 
   const getModeInfo = (mode: Subject["mode"]) => {
@@ -147,6 +214,57 @@ const SubjectsStep = ({ subjects, setSubjects }: SubjectsStepProps) => {
           })}
         </div>
       </div>
+
+      {/* Language Subject Options */}
+      {isLanguage && (
+        <Collapsible defaultOpen>
+          <Card className="border-2 border-purple-500/30 bg-purple-500/5">
+            <CollapsibleTrigger asChild>
+              <div className="p-3 cursor-pointer flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Languages className="h-4 w-4 text-purple-500" />
+                  <span className="text-sm font-medium">Language Focus Settings</span>
+                </div>
+                <Badge variant="secondary" className="bg-purple-500/20 text-purple-700 dark:text-purple-300">
+                  Language
+                </Badge>
+              </div>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <div className="px-3 pb-3 space-y-3">
+                <p className="text-xs text-muted-foreground">
+                  Set how much time you want to allocate to each language skill
+                </p>
+                {[
+                  { key: "vocabulary", label: "Vocabulary", emoji: "📚" },
+                  { key: "grammar", label: "Grammar", emoji: "📝" },
+                  { key: "reading", label: "Reading", emoji: "📖" },
+                  { key: "listening", label: "Listening", emoji: "🎧" },
+                  { key: "speaking", label: "Speaking", emoji: "🗣️" },
+                ].map(({ key, label, emoji }) => (
+                  <div key={key} className="space-y-1">
+                    <div className="flex items-center justify-between">
+                      <Label className="text-xs flex items-center gap-1">
+                        <span>{emoji}</span> {label}
+                      </Label>
+                      <span className="text-xs font-medium text-muted-foreground">
+                        {languageFocus[key as keyof typeof languageFocus]}%
+                      </span>
+                    </div>
+                    <Slider
+                      value={[languageFocus[key as keyof typeof languageFocus]]}
+                      onValueChange={(v) => handleLanguageFocusChange(key as keyof typeof languageFocus, v[0])}
+                      max={100}
+                      step={5}
+                      className="w-full"
+                    />
+                  </div>
+                ))}
+              </div>
+            </CollapsibleContent>
+          </Card>
+        </Collapsible>
+      )}
 
       <Button
         type="button"
