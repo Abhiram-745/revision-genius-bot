@@ -85,13 +85,18 @@ export type Database = {
       }
       blurt_activity_logs: {
         Row: {
+          accuracy_percentage: number | null
           ai_analysis: Json | null
           analyzed_at: string | null
+          concepts_mastered: Json | null
+          concepts_struggling: Json | null
+          confidence_level: number | null
           created_at: string | null
           duration_seconds: number
           id: string
           keywords_missed: string[] | null
           keywords_remembered: string[] | null
+          mistake_types: Json | null
           raw_data: Json | null
           score_percentage: number | null
           session_end: string
@@ -104,13 +109,18 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          accuracy_percentage?: number | null
           ai_analysis?: Json | null
           analyzed_at?: string | null
+          concepts_mastered?: Json | null
+          concepts_struggling?: Json | null
+          confidence_level?: number | null
           created_at?: string | null
           duration_seconds: number
           id?: string
           keywords_missed?: string[] | null
           keywords_remembered?: string[] | null
+          mistake_types?: Json | null
           raw_data?: Json | null
           score_percentage?: number | null
           session_end: string
@@ -123,13 +133,18 @@ export type Database = {
           user_id: string
         }
         Update: {
+          accuracy_percentage?: number | null
           ai_analysis?: Json | null
           analyzed_at?: string | null
+          concepts_mastered?: Json | null
+          concepts_struggling?: Json | null
+          confidence_level?: number | null
           created_at?: string | null
           duration_seconds?: number
           id?: string
           keywords_missed?: string[] | null
           keywords_remembered?: string[] | null
+          mistake_types?: Json | null
           raw_data?: Json | null
           score_percentage?: number | null
           session_end?: string

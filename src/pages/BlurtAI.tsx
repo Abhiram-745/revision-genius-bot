@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { ArrowLeft, Brain, Sparkles, Target, Zap, BookOpen, Play, Star, Clock, TrendingUp } from "lucide-react";
+import { ArrowLeft, Brain, Sparkles, Target, Zap, BookOpen, Play, Star, Clock, TrendingUp, Radio } from "lucide-react";
 import Header from "@/components/Header";
 import PageTransition from "@/components/PageTransition";
 import { supabase } from "@/integrations/supabase/client";
@@ -21,6 +21,14 @@ interface Timetable {
   schedule: any;
 }
 
+interface ScheduleSession {
+  subject: string;
+  topic: string;
+  startTime: string;
+  endTime: string;
+  duration: number;
+}
+
 interface TopicWithStats {
   id: string;
   name: string;
@@ -28,6 +36,11 @@ interface TopicWithStats {
   subjectName: string;
   practiceCount: number;
   isRecommended: boolean;
+  isHappeningNow?: boolean;
+  isUpNext?: boolean;
+  scheduledTime?: string;
+  avgConfidence?: number;
+  avgAccuracy?: number;
 }
 
 const BlurtAI = () => {
@@ -41,6 +54,8 @@ const BlurtAI = () => {
   const [totalPracticeSessions, setTotalPracticeSessions] = useState(0);
   const [totalPracticeTime, setTotalPracticeTime] = useState(0);
   const [recommendedTopic, setRecommendedTopic] = useState<TopicWithStats | null>(null);
+  const [currentSession, setCurrentSession] = useState<ScheduleSession | null>(null);
+  const [upNextSession, setUpNextSession] = useState<ScheduleSession | null>(null);
 
   // Fetch timetables
   useEffect(() => {
@@ -78,6 +93,61 @@ const BlurtAI = () => {
     fetchTimetables();
   }, [user]);
 
+  // Parse time string to minutes from midnight
+  const parseTimeToMinutes = (timeStr: string): number => {
+    const [hours, minutes] = timeStr.split(":").map(Number);
+    return hours * 60 + minutes;
+  };
+
+  // Get current time in minutes from midnight
+  const getCurrentTimeMinutes = (): number => {
+    const now = new Date();
+    return now.getHours() * 60 + now.getMinutes();
+  };
+
+  // Find current and upcoming sessions from today's schedule
+  const findCurrentAndUpNextSessions = (schedule: any): { current: ScheduleSession | null; upNext: ScheduleSession | null } => {
+    const today = new Date().toISOString().split("T")[0];
+    const todaySchedule: ScheduleSession[] = schedule[today] || [];
+    
+    if (todaySchedule.length === 0) {
+      return { current: null, upNext: null };
+    }
+
+    const currentMinutes = getCurrentTimeMinutes();
+    let currentSession: ScheduleSession | null = null;
+    let upNextSession: ScheduleSession | null = null;
+
+    // Sort sessions by start time
+    const sortedSessions = [...todaySchedule].sort((a, b) => 
+      parseTimeToMinutes(a.startTime) - parseTimeToMinutes(b.startTime)
+    );
+
+    for (let i = 0; i < sortedSessions.length; i++) {
+      const session = sortedSessions[i];
+      const startMinutes = parseTimeToMinutes(session.startTime);
+      const endMinutes = parseTimeToMinutes(session.endTime);
+
+      // Check if current time is within this session
+      if (currentMinutes >= startMinutes && currentMinutes < endMinutes) {
+        currentSession = session;
+        // Up next is the next session after this one
+        if (i + 1 < sortedSessions.length) {
+          upNextSession = sortedSessions[i + 1];
+        }
+        break;
+      }
+      
+      // Check if this session is upcoming
+      if (currentMinutes < startMinutes && !upNextSession) {
+        upNextSession = session;
+        break;
+      }
+    }
+
+    return { current: currentSession, upNext: upNextSession };
+  };
+
   // Fetch practice stats and build topic list when timetable changes
   useEffect(() => {
     const fetchTopicsAndStats = async () => {
@@ -87,29 +157,61 @@ const BlurtAI = () => {
       if (!selectedTimetable) return;
 
       try {
-        // Fetch practice counts from blurt_activity_logs
+        // Fetch practice counts and stats from blurt_activity_logs
         const { data: activityLogs, error: logsError } = await supabase
           .from("blurt_activity_logs")
-          .select("topic_name, subject_name, duration_seconds")
+          .select("topic_name, subject_name, duration_seconds, confidence_level, accuracy_percentage")
           .eq("user_id", user.id);
 
         if (logsError) throw logsError;
 
-        // Calculate practice counts per topic
-        const practiceCountMap: Record<string, number> = {};
+        // Calculate practice counts and averages per topic
+        const practiceStatsMap: Record<string, { 
+          count: number; 
+          totalTime: number;
+          confidenceSum: number;
+          confidenceCount: number;
+          accuracySum: number;
+          accuracyCount: number;
+        }> = {};
+        
         let totalTime = 0;
         (activityLogs || []).forEach(log => {
           const key = `${log.subject_name}:${log.topic_name}`;
-          practiceCountMap[key] = (practiceCountMap[key] || 0) + 1;
+          if (!practiceStatsMap[key]) {
+            practiceStatsMap[key] = { 
+              count: 0, 
+              totalTime: 0, 
+              confidenceSum: 0, 
+              confidenceCount: 0,
+              accuracySum: 0,
+              accuracyCount: 0
+            };
+          }
+          practiceStatsMap[key].count++;
+          practiceStatsMap[key].totalTime += log.duration_seconds || 0;
+          if (log.confidence_level) {
+            practiceStatsMap[key].confidenceSum += log.confidence_level;
+            practiceStatsMap[key].confidenceCount++;
+          }
+          if (log.accuracy_percentage) {
+            practiceStatsMap[key].accuracySum += log.accuracy_percentage;
+            practiceStatsMap[key].accuracyCount++;
+          }
           totalTime += log.duration_seconds || 0;
         });
 
         setTotalPracticeSessions(activityLogs?.length || 0);
-        setTotalPracticeTime(Math.round(totalTime / 60)); // Convert to minutes
+        setTotalPracticeTime(Math.round(totalTime / 60));
+
+        // Find current and upcoming sessions
+        const { current, upNext } = findCurrentAndUpNextSessions(selectedTimetable.schedule);
+        setCurrentSession(current);
+        setUpNextSession(upNext);
 
         // Find today's scheduled topics for recommendations
         const today = new Date().toISOString().split("T")[0];
-        const todaySchedule = selectedTimetable.schedule[today] || [];
+        const todaySchedule: ScheduleSession[] = selectedTimetable.schedule[today] || [];
         const scheduledTopicNames = todaySchedule.map((s: any) => s.topic?.toLowerCase());
 
         // Build topics with stats
@@ -117,25 +219,49 @@ const BlurtAI = () => {
           const subject = selectedTimetable.subjects.find((s: any) => s.id === topic.subject_id);
           const subjectName = subject?.name || "Unknown";
           const key = `${subjectName}:${topic.name}`;
+          const stats = practiceStatsMap[key];
           const isRecommended = scheduledTopicNames.includes(topic.name?.toLowerCase());
+          
+          // Check if this topic is happening now or up next
+          const isHappeningNow = current?.topic?.toLowerCase() === topic.name?.toLowerCase() && 
+                                  current?.subject?.toLowerCase() === subjectName?.toLowerCase();
+          const isUpNext = upNext?.topic?.toLowerCase() === topic.name?.toLowerCase() && 
+                          upNext?.subject?.toLowerCase() === subjectName?.toLowerCase();
 
           return {
             id: topic.id || `${topic.subject_id}-${topic.name}`,
             name: topic.name,
             subjectId: topic.subject_id,
             subjectName,
-            practiceCount: practiceCountMap[key] || 0,
+            practiceCount: stats?.count || 0,
             isRecommended,
+            isHappeningNow,
+            isUpNext,
+            scheduledTime: isHappeningNow ? current?.startTime : isUpNext ? upNext?.startTime : undefined,
+            avgConfidence: stats?.confidenceCount > 0 
+              ? Math.round(stats.confidenceSum / stats.confidenceCount * 10) / 10 
+              : undefined,
+            avgAccuracy: stats?.accuracyCount > 0 
+              ? Math.round(stats.accuracySum / stats.accuracyCount) 
+              : undefined,
           };
         });
 
         setTopicsWithStats(topics);
 
-        // Set recommended topic (first scheduled topic with lowest practice count)
-        const recommended = topics
-          .filter(t => t.isRecommended)
-          .sort((a, b) => a.practiceCount - b.practiceCount)[0] 
-          || topics.sort((a, b) => a.practiceCount - b.practiceCount)[0];
+        // Set recommended topic with priority: happening now > up next > scheduled today > lowest practice
+        let recommended = topics.find(t => t.isHappeningNow);
+        if (!recommended) {
+          recommended = topics.find(t => t.isUpNext);
+        }
+        if (!recommended) {
+          recommended = topics
+            .filter(t => t.isRecommended)
+            .sort((a, b) => a.practiceCount - b.practiceCount)[0];
+        }
+        if (!recommended) {
+          recommended = topics.sort((a, b) => a.practiceCount - b.practiceCount)[0];
+        }
         setRecommendedTopic(recommended);
 
       } catch (err) {
@@ -161,11 +287,41 @@ const BlurtAI = () => {
 
   const handleSessionComplete = () => {
     setPracticeSession(null);
-    // Refresh stats
-    setSelectedTimetableId(prev => prev); // Trigger re-fetch
+    // Trigger re-fetch by changing the ID reference
+    const currentId = selectedTimetableId;
+    setSelectedTimetableId("");
+    setTimeout(() => setSelectedTimetableId(currentId), 10);
   };
 
   const selectedTimetable = timetables.find(t => t.id === selectedTimetableId);
+
+  const getRecommendationBadge = (topic: TopicWithStats) => {
+    if (topic.isHappeningNow) {
+      return (
+        <Badge className="bg-green-500/20 text-green-600 border-green-500/30 animate-pulse">
+          <Radio className="w-3 h-3 mr-1" />
+          Happening Now
+        </Badge>
+      );
+    }
+    if (topic.isUpNext) {
+      return (
+        <Badge className="bg-blue-500/20 text-blue-600 border-blue-500/30">
+          <Clock className="w-3 h-3 mr-1" />
+          Up Next {topic.scheduledTime && `at ${topic.scheduledTime}`}
+        </Badge>
+      );
+    }
+    if (topic.isRecommended) {
+      return (
+        <Badge className="bg-primary/20 text-primary border-primary/30">
+          <Star className="w-3 h-3 mr-1" />
+          Scheduled Today
+        </Badge>
+      );
+    }
+    return null;
+  };
 
   return (
     <PageTransition>
@@ -291,22 +447,49 @@ const BlurtAI = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
             >
-              <Card className="bg-gradient-to-r from-primary/10 to-secondary/10 border-primary/30">
+              <Card className={cn(
+                "border",
+                recommendedTopic.isHappeningNow 
+                  ? "bg-gradient-to-r from-green-500/10 to-green-500/5 border-green-500/30" 
+                  : recommendedTopic.isUpNext
+                  ? "bg-gradient-to-r from-blue-500/10 to-blue-500/5 border-blue-500/30"
+                  : "bg-gradient-to-r from-primary/10 to-secondary/10 border-primary/30"
+              )}>
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between flex-wrap gap-3">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
-                        <Star className="w-5 h-5 text-primary" />
+                      <div className={cn(
+                        "w-10 h-10 rounded-full flex items-center justify-center",
+                        recommendedTopic.isHappeningNow 
+                          ? "bg-green-500/20" 
+                          : recommendedTopic.isUpNext
+                          ? "bg-blue-500/20"
+                          : "bg-primary/20"
+                      )}>
+                        {recommendedTopic.isHappeningNow ? (
+                          <Radio className="w-5 h-5 text-green-600" />
+                        ) : (
+                          <Star className="w-5 h-5 text-primary" />
+                        )}
                       </div>
                       <div>
-                        <p className="text-sm text-muted-foreground">Recommended Now</p>
-                        <p className="font-semibold text-foreground">{recommendedTopic.subjectName}: {recommendedTopic.name}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {recommendedTopic.isHappeningNow 
+                            ? "Happening Now" 
+                            : recommendedTopic.isUpNext 
+                            ? "Up Next" 
+                            : "Recommended Now"}
+                        </p>
+                        <p className="font-semibold text-foreground">
+                          {recommendedTopic.subjectName}: {recommendedTopic.name}
+                        </p>
+                        {recommendedTopic.avgConfidence && (
+                          <p className="text-xs text-muted-foreground">
+                            Avg confidence: {recommendedTopic.avgConfidence}/5
+                          </p>
+                        )}
                       </div>
-                      {recommendedTopic.isRecommended && (
-                        <Badge variant="secondary" className="bg-primary/20 text-primary border-primary/30">
-                          Scheduled Today
-                        </Badge>
-                      )}
+                      {getRecommendationBadge(recommendedTopic)}
                     </div>
                     <Button 
                       onClick={() => handleStartPractice(recommendedTopic.subjectName, recommendedTopic.name)}
@@ -355,25 +538,33 @@ const BlurtAI = () => {
                           {topics.map((topic) => (
                             <div
                               key={topic.id}
-                              className="flex items-center justify-between p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors"
+                              className={cn(
+                                "flex items-center justify-between p-3 rounded-lg transition-colors",
+                                topic.isHappeningNow 
+                                  ? "bg-green-500/10 border border-green-500/20" 
+                                  : topic.isUpNext 
+                                  ? "bg-blue-500/10 border border-blue-500/20"
+                                  : "bg-muted/30 hover:bg-muted/50"
+                              )}
                             >
-                              <div className="flex items-center gap-3">
+                              <div className="flex items-center gap-3 flex-wrap">
                                 <span className="text-sm font-medium">{topic.name}</span>
                                 {topic.practiceCount > 0 && (
                                   <Badge variant="secondary" className="text-xs">
                                     Practiced: {topic.practiceCount}x
                                   </Badge>
                                 )}
-                                {topic.isRecommended && (
-                                  <Badge className="bg-primary/20 text-primary border-primary/30 text-xs">
-                                    <Star className="w-3 h-3 mr-1" />
-                                    Recommended
+                                {topic.avgConfidence && (
+                                  <Badge variant="outline" className="text-xs">
+                                    <Star className="w-3 h-3 mr-1 text-amber-400" />
+                                    {topic.avgConfidence}/5
                                   </Badge>
                                 )}
+                                {getRecommendationBadge(topic)}
                               </div>
                               <Button
                                 size="sm"
-                                variant="outline"
+                                variant={topic.isHappeningNow ? "default" : "outline"}
                                 onClick={() => handleStartPractice(subject, topic.name)}
                                 className="gap-1"
                               >
@@ -408,5 +599,8 @@ const BlurtAI = () => {
     </PageTransition>
   );
 };
+
+// Helper for conditional classes
+const cn = (...classes: (string | boolean | undefined)[]) => classes.filter(Boolean).join(" ");
 
 export default BlurtAI;

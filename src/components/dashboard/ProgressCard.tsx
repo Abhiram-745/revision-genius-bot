@@ -178,7 +178,7 @@ export const ProgressCard = ({ userId }: ProgressCardProps) => {
         <Button 
           variant="ghost" 
           className="w-full justify-between text-sm h-9"
-          onClick={() => navigate("/reflections")}
+          onClick={() => navigate("/ai-insights")}
         >
           View full progress
           <ChevronRight className="h-4 w-4" />
