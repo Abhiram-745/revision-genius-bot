@@ -332,6 +332,23 @@ const Header = ({ onNewTimetable }: HeaderProps) => {
         </Badge>
       </Button>
 
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() => {
+          navigate("/savemyexams");
+          onItemClick?.();
+        }}
+        className={`justify-start gap-3 w-full px-3 py-3 rounded-xl transition-all ${
+          isActivePath("/savemyexams") 
+            ? "bg-gradient-to-r from-emerald-500/20 to-teal-500/20 text-emerald-700 dark:text-emerald-400 font-semibold border border-emerald-500/30" 
+            : "hover:bg-emerald-500/10 border border-transparent hover:border-emerald-500/20"
+        }`}
+      >
+        <BookOpen className="h-5 w-5 text-emerald-600" />
+        <span className="font-medium">SaveMyExams</span>
+      </Button>
+
       {isAdmin && (
         <Button
           variant="ghost"
@@ -548,6 +565,13 @@ const Header = ({ onNewTimetable }: HeaderProps) => {
                 >
                   <Brain className="h-4 w-4 mr-2" />
                   Insights
+                </DropdownMenuItem>
+                <DropdownMenuItem 
+                  onClick={() => navigate("/savemyexams")} 
+                  className={`cursor-pointer ${isActivePath("/savemyexams") ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400" : ""}`}
+                >
+                  <BookOpen className="h-4 w-4 mr-2 text-emerald-600" />
+                  SaveMyExams
                 </DropdownMenuItem>
                 {isAdmin && (
                   <DropdownMenuItem 

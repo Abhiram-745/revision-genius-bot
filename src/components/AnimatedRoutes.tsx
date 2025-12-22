@@ -20,6 +20,7 @@ import Reflections from "@/pages/Reflections";
 import NotFound from "@/pages/NotFound";
 import ImportAccount from "@/pages/ImportAccount";
 import Admin from "@/pages/Admin";
+import SaveMyExams from "@/pages/SaveMyExams";
 export const AnimatedRoutes = () => {
   const location = useLocation();
 
@@ -40,6 +41,7 @@ export const AnimatedRoutes = () => {
         <Route path="/test-scores" element={<TestScores />} />
         <Route path="/ai-insights" element={<AIInsights />} />
         <Route path="/blurt-ai" element={<BlurtAI />} />
+        <Route path="/savemyexams" element={<SaveMyExams />} />
         <Route path="/activity" element={<Activity />} />
         <Route path="/reflections" element={<Reflections />} />
         <Route path="/timetable/:id" element={<TimetableView />} />

@@ -6,41 +6,38 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { ArrowLeft, Brain, Sparkles, Target, Zap, BookOpen, Play, Star, Clock, TrendingUp } from "lucide-react";
+import { ArrowLeft, BookOpen, Sparkles, ExternalLink, Play, Clock, GraduationCap } from "lucide-react";
 import Header from "@/components/Header";
 import PageTransition from "@/components/PageTransition";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
-import { BlurtAIPracticeSession } from "@/components/BlurtAIPracticeSession";
+import { SaveMyExamsPracticeSession } from "@/components/SaveMyExamsPracticeSession";
 
 interface Timetable {
   id: string;
   name: string;
   subjects: any[];
   topics: any[];
-  schedule: any;
 }
 
-interface TopicWithStats {
+interface TopicInfo {
   id: string;
   name: string;
   subjectId: string;
   subjectName: string;
-  practiceCount: number;
-  isRecommended: boolean;
+  examBoard?: string;
 }
 
-const BlurtAI = () => {
+const SaveMyExams = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [timetables, setTimetables] = useState<Timetable[]>([]);
   const [selectedTimetableId, setSelectedTimetableId] = useState<string>("");
-  const [topicsWithStats, setTopicsWithStats] = useState<TopicWithStats[]>([]);
+  const [topics, setTopics] = useState<TopicInfo[]>([]);
   const [loading, setLoading] = useState(true);
-  const [practiceSession, setPracticeSession] = useState<{ subject: string; topic: string } | null>(null);
-  const [totalPracticeSessions, setTotalPracticeSessions] = useState(0);
-  const [totalPracticeTime, setTotalPracticeTime] = useState(0);
-  const [recommendedTopic, setRecommendedTopic] = useState<TopicWithStats | null>(null);
+  const [practiceSession, setPracticeSession] = useState<{ subject: string; topic: string; examBoard?: string } | null>(null);
+  const [totalSessions, setTotalSessions] = useState(0);
+  const [totalTime, setTotalTime] = useState(0);
 
   // Fetch timetables
   useEffect(() => {
@@ -50,7 +47,7 @@ const BlurtAI = () => {
       try {
         const { data, error } = await supabase
           .from("timetables")
-          .select("id, name, subjects, topics, schedule")
+          .select("id, name, subjects, topics")
           .eq("user_id", user.id)
           .order("created_at", { ascending: false });
 
@@ -61,7 +58,6 @@ const BlurtAI = () => {
           name: t.name,
           subjects: (t.subjects as any[]) || [],
           topics: (t.topics as any[]) || [],
-          schedule: t.schedule || {},
         }));
         
         setTimetables(parsed);
@@ -87,57 +83,36 @@ const BlurtAI = () => {
       if (!selectedTimetable) return;
 
       try {
-        // Fetch practice counts from blurt_activity_logs
+        // Fetch SaveMyExams session counts
         const { data: activityLogs, error: logsError } = await supabase
           .from("blurt_activity_logs")
-          .select("topic_name, subject_name, duration_seconds")
-          .eq("user_id", user.id);
+          .select("duration_seconds")
+          .eq("user_id", user.id)
+          .eq("session_type", "savemyexams");
 
         if (logsError) throw logsError;
 
-        // Calculate practice counts per topic
-        const practiceCountMap: Record<string, number> = {};
-        let totalTime = 0;
+        let time = 0;
         (activityLogs || []).forEach(log => {
-          const key = `${log.subject_name}:${log.topic_name}`;
-          practiceCountMap[key] = (practiceCountMap[key] || 0) + 1;
-          totalTime += log.duration_seconds || 0;
+          time += log.duration_seconds || 0;
         });
 
-        setTotalPracticeSessions(activityLogs?.length || 0);
-        setTotalPracticeTime(Math.round(totalTime / 60)); // Convert to minutes
+        setTotalSessions(activityLogs?.length || 0);
+        setTotalTime(Math.round(time / 60));
 
-        // Find today's scheduled topics for recommendations
-        const today = new Date().toISOString().split("T")[0];
-        const todaySchedule = selectedTimetable.schedule[today] || [];
-        const scheduledTopicNames = todaySchedule.map((s: any) => s.topic?.toLowerCase());
-
-        // Build topics with stats
-        const topics: TopicWithStats[] = selectedTimetable.topics.map((topic: any) => {
+        // Build topics list
+        const topicsList: TopicInfo[] = selectedTimetable.topics.map((topic: any) => {
           const subject = selectedTimetable.subjects.find((s: any) => s.id === topic.subject_id);
-          const subjectName = subject?.name || "Unknown";
-          const key = `${subjectName}:${topic.name}`;
-          const isRecommended = scheduledTopicNames.includes(topic.name?.toLowerCase());
-
           return {
             id: topic.id || `${topic.subject_id}-${topic.name}`,
             name: topic.name,
             subjectId: topic.subject_id,
-            subjectName,
-            practiceCount: practiceCountMap[key] || 0,
-            isRecommended,
+            subjectName: subject?.name || "Unknown",
+            examBoard: subject?.exam_board || subject?.examBoard,
           };
         });
 
-        setTopicsWithStats(topics);
-
-        // Set recommended topic (first scheduled topic with lowest practice count)
-        const recommended = topics
-          .filter(t => t.isRecommended)
-          .sort((a, b) => a.practiceCount - b.practiceCount)[0] 
-          || topics.sort((a, b) => a.practiceCount - b.practiceCount)[0];
-        setRecommendedTopic(recommended);
-
+        setTopics(topicsList);
       } catch (err) {
         console.error("Error fetching topics and stats:", err);
       }
@@ -147,25 +122,23 @@ const BlurtAI = () => {
   }, [user, selectedTimetableId, timetables]);
 
   // Group topics by subject
-  const topicsBySubject = topicsWithStats.reduce((acc, topic) => {
+  const topicsBySubject = topics.reduce((acc, topic) => {
     if (!acc[topic.subjectName]) {
-      acc[topic.subjectName] = [];
+      acc[topic.subjectName] = { topics: [], examBoard: topic.examBoard };
     }
-    acc[topic.subjectName].push(topic);
+    acc[topic.subjectName].topics.push(topic);
     return acc;
-  }, {} as Record<string, TopicWithStats[]>);
+  }, {} as Record<string, { topics: TopicInfo[]; examBoard?: string }>);
 
-  const handleStartPractice = (subject: string, topic: string) => {
-    setPracticeSession({ subject, topic });
+  const handleStartPractice = (subject: string, topic: string, examBoard?: string) => {
+    setPracticeSession({ subject, topic, examBoard });
   };
 
   const handleSessionComplete = () => {
     setPracticeSession(null);
-    // Refresh stats
-    setSelectedTimetableId(prev => prev); // Trigger re-fetch
+    // Refresh stats by triggering re-fetch
+    setSelectedTimetableId(prev => prev);
   };
-
-  const selectedTimetable = timetables.find(t => t.id === selectedTimetableId);
 
   return (
     <PageTransition>
@@ -183,14 +156,6 @@ const BlurtAI = () => {
               <ArrowLeft className="h-4 w-4" />
               Back to Dashboard
             </Button>
-            <Button
-              variant="outline"
-              onClick={() => navigate("/ai-insights?tab=overview")}
-              className="gap-2"
-            >
-              <TrendingUp className="h-4 w-4" />
-              View Activity
-            </Button>
           </div>
 
           {/* Hero Section */}
@@ -198,28 +163,28 @@ const BlurtAI = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
-            className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-secondary/20 via-secondary/10 to-primary/10 border border-secondary/30 p-6 md:p-8"
+            className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-emerald-500/20 via-teal-500/10 to-cyan-500/10 border border-emerald-500/30 p-6 md:p-8"
           >
-            <div className="absolute top-4 right-4 w-20 h-20 bg-secondary/20 rounded-full blur-2xl" />
-            <div className="absolute bottom-4 left-4 w-16 h-16 bg-primary/20 rounded-full blur-xl" />
+            <div className="absolute top-4 right-4 w-20 h-20 bg-emerald-500/20 rounded-full blur-2xl" />
+            <div className="absolute bottom-4 left-4 w-16 h-16 bg-cyan-500/20 rounded-full blur-xl" />
             
             <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center gap-6">
               <div className="flex-shrink-0">
-                <div className="w-16 h-16 md:w-20 md:h-20 rounded-2xl bg-gradient-to-br from-secondary to-secondary/60 flex items-center justify-center shadow-lg">
-                  <Brain className="w-8 h-8 md:w-10 md:h-10 text-secondary-foreground" />
+                <div className="w-16 h-16 md:w-20 md:h-20 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center shadow-lg">
+                  <GraduationCap className="w-8 h-8 md:w-10 md:h-10 text-white" />
                 </div>
               </div>
               
               <div className="flex-1 space-y-2">
                 <div className="flex items-center gap-3 flex-wrap">
-                  <h1 className="text-2xl md:text-3xl font-bold text-foreground">BlurtAI Practice</h1>
-                  <Badge variant="secondary" className="bg-secondary/30 text-secondary-foreground border-secondary/50">
-                    <Sparkles className="w-3 h-3 mr-1" />
-                    AI-Powered
+                  <h1 className="text-2xl md:text-3xl font-bold text-foreground">SaveMyExams</h1>
+                  <Badge variant="secondary" className="bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border-emerald-500/50">
+                    <ExternalLink className="w-3 h-3 mr-1" />
+                    External Resource
                   </Badge>
                 </div>
                 <p className="text-muted-foreground text-sm md:text-base max-w-2xl">
-                  Master your revision with active recall. Choose a topic and test yourself.
+                  Access revision notes, past papers, and exam resources from SaveMyExams. Select a topic to study.
                 </p>
               </div>
             </div>
@@ -248,91 +213,43 @@ const BlurtAI = () => {
           </Card>
 
           {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Card className="bg-card/50 border-border/50">
               <CardContent className="p-4 flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                  <Target className="w-5 h-5 text-primary" />
+                <div className="w-10 h-10 rounded-full bg-emerald-500/10 flex items-center justify-center">
+                  <BookOpen className="w-5 h-5 text-emerald-600" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-foreground">{totalPracticeSessions}</p>
-                  <p className="text-xs text-muted-foreground">Practice Sessions</p>
+                  <p className="text-2xl font-bold text-foreground">{totalSessions}</p>
+                  <p className="text-xs text-muted-foreground">Study Sessions</p>
                 </div>
               </CardContent>
             </Card>
             <Card className="bg-card/50 border-border/50">
               <CardContent className="p-4 flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-secondary/10 flex items-center justify-center">
-                  <Clock className="w-5 h-5 text-secondary" />
+                <div className="w-10 h-10 rounded-full bg-teal-500/10 flex items-center justify-center">
+                  <Clock className="w-5 h-5 text-teal-600" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-foreground">{totalPracticeTime} min</p>
-                  <p className="text-xs text-muted-foreground">Total Practice Time</p>
-                </div>
-              </CardContent>
-            </Card>
-            <Card className="bg-card/50 border-border/50">
-              <CardContent className="p-4 flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-amber-500/10 flex items-center justify-center">
-                  <Zap className="w-5 h-5 text-amber-500" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold text-foreground">{Object.keys(topicsBySubject).length}</p>
-                  <p className="text-xs text-muted-foreground">Subjects Available</p>
+                  <p className="text-2xl font-bold text-foreground">{totalTime} min</p>
+                  <p className="text-xs text-muted-foreground">Total Study Time</p>
                 </div>
               </CardContent>
             </Card>
           </div>
 
-          {/* Recommended Topic */}
-          {recommendedTopic && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
-            >
-              <Card className="bg-gradient-to-r from-primary/10 to-secondary/10 border-primary/30">
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between flex-wrap gap-3">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
-                        <Star className="w-5 h-5 text-primary" />
-                      </div>
-                      <div>
-                        <p className="text-sm text-muted-foreground">Recommended Now</p>
-                        <p className="font-semibold text-foreground">{recommendedTopic.subjectName}: {recommendedTopic.name}</p>
-                      </div>
-                      {recommendedTopic.isRecommended && (
-                        <Badge variant="secondary" className="bg-primary/20 text-primary border-primary/30">
-                          Scheduled Today
-                        </Badge>
-                      )}
-                    </div>
-                    <Button 
-                      onClick={() => handleStartPractice(recommendedTopic.subjectName, recommendedTopic.name)}
-                      className="gap-2"
-                    >
-                      <Play className="w-4 h-4" />
-                      Start Practice
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
-          )}
-
           {/* Subjects & Topics Accordion */}
           <Card className="bg-card/50 border-border/50">
             <CardHeader>
               <CardTitle className="text-lg flex items-center gap-2">
-                <BookOpen className="w-5 h-5 text-primary" />
+                <BookOpen className="w-5 h-5 text-emerald-600" />
                 Subjects & Topics
               </CardTitle>
             </CardHeader>
             <CardContent>
               {loading ? (
                 <div className="flex items-center justify-center py-8">
-                  <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                  <div className="w-8 h-8 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
                 </div>
               ) : Object.keys(topicsBySubject).length === 0 ? (
                 <p className="text-center text-muted-foreground py-8">
@@ -340,45 +257,39 @@ const BlurtAI = () => {
                 </p>
               ) : (
                 <Accordion type="multiple" className="space-y-2">
-                  {Object.entries(topicsBySubject).map(([subject, topics]) => (
+                  {Object.entries(topicsBySubject).map(([subject, { topics: subjectTopics, examBoard }]) => (
                     <AccordionItem key={subject} value={subject} className="border rounded-lg px-4">
                       <AccordionTrigger className="hover:no-underline">
                         <div className="flex items-center gap-3">
                           <span className="font-semibold">{subject}</span>
                           <Badge variant="outline" className="text-xs">
-                            {topics.length} topics
+                            {subjectTopics.length} topics
                           </Badge>
+                          {examBoard && (
+                            <Badge variant="secondary" className="text-xs bg-emerald-500/10 text-emerald-700 dark:text-emerald-400">
+                              {examBoard}
+                            </Badge>
+                          )}
                         </div>
                       </AccordionTrigger>
                       <AccordionContent>
                         <div className="space-y-2 pt-2">
-                          {topics.map((topic) => (
+                          {subjectTopics.map((topic) => (
                             <div
                               key={topic.id}
                               className="flex items-center justify-between p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors"
                             >
                               <div className="flex items-center gap-3">
                                 <span className="text-sm font-medium">{topic.name}</span>
-                                {topic.practiceCount > 0 && (
-                                  <Badge variant="secondary" className="text-xs">
-                                    Practiced: {topic.practiceCount}x
-                                  </Badge>
-                                )}
-                                {topic.isRecommended && (
-                                  <Badge className="bg-primary/20 text-primary border-primary/30 text-xs">
-                                    <Star className="w-3 h-3 mr-1" />
-                                    Recommended
-                                  </Badge>
-                                )}
                               </div>
                               <Button
                                 size="sm"
                                 variant="outline"
-                                onClick={() => handleStartPractice(subject, topic.name)}
-                                className="gap-1"
+                                onClick={() => handleStartPractice(subject, topic.name, examBoard)}
+                                className="gap-1 border-emerald-500/30 hover:bg-emerald-500/10 hover:text-emerald-700 dark:hover:text-emerald-400"
                               >
                                 <Play className="w-3 h-3" />
-                                Start
+                                Study
                               </Button>
                             </div>
                           ))}
@@ -394,12 +305,12 @@ const BlurtAI = () => {
 
         {/* Practice Session Dialog */}
         {practiceSession && (
-          <BlurtAIPracticeSession
+          <SaveMyExamsPracticeSession
             open={!!practiceSession}
             onOpenChange={(open) => !open && setPracticeSession(null)}
             subject={practiceSession.subject}
             topic={practiceSession.topic}
-            plannedDurationMinutes={25}
+            examBoard={practiceSession.examBoard}
             onComplete={handleSessionComplete}
             userId={user?.id}
           />
@@ -409,4 +320,4 @@ const BlurtAI = () => {
   );
 };
 
-export default BlurtAI;
+export default SaveMyExams;
