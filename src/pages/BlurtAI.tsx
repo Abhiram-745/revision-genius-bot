@@ -2,107 +2,170 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Brain, Sparkles, Target, Zap, BookOpen, ExternalLink } from "lucide-react";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { ArrowLeft, Brain, Sparkles, Target, Zap, BookOpen, Play, Star, Clock, TrendingUp } from "lucide-react";
 import Header from "@/components/Header";
 import PageTransition from "@/components/PageTransition";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
+import { BlurtAIPracticeSession } from "@/components/BlurtAIPracticeSession";
 
-interface TopicData {
-  subject: string;
-  topic: string;
+interface Timetable {
+  id: string;
+  name: string;
+  subjects: any[];
+  topics: any[];
+  schedule: any;
+}
+
+interface TopicWithStats {
+  id: string;
+  name: string;
+  subjectId: string;
+  subjectName: string;
+  practiceCount: number;
+  isRecommended: boolean;
 }
 
 const BlurtAI = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [isIframeLoaded, setIsIframeLoaded] = useState(false);
-  const [topics, setTopics] = useState<TopicData[]>([]);
-  const [selectedTopic, setSelectedTopic] = useState<string>("");
+  const [timetables, setTimetables] = useState<Timetable[]>([]);
+  const [selectedTimetableId, setSelectedTimetableId] = useState<string>("");
+  const [topicsWithStats, setTopicsWithStats] = useState<TopicWithStats[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [practiceSession, setPracticeSession] = useState<{ subject: string; topic: string } | null>(null);
+  const [totalPracticeSessions, setTotalPracticeSessions] = useState(0);
+  const [totalPracticeTime, setTotalPracticeTime] = useState(0);
+  const [recommendedTopic, setRecommendedTopic] = useState<TopicWithStats | null>(null);
 
-  // Fetch user topics from timetables
+  // Fetch timetables
   useEffect(() => {
-    const fetchTopics = async () => {
+    const fetchTimetables = async () => {
       if (!user) return;
-
+      
       try {
-        const { data: timetables, error } = await supabase
+        const { data, error } = await supabase
           .from("timetables")
-          .select("topics, subjects")
+          .select("id, name, subjects, topics, schedule")
           .eq("user_id", user.id)
-          .order("created_at", { ascending: false })
-          .limit(1);
+          .order("created_at", { ascending: false });
 
         if (error) throw error;
-
-        if (timetables && timetables.length > 0) {
-          const timetable = timetables[0];
-          const topicsList: TopicData[] = [];
-
-          // Extract topics with their subject names
-          if (timetable.topics && Array.isArray(timetable.topics)) {
-            const subjects = (timetable.subjects as any[]) || [];
-            
-            (timetable.topics as any[]).forEach((topic: any) => {
-              const subject = subjects.find((s: any) => s.id === topic.subject_id);
-              if (topic.name && subject?.name) {
-                topicsList.push({
-                  subject: subject.name,
-                  topic: topic.name,
-                });
-              }
-            });
-          }
-
-          setTopics(topicsList);
+        
+        const parsed = (data || []).map(t => ({
+          id: t.id,
+          name: t.name,
+          subjects: (t.subjects as any[]) || [],
+          topics: (t.topics as any[]) || [],
+          schedule: t.schedule || {},
+        }));
+        
+        setTimetables(parsed);
+        if (parsed.length > 0 && !selectedTimetableId) {
+          setSelectedTimetableId(parsed[0].id);
         }
       } catch (err) {
-        console.error("Error fetching topics:", err);
+        console.error("Error fetching timetables:", err);
+      } finally {
+        setLoading(false);
       }
     };
 
-    fetchTopics();
+    fetchTimetables();
   }, [user]);
 
-  // Build iframe URL with selected topic
-  const getIframeUrl = () => {
-    const baseUrl = "https://blurtaigcsee.vercel.app";
-    if (selectedTopic) {
-      const topicData = topics.find(t => `${t.subject}: ${t.topic}` === selectedTopic);
-      if (topicData) {
-        const params = new URLSearchParams({
-          subject: topicData.subject,
-          topic: topicData.topic,
+  // Fetch practice stats and build topic list when timetable changes
+  useEffect(() => {
+    const fetchTopicsAndStats = async () => {
+      if (!user || !selectedTimetableId) return;
+
+      const selectedTimetable = timetables.find(t => t.id === selectedTimetableId);
+      if (!selectedTimetable) return;
+
+      try {
+        // Fetch practice counts from blurt_activity_logs
+        const { data: activityLogs, error: logsError } = await supabase
+          .from("blurt_activity_logs")
+          .select("topic_name, subject_name, duration_seconds")
+          .eq("user_id", user.id);
+
+        if (logsError) throw logsError;
+
+        // Calculate practice counts per topic
+        const practiceCountMap: Record<string, number> = {};
+        let totalTime = 0;
+        (activityLogs || []).forEach(log => {
+          const key = `${log.subject_name}:${log.topic_name}`;
+          practiceCountMap[key] = (practiceCountMap[key] || 0) + 1;
+          totalTime += log.duration_seconds || 0;
         });
-        return `${baseUrl}?${params.toString()}`;
+
+        setTotalPracticeSessions(activityLogs?.length || 0);
+        setTotalPracticeTime(Math.round(totalTime / 60)); // Convert to minutes
+
+        // Find today's scheduled topics for recommendations
+        const today = new Date().toISOString().split("T")[0];
+        const todaySchedule = selectedTimetable.schedule[today] || [];
+        const scheduledTopicNames = todaySchedule.map((s: any) => s.topic?.toLowerCase());
+
+        // Build topics with stats
+        const topics: TopicWithStats[] = selectedTimetable.topics.map((topic: any) => {
+          const subject = selectedTimetable.subjects.find((s: any) => s.id === topic.subject_id);
+          const subjectName = subject?.name || "Unknown";
+          const key = `${subjectName}:${topic.name}`;
+          const isRecommended = scheduledTopicNames.includes(topic.name?.toLowerCase());
+
+          return {
+            id: topic.id || `${topic.subject_id}-${topic.name}`,
+            name: topic.name,
+            subjectId: topic.subject_id,
+            subjectName,
+            practiceCount: practiceCountMap[key] || 0,
+            isRecommended,
+          };
+        });
+
+        setTopicsWithStats(topics);
+
+        // Set recommended topic (first scheduled topic with lowest practice count)
+        const recommended = topics
+          .filter(t => t.isRecommended)
+          .sort((a, b) => a.practiceCount - b.practiceCount)[0] 
+          || topics.sort((a, b) => a.practiceCount - b.practiceCount)[0];
+        setRecommendedTopic(recommended);
+
+      } catch (err) {
+        console.error("Error fetching topics and stats:", err);
       }
+    };
+
+    fetchTopicsAndStats();
+  }, [user, selectedTimetableId, timetables]);
+
+  // Group topics by subject
+  const topicsBySubject = topicsWithStats.reduce((acc, topic) => {
+    if (!acc[topic.subjectName]) {
+      acc[topic.subjectName] = [];
     }
-    return baseUrl;
+    acc[topic.subjectName].push(topic);
+    return acc;
+  }, {} as Record<string, TopicWithStats[]>);
+
+  const handleStartPractice = (subject: string, topic: string) => {
+    setPracticeSession({ subject, topic });
   };
 
-  const features = [
-    {
-      icon: Brain,
-      title: "Active Recall",
-      description: "The most effective learning technique",
-      color: "text-secondary",
-    },
-    {
-      icon: Zap,
-      title: "3x More Effective",
-      description: "Proven to boost retention",
-      color: "text-amber-500",
-    },
-    {
-      icon: Target,
-      title: "GCSE Aligned",
-      description: "Tailored to your exams",
-      color: "text-primary",
-    },
-  ];
+  const handleSessionComplete = () => {
+    setPracticeSession(null);
+    // Refresh stats
+    setSelectedTimetableId(prev => prev); // Trigger re-fetch
+  };
+
+  const selectedTimetable = timetables.find(t => t.id === selectedTimetableId);
 
   return (
     <PageTransition>
@@ -111,14 +174,24 @@ const BlurtAI = () => {
         
         <main className="container mx-auto px-4 py-6 space-y-6">
           {/* Back Button */}
-          <Button
-            variant="ghost"
-            onClick={() => navigate("/dashboard")}
-            className="gap-2 text-muted-foreground hover:text-foreground"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Back to Dashboard
-          </Button>
+          <div className="flex items-center justify-between">
+            <Button
+              variant="ghost"
+              onClick={() => navigate("/dashboard")}
+              className="gap-2 text-muted-foreground hover:text-foreground"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Back to Dashboard
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => navigate("/activity")}
+              className="gap-2"
+            >
+              <TrendingUp className="h-4 w-4" />
+              View Activity
+            </Button>
+          </div>
 
           {/* Hero Section */}
           <motion.div
@@ -127,7 +200,6 @@ const BlurtAI = () => {
             transition={{ duration: 0.5 }}
             className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-secondary/20 via-secondary/10 to-primary/10 border border-secondary/30 p-6 md:p-8"
           >
-            {/* Floating decorations */}
             <div className="absolute top-4 right-4 w-20 h-20 bg-secondary/20 rounded-full blur-2xl" />
             <div className="absolute bottom-4 left-4 w-16 h-16 bg-primary/20 rounded-full blur-xl" />
             
@@ -138,195 +210,200 @@ const BlurtAI = () => {
                 </div>
               </div>
               
-              <div className="flex-1 space-y-3">
+              <div className="flex-1 space-y-2">
                 <div className="flex items-center gap-3 flex-wrap">
-                  <h1 className="text-2xl md:text-3xl font-bold text-foreground">
-                    BlurtAI
-                  </h1>
+                  <h1 className="text-2xl md:text-3xl font-bold text-foreground">BlurtAI Practice</h1>
                   <Badge variant="secondary" className="bg-secondary/30 text-secondary-foreground border-secondary/50">
                     <Sparkles className="w-3 h-3 mr-1" />
                     AI-Powered
                   </Badge>
                 </div>
-                
                 <p className="text-muted-foreground text-sm md:text-base max-w-2xl">
-                  Master your revision with active recall. Write everything you know about a topic, 
-                  and BlurtAI identifies gaps in your knowledge instantly.
+                  Master your revision with active recall. Choose a topic and test yourself.
                 </p>
-
-                {/* Feature Badges */}
-                <div className="flex flex-wrap gap-3 pt-2">
-                  {features.map((feature, index) => (
-                    <motion.div
-                      key={feature.title}
-                      initial={{ opacity: 0, scale: 0.9 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ delay: 0.2 + index * 0.1 }}
-                    >
-                      <Card className="bg-card/50 border-border/50 hover:border-secondary/50 transition-colors">
-                        <CardContent className="flex items-center gap-2 p-3">
-                          <feature.icon className={`w-4 h-4 ${feature.color}`} />
-                          <div>
-                            <p className="text-xs font-medium text-foreground">{feature.title}</p>
-                            <p className="text-[10px] text-muted-foreground">{feature.description}</p>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    </motion.div>
-                  ))}
-                </div>
-              </div>
-
-              {/* CTA */}
-              <div className="flex-shrink-0 w-full md:w-auto">
-                <Button
-                  size="lg"
-                  className="w-full md:w-auto bg-gradient-to-r from-secondary to-secondary/80 hover:from-secondary/90 hover:to-secondary/70 text-secondary-foreground shadow-lg gap-2"
-                  onClick={() => {
-                    const iframe = document.getElementById('blurtai-iframe');
-                    iframe?.scrollIntoView({ behavior: 'smooth' });
-                  }}
-                >
-                  <BookOpen className="w-4 h-4" />
-                  Start Revising
-                </Button>
               </div>
             </div>
           </motion.div>
 
-          {/* How it Works */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-            className="grid grid-cols-1 md:grid-cols-3 gap-4"
-          >
-            {[
-              { step: "1", title: "Choose a topic", desc: "Pick from your study subjects" },
-              { step: "2", title: "Write what you know", desc: "Empty your brain onto the page" },
-              { step: "3", title: "Get instant feedback", desc: "AI shows what you missed" },
-            ].map((item, index) => (
-              <Card key={index} className="bg-card/50 border-border/50 hover:border-primary/30 transition-all hover:shadow-md">
-                <CardContent className="p-4 flex items-start gap-3">
-                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                    <span className="text-sm font-bold text-primary">{item.step}</span>
-                  </div>
-                  <div>
-                    <p className="font-medium text-foreground">{item.title}</p>
-                    <p className="text-xs text-muted-foreground">{item.desc}</p>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </motion.div>
+          {/* Timetable Selector */}
+          <Card className="bg-card/50 border-border/50">
+            <CardContent className="p-4">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                <div className="flex items-center gap-2">
+                  <BookOpen className="w-4 h-4 text-primary" />
+                  <span className="text-sm font-medium text-foreground">Select Timetable:</span>
+                </div>
+                <Select value={selectedTimetableId} onValueChange={setSelectedTimetableId}>
+                  <SelectTrigger className="w-full sm:w-[280px]">
+                    <SelectValue placeholder="Choose a timetable" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {timetables.map((t) => (
+                      <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </CardContent>
+          </Card>
 
-          {/* Topic Selector */}
-          {topics.length > 0 && (
+          {/* Stats Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <Card className="bg-card/50 border-border/50">
+              <CardContent className="p-4 flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                  <Target className="w-5 h-5 text-primary" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-foreground">{totalPracticeSessions}</p>
+                  <p className="text-xs text-muted-foreground">Practice Sessions</p>
+                </div>
+              </CardContent>
+            </Card>
+            <Card className="bg-card/50 border-border/50">
+              <CardContent className="p-4 flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-secondary/10 flex items-center justify-center">
+                  <Clock className="w-5 h-5 text-secondary" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-foreground">{totalPracticeTime} min</p>
+                  <p className="text-xs text-muted-foreground">Total Practice Time</p>
+                </div>
+              </CardContent>
+            </Card>
+            <Card className="bg-card/50 border-border/50">
+              <CardContent className="p-4 flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-amber-500/10 flex items-center justify-center">
+                  <Zap className="w-5 h-5 text-amber-500" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-foreground">{Object.keys(topicsBySubject).length}</p>
+                  <p className="text-xs text-muted-foreground">Subjects Available</p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Recommended Topic */}
+          {recommendedTopic && (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.25 }}
+              transition={{ delay: 0.1 }}
             >
-              <Card className="bg-card/50 border-border/50">
+              <Card className="bg-gradient-to-r from-primary/10 to-secondary/10 border-primary/30">
                 <CardContent className="p-4">
-                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
-                    <div className="flex items-center gap-2">
-                      <BookOpen className="w-4 h-4 text-primary" />
-                      <span className="text-sm font-medium text-foreground">Quick Start with Your Topics:</span>
+                  <div className="flex items-center justify-between flex-wrap gap-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
+                        <Star className="w-5 h-5 text-primary" />
+                      </div>
+                      <div>
+                        <p className="text-sm text-muted-foreground">Recommended Now</p>
+                        <p className="font-semibold text-foreground">{recommendedTopic.subjectName}: {recommendedTopic.name}</p>
+                      </div>
+                      {recommendedTopic.isRecommended && (
+                        <Badge variant="secondary" className="bg-primary/20 text-primary border-primary/30">
+                          Scheduled Today
+                        </Badge>
+                      )}
                     </div>
-                    <Select value={selectedTopic} onValueChange={setSelectedTopic}>
-                      <SelectTrigger className="w-full sm:w-[280px]">
-                        <SelectValue placeholder="Select a topic to practice" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {topics.map((t, i) => (
-                          <SelectItem key={i} value={`${t.subject}: ${t.topic}`}>
-                            {t.subject}: {t.topic}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <Button 
+                      onClick={() => handleStartPractice(recommendedTopic.subjectName, recommendedTopic.name)}
+                      className="gap-2"
+                    >
+                      <Play className="w-4 h-4" />
+                      Start Practice
+                    </Button>
                   </div>
                 </CardContent>
               </Card>
             </motion.div>
           )}
 
-          {/* BlurtAI Iframe */}
-          <motion.div
-            id="blurtai-iframe"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.3 }}
-            className="relative"
-          >
-            <Card className="overflow-hidden border-secondary/30 shadow-xl">
-              <div className="bg-gradient-to-r from-secondary/10 to-primary/10 px-4 py-3 border-b border-border/50 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Brain className="w-4 h-4 text-secondary" />
-                  <span className="text-sm font-medium text-foreground">BlurtAI Practice Session</span>
-                  {selectedTopic && (
-                    <Badge variant="outline" className="text-xs">
-                      {selectedTopic}
-                    </Badge>
-                  )}
+          {/* Subjects & Topics Accordion */}
+          <Card className="bg-card/50 border-border/50">
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <BookOpen className="w-5 h-5 text-primary" />
+                Subjects & Topics
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {loading ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
                 </div>
-                <a
-                  href={getIframeUrl()}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors"
-                >
-                  Open in new tab
-                  <ExternalLink className="w-3 h-3" />
-                </a>
-              </div>
-              
-              <div className="relative" style={{ height: "calc(100vh - 400px)", minHeight: "500px" }}>
-                {!isIframeLoaded && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-background">
-                    <div className="flex flex-col items-center gap-3">
-                      <div className="w-10 h-10 border-3 border-secondary border-t-transparent rounded-full animate-spin" />
-                      <p className="text-sm text-muted-foreground">Loading BlurtAI...</p>
-                    </div>
-                  </div>
-                )}
-                <iframe
-                  key={selectedTopic} // Force reload when topic changes
-                  src={getIframeUrl()}
-                  className="w-full h-full border-0"
-                  title="BlurtAI Practice Session"
-                  onLoad={() => setIsIframeLoaded(true)}
-                  allow="clipboard-write"
-                />
-              </div>
-            </Card>
-          </motion.div>
-
-          {/* Tips Section */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.4 }}
-          >
-            <Card className="bg-gradient-to-r from-amber-500/10 to-orange-500/10 border-amber-500/30">
-              <CardContent className="p-4">
-                <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 rounded-full bg-amber-500/20 flex items-center justify-center flex-shrink-0">
-                    <Sparkles className="w-4 h-4 text-amber-500" />
-                  </div>
-                  <div>
-                    <p className="font-medium text-foreground">Pro Tip</p>
-                    <p className="text-sm text-muted-foreground">
-                      Use BlurtAI after each study session in your timetable. It's the fastest way to identify 
-                      what you actually know vs. what you think you know.
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
+              ) : Object.keys(topicsBySubject).length === 0 ? (
+                <p className="text-center text-muted-foreground py-8">
+                  No topics found. Select a timetable with topics to get started.
+                </p>
+              ) : (
+                <Accordion type="multiple" className="space-y-2">
+                  {Object.entries(topicsBySubject).map(([subject, topics]) => (
+                    <AccordionItem key={subject} value={subject} className="border rounded-lg px-4">
+                      <AccordionTrigger className="hover:no-underline">
+                        <div className="flex items-center gap-3">
+                          <span className="font-semibold">{subject}</span>
+                          <Badge variant="outline" className="text-xs">
+                            {topics.length} topics
+                          </Badge>
+                        </div>
+                      </AccordionTrigger>
+                      <AccordionContent>
+                        <div className="space-y-2 pt-2">
+                          {topics.map((topic) => (
+                            <div
+                              key={topic.id}
+                              className="flex items-center justify-between p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors"
+                            >
+                              <div className="flex items-center gap-3">
+                                <span className="text-sm font-medium">{topic.name}</span>
+                                {topic.practiceCount > 0 && (
+                                  <Badge variant="secondary" className="text-xs">
+                                    Practiced: {topic.practiceCount}x
+                                  </Badge>
+                                )}
+                                {topic.isRecommended && (
+                                  <Badge className="bg-primary/20 text-primary border-primary/30 text-xs">
+                                    <Star className="w-3 h-3 mr-1" />
+                                    Recommended
+                                  </Badge>
+                                )}
+                              </div>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleStartPractice(subject, topic.name)}
+                                className="gap-1"
+                              >
+                                <Play className="w-3 h-3" />
+                                Start
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      </AccordionContent>
+                    </AccordionItem>
+                  ))}
+                </Accordion>
+              )}
+            </CardContent>
+          </Card>
         </main>
+
+        {/* Practice Session Dialog */}
+        {practiceSession && (
+          <BlurtAIPracticeSession
+            open={!!practiceSession}
+            onOpenChange={(open) => !open && setPracticeSession(null)}
+            subject={practiceSession.subject}
+            topic={practiceSession.topic}
+            plannedDurationMinutes={25}
+            onComplete={handleSessionComplete}
+            userId={user?.id}
+          />
+        )}
       </div>
     </PageTransition>
   );

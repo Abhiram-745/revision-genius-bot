@@ -56,3 +56,6 @@ verify_jwt = false
 
 [functions.topic-chat]
 verify_jwt = false
+
+[functions.analyze-blurt-activity]
+verify_jwt = false

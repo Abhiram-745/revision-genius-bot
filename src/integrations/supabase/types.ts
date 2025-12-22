@@ -83,6 +83,66 @@ export type Database = {
         }
         Relationships: []
       }
+      blurt_activity_logs: {
+        Row: {
+          ai_analysis: Json | null
+          analyzed_at: string | null
+          created_at: string | null
+          duration_seconds: number
+          id: string
+          keywords_missed: string[] | null
+          keywords_remembered: string[] | null
+          raw_data: Json | null
+          score_percentage: number | null
+          session_end: string
+          session_id: string
+          session_start: string
+          session_type: string | null
+          subject_name: string
+          topic_name: string
+          total_keywords: number | null
+          user_id: string
+        }
+        Insert: {
+          ai_analysis?: Json | null
+          analyzed_at?: string | null
+          created_at?: string | null
+          duration_seconds: number
+          id?: string
+          keywords_missed?: string[] | null
+          keywords_remembered?: string[] | null
+          raw_data?: Json | null
+          score_percentage?: number | null
+          session_end: string
+          session_id: string
+          session_start: string
+          session_type?: string | null
+          subject_name: string
+          topic_name: string
+          total_keywords?: number | null
+          user_id: string
+        }
+        Update: {
+          ai_analysis?: Json | null
+          analyzed_at?: string | null
+          created_at?: string | null
+          duration_seconds?: number
+          id?: string
+          keywords_missed?: string[] | null
+          keywords_remembered?: string[] | null
+          raw_data?: Json | null
+          score_percentage?: number | null
+          session_end?: string
+          session_id?: string
+          session_start?: string
+          session_type?: string | null
+          subject_name?: string
+          topic_name?: string
+          total_keywords?: number | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       blurt_ai_sessions: {
         Row: {
           blurt_content: Json | null

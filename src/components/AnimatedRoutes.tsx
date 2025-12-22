@@ -15,6 +15,7 @@ import Homework from "@/pages/Homework";
 import TestScores from "@/pages/TestScores";
 import AIInsights from "@/pages/AIInsights";
 import BlurtAI from "@/pages/BlurtAI";
+import Activity from "@/pages/Activity";
 import Reflections from "@/pages/Reflections";
 import NotFound from "@/pages/NotFound";
 import ImportAccount from "@/pages/ImportAccount";
@@ -39,6 +40,7 @@ export const AnimatedRoutes = () => {
         <Route path="/test-scores" element={<TestScores />} />
         <Route path="/ai-insights" element={<AIInsights />} />
         <Route path="/blurt-ai" element={<BlurtAI />} />
+        <Route path="/activity" element={<Activity />} />
         <Route path="/reflections" element={<Reflections />} />
         <Route path="/timetable/:id" element={<TimetableView />} />
         <Route path="/import-account" element={<ImportAccount />} />
