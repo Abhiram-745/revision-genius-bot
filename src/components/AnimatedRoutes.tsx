@@ -24,6 +24,7 @@ import SaveMyExams from "@/pages/SaveMyExams";
 import Practice from "@/pages/Practice";
 import PMT from "@/pages/PMT";
 import Quizlet from "@/pages/Quizlet";
+import Gradlify from "@/pages/Gradlify";
 
 export const AnimatedRoutes = () => {
   const location = useLocation();
@@ -49,6 +50,7 @@ export const AnimatedRoutes = () => {
         <Route path="/practice" element={<Practice />} />
         <Route path="/pmt" element={<PMT />} />
         <Route path="/quizlet" element={<Quizlet />} />
+        <Route path="/gradlify" element={<Gradlify />} />
         <Route path="/activity" element={<Activity />} />
         <Route path="/reflections" element={<Reflections />} />
         <Route path="/timetable/:id" element={<TimetableView />} />
