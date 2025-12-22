@@ -413,59 +413,41 @@ const Header = ({ onNewTimetable }: HeaderProps) => {
           </div>
 
           {/* Desktop Navigation - Hidden on mobile/tablet */}
-          <nav className="hidden lg:flex items-center gap-1">
+          <nav className="hidden lg:flex items-center gap-0.5">
             <Button 
               variant="ghost" 
               size="sm" 
               onClick={() => navigate("/")} 
-              className={`text-sm font-medium transition-all ${isActivePath("/") ? "bg-primary/15 text-primary" : ""}`}
+              className={`text-sm font-medium transition-all px-2.5 ${isActivePath("/") ? "bg-primary/15 text-primary" : ""}`}
             >
-              <Home className="h-4 w-4 mr-1.5" />
+              <Home className="h-4 w-4 mr-1" />
               Dashboard
             </Button>
             <Button 
               variant="ghost" 
               size="sm" 
               onClick={() => navigate("/timetables")} 
-              className={`text-sm font-medium transition-all ${isActivePath("/timetables") ? "bg-primary/15 text-primary" : ""}`}
+              className={`text-sm font-medium transition-all px-2.5 ${isActivePath("/timetables") ? "bg-primary/15 text-primary" : ""}`}
             >
-              <Calendar className="h-4 w-4 mr-1.5" />
+              <Calendar className="h-4 w-4 mr-1" />
               Timetables
             </Button>
             <Button 
               variant="ghost" 
               size="sm" 
-              onClick={() => navigate("/calendar")} 
-              className={`text-sm font-medium transition-all ${isActivePath("/calendar") ? "bg-primary/15 text-primary" : ""}`}
-            >
-              <CalendarClock className="h-4 w-4 mr-1.5" />
-              Calendar
-            </Button>
-            <Button 
-              variant="ghost" 
-              size="sm" 
               onClick={() => navigate("/homework")} 
-              className={`text-sm font-medium transition-all ${isActivePath("/homework") ? "bg-primary/15 text-primary" : ""}`}
+              className={`text-sm font-medium transition-all px-2.5 ${isActivePath("/homework") ? "bg-primary/15 text-primary" : ""}`}
             >
-              <ClipboardList className="h-4 w-4 mr-1.5" />
+              <ClipboardList className="h-4 w-4 mr-1" />
               Homework
             </Button>
             <Button 
               variant="ghost" 
               size="sm" 
-              onClick={() => navigate("/groups")} 
-              className={`text-sm font-medium transition-all ${isActivePath("/groups") ? "bg-primary/15 text-primary" : ""}`}
-            >
-              <Users className="h-4 w-4 mr-1.5" />
-              Groups
-            </Button>
-            <Button 
-              variant="ghost" 
-              size="sm" 
               onClick={() => navigate("/blurt-ai")} 
-              className={`text-sm font-medium transition-all ${isActivePath("/blurt-ai") ? "bg-secondary/15 text-secondary" : "hover:bg-secondary/10"}`}
+              className={`text-sm font-medium transition-all px-2.5 ${isActivePath("/blurt-ai") ? "bg-secondary/15 text-secondary" : "hover:bg-secondary/10"}`}
             >
-              <Sparkles className="h-4 w-4 mr-1.5 text-secondary" />
+              <Sparkles className="h-4 w-4 mr-1 text-secondary" />
               BlurtAI
             </Button>
             
@@ -473,58 +455,47 @@ const Header = ({ onNewTimetable }: HeaderProps) => {
             <Button 
               variant="ghost" 
               size="sm" 
-              onClick={() => navigate("/events")} 
-              className={`hidden xl:flex text-sm font-medium transition-all ${isActivePath("/events") ? "bg-primary/15 text-primary" : ""}`}
+              onClick={() => navigate("/calendar")} 
+              className={`hidden xl:flex text-sm font-medium transition-all px-2.5 ${isActivePath("/calendar") ? "bg-primary/15 text-primary" : ""}`}
             >
-              <CalendarClock className="h-4 w-4 mr-1.5" />
+              <CalendarClock className="h-4 w-4 mr-1" />
+              Calendar
+            </Button>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => navigate("/groups")} 
+              className={`hidden xl:flex text-sm font-medium transition-all px-2.5 ${isActivePath("/groups") ? "bg-primary/15 text-primary" : ""}`}
+            >
+              <Users className="h-4 w-4 mr-1" />
+              Groups
+            </Button>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => navigate("/events")} 
+              className={`hidden 2xl:flex text-sm font-medium transition-all px-2.5 ${isActivePath("/events") ? "bg-primary/15 text-primary" : ""}`}
+            >
+              <CalendarClock className="h-4 w-4 mr-1" />
               Events
             </Button>
             <Button 
               variant="ghost" 
               size="sm" 
               onClick={() => navigate("/test-scores")} 
-              className={`hidden xl:flex text-sm font-medium transition-all ${isActivePath("/test-scores") ? "bg-primary/15 text-primary" : ""}`}
+              className={`hidden 2xl:flex text-sm font-medium transition-all px-2.5 ${isActivePath("/test-scores") ? "bg-primary/15 text-primary" : ""}`}
             >
-              <TrendingUp className="h-4 w-4 mr-1.5" />
+              <TrendingUp className="h-4 w-4 mr-1" />
               Scores
             </Button>
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={() => navigate("/social")} 
-              className={`hidden 2xl:flex text-sm font-medium transition-all ${isActivePath("/social") ? "bg-primary/15 text-primary" : ""}`}
-            >
-              <Users className="h-4 w-4 mr-1.5" />
-              Social
-            </Button>
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={() => navigate("/ai-insights")} 
-              className={`hidden 2xl:flex text-sm font-medium transition-all ${isActivePath("/ai-insights") ? "bg-primary/15 text-primary" : ""}`}
-            >
-              <Brain className="h-4 w-4 mr-1.5" />
-              Insights
-            </Button>
-            {isAdmin && (
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={() => navigate("/admin")} 
-                className={`hidden 2xl:flex text-sm font-medium transition-all ${isActivePath("/admin") ? "bg-primary/15 text-primary" : ""}`}
-              >
-                <Crown className="h-4 w-4 mr-1.5 text-amber-500" />
-                Admin
-              </Button>
-            )}
 
-            {/* More dropdown - only shows on lg, hidden on 2xl+ */}
+            {/* More dropdown - shows on lg/xl, hidden on 2xl+ */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button 
                   variant="ghost" 
                   size="sm" 
-                  className={`2xl:hidden text-sm font-medium transition-all ${isMoreActive ? "bg-primary/15 text-primary" : ""}`}
+                  className={`text-sm font-medium transition-all px-2.5 ${isMoreActive ? "bg-primary/15 text-primary" : ""}`}
                 >
                   More
                   <svg className="ml-1 h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -533,22 +504,37 @@ const Header = ({ onNewTimetable }: HeaderProps) => {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48 bg-popover border border-border shadow-lg z-50">
-                {/* Events and Scores show in dropdown only on lg (hidden on xl+) */}
+                {/* Calendar and Groups show in dropdown on lg only */}
+                <DropdownMenuItem 
+                  onClick={() => navigate("/calendar")} 
+                  className={`xl:hidden cursor-pointer ${isActivePath("/calendar") ? "bg-primary/10 text-primary" : ""}`}
+                >
+                  <CalendarClock className="h-4 w-4 mr-2" />
+                  Calendar
+                </DropdownMenuItem>
+                <DropdownMenuItem 
+                  onClick={() => navigate("/groups")} 
+                  className={`xl:hidden cursor-pointer ${isActivePath("/groups") ? "bg-primary/10 text-primary" : ""}`}
+                >
+                  <Users className="h-4 w-4 mr-2" />
+                  Groups
+                </DropdownMenuItem>
+                {/* Events and Scores show in dropdown on lg/xl */}
                 <DropdownMenuItem 
                   onClick={() => navigate("/events")} 
-                  className={`xl:hidden cursor-pointer ${isActivePath("/events") ? "bg-primary/10 text-primary" : ""}`}
+                  className={`2xl:hidden cursor-pointer ${isActivePath("/events") ? "bg-primary/10 text-primary" : ""}`}
                 >
                   <CalendarClock className="h-4 w-4 mr-2" />
                   Events
                 </DropdownMenuItem>
                 <DropdownMenuItem 
                   onClick={() => navigate("/test-scores")} 
-                  className={`xl:hidden cursor-pointer ${isActivePath("/test-scores") ? "bg-primary/10 text-primary" : ""}`}
+                  className={`2xl:hidden cursor-pointer ${isActivePath("/test-scores") ? "bg-primary/10 text-primary" : ""}`}
                 >
                   <TrendingUp className="h-4 w-4 mr-2" />
                   Test Scores
                 </DropdownMenuItem>
-                {/* Social and AI show in dropdown on lg and xl (hidden on 2xl+) */}
+                {/* Always in dropdown */}
                 <DropdownMenuItem 
                   onClick={() => navigate("/social")} 
                   className={`cursor-pointer ${isActivePath("/social") ? "bg-primary/10 text-primary" : ""}`}
