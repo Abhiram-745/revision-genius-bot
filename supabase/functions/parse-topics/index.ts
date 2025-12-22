@@ -65,13 +65,14 @@ serve(async (req) => {
   }
 
   try {
-    const { text, subjectName, images, extractionMode = "exact" } = await req.json();
+    const { text, subjectName, images, documents, extractionMode = "exact" } = await req.json();
     
     console.log('Received request:', {
       hasText: !!text,
       textPreview: text?.substring?.(0, 100) ?? 'N/A',
       subjectName,
       imagesCount: images?.length ?? 0,
+      documentsCount: documents?.length ?? 0,
       extractionMode,
       imagesType: Array.isArray(images) ? 'array' : typeof images,
       firstImagePreview: typeof images?.[0] === 'string' ? images[0].substring(0, 80) : JSON.stringify(images?.[0])?.substring(0, 80)
@@ -134,13 +135,26 @@ Do NOT include any explanation or commentary - ONLY the JSON.`;
     
     // Add instruction and subject context
     let textContent = `${systemPrompt}\n\nSubject: ${subjectName}\n\n`;
+    
+    // Add document content if provided
+    if (documents && Array.isArray(documents) && documents.length > 0) {
+      console.log(`Processing ${documents.length} document(s) for topic extraction`);
+      textContent += "Extract topics from these documents:\n\n";
+      for (const doc of documents) {
+        if (doc.name && doc.content) {
+          textContent += `--- Document: ${doc.name} ---\n`;
+          // The content is base64 encoded, we'll add it as an image for the AI to process
+        }
+      }
+    }
+    
     if (text) {
       textContent += extractionMode === "exact" 
         ? `Extract ALL topics from this exactly as written:\n${text}`
         : `Identify the key learning topics from this content:\n${text}`;
-    } else if (images && Array.isArray(images) && images.length > 0) {
+    } else if ((images && Array.isArray(images) && images.length > 0) || (documents && Array.isArray(documents) && documents.length > 0)) {
       textContent += extractionMode === "exact"
-        ? `IMPORTANT: Carefully read and extract ALL text items/topics visible in this image EXACTLY as written. Copy every single line of text that represents a topic or item to study.`
+        ? `IMPORTANT: Carefully read and extract ALL text items/topics visible in these files EXACTLY as written. Copy every single line of text that represents a topic or item to study.`
         : `IMPORTANT: Analyze this educational material and identify the key concepts and learning topics. Create clear, concise topic names based on the content.`;
     }
     
@@ -189,6 +203,27 @@ Do NOT include any explanation or commentary - ONLY the JSON.`;
         }
       }
       console.log(`Successfully added ${imagesAdded} images to message content`);
+    }
+
+    // Add documents as images (PDFs, DOCX etc are sent as base64 data URLs)
+    if (documents && Array.isArray(documents) && documents.length > 0) {
+      console.log(`Processing ${documents.length} document(s) for topic extraction (mode: ${extractionMode})`);
+      
+      let docsAdded = 0;
+      for (const doc of documents) {
+        if (doc.content && typeof doc.content === 'string' && doc.content.startsWith('data:')) {
+          // Document as data URL - the AI will process it
+          messageContent.push({
+            type: "image_url",
+            image_url: {
+              url: doc.content
+            }
+          });
+          docsAdded++;
+          console.log(`Added document: ${doc.name}`);
+        }
+      }
+      console.log(`Successfully added ${docsAdded} documents to message content`);
     }
 
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');

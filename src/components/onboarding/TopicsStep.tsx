@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { X, Plus, ChevronLeft, ChevronRight, Sparkles, Loader2, Image as ImageIcon, Search, GripVertical, Edit2 } from "lucide-react";
+import { X, Plus, ChevronLeft, ChevronRight, Sparkles, Loader2, Image as ImageIcon, Search, GripVertical, Edit2, FileText, Upload } from "lucide-react";
 import { Subject, Topic } from "../OnboardingWizard";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
@@ -117,6 +117,7 @@ const TopicsStep = ({ subjects, topics, setTopics }: TopicsStepProps) => {
   const [pastedText, setPastedText] = useState("");
   const [isParsing, setIsParsing] = useState(false);
   const [images, setImages] = useState<string[]>([]);
+  const [documents, setDocuments] = useState<{ name: string; content: string }[]>([]);
   const [additionalNotes, setAdditionalNotes] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [showPriorityOrder, setShowPriorityOrder] = useState(false);
@@ -195,13 +196,33 @@ const TopicsStep = ({ subjects, topics, setTopics }: TopicsStepProps) => {
     toast.success(`${files.length} image(s) uploaded successfully`);
   };
 
+  const handleDocumentUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files) return;
+
+    Array.from(files).forEach((file) => {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const base64 = event.target?.result as string;
+        setDocuments(prev => [...prev, { name: file.name, content: base64 }]);
+      };
+      reader.readAsDataURL(file);
+    });
+
+    toast.success(`${files.length} document(s) uploaded successfully`);
+  };
+
+  const removeDocument = (index: number) => {
+    setDocuments(prev => prev.filter((_, i) => i !== index));
+  };
+
   const removeImage = (index: number) => {
     setImages(prev => prev.filter((_, i) => i !== index));
   };
 
   const parseWithAI = async () => {
-    if (!pastedText.trim() && images.length === 0) {
-      toast.error("Please paste some content or upload images first");
+    if (!pastedText.trim() && images.length === 0 && documents.length === 0) {
+      toast.error("Please paste some content, upload images, or upload documents first");
       return;
     }
 
@@ -211,7 +232,8 @@ const TopicsStep = ({ subjects, topics, setTopics }: TopicsStepProps) => {
         body: { 
           text: pastedText, 
           subjectName: currentSubject.name,
-          images: images.length > 0 ? images : undefined
+          images: images.length > 0 ? images : undefined,
+          documents: documents.length > 0 ? documents : undefined
         }
       });
 
@@ -230,6 +252,7 @@ const TopicsStep = ({ subjects, topics, setTopics }: TopicsStepProps) => {
         setTopics([...topics, ...newTopics]);
         setPastedText("");
         setImages([]);
+        setDocuments([]);
         setAdditionalNotes("");
         toast.success(`Added ${newTopics.length} topics!`);
       }
@@ -394,13 +417,21 @@ const TopicsStep = ({ subjects, topics, setTopics }: TopicsStepProps) => {
             rows={6}
             className="resize-none"
           />
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <Input
               id="image-upload"
               type="file"
               accept="image/*"
               multiple
               onChange={handleImageUpload}
+              className="hidden"
+            />
+            <Input
+              id="document-upload"
+              type="file"
+              accept=".pdf,.doc,.docx,.ppt,.pptx"
+              multiple
+              onChange={handleDocumentUpload}
               className="hidden"
             />
             <Button
@@ -411,14 +442,49 @@ const TopicsStep = ({ subjects, topics, setTopics }: TopicsStepProps) => {
               className="gap-2"
             >
               <ImageIcon className="h-4 w-4" />
-              Upload Images
+              Images
             </Button>
-            <span className="text-xs text-muted-foreground">or paste images directly (Ctrl+V)</span>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => document.getElementById('document-upload')?.click()}
+              className="gap-2"
+            >
+              <FileText className="h-4 w-4" />
+              PDF/DOCX/PPTX
+            </Button>
+            <span className="text-xs text-muted-foreground">or paste images (Ctrl+V)</span>
           </div>
           <p className="text-xs text-muted-foreground">
-            AI will automatically extract topics from your checklist
+            AI will automatically extract topics from your checklist, images, or documents
           </p>
         </div>
+
+        {documents.length > 0 && (
+          <div className="space-y-2">
+            <Label>Uploaded Documents ({documents.length})</Label>
+            <div className="space-y-2">
+              {documents.map((doc, idx) => (
+                <div key={idx} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg border border-border">
+                  <div className="flex items-center gap-2">
+                    <FileText className="h-4 w-4 text-primary" />
+                    <span className="text-sm truncate max-w-[200px]">{doc.name}</span>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-destructive hover:text-destructive"
+                    onClick={() => removeDocument(idx)}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {images.length > 0 && (
           <div className="space-y-2">
@@ -449,7 +515,7 @@ const TopicsStep = ({ subjects, topics, setTopics }: TopicsStepProps) => {
         <Button
           type="button"
           onClick={parseWithAI}
-          disabled={(!pastedText.trim() && images.length === 0) || isParsing}
+          disabled={(!pastedText.trim() && images.length === 0 && documents.length === 0) || isParsing}
           className="w-full bg-gradient-primary hover:opacity-90"
         >
           {isParsing ? (
