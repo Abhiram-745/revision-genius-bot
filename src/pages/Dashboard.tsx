@@ -10,6 +10,11 @@ import OnboardingWizard from "@/components/OnboardingWizard";
 import { TodayOverviewCard } from "@/components/dashboard/TodayOverviewCard";
 import { ProgressCard } from "@/components/dashboard/ProgressCard";
 import { AIInsightsCard } from "@/components/dashboard/AIInsightsCard";
+import { QuickActionsCard } from "@/components/dashboard/QuickActionsCard";
+import { CompactStreakCard } from "@/components/dashboard/CompactStreakCard";
+import { CompactDeadlinesCard } from "@/components/dashboard/CompactDeadlinesCard";
+import { RecentPracticeCard } from "@/components/dashboard/RecentPracticeCard";
+import { WeeklyGoalCard } from "@/components/dashboard/WeeklyGoalCard";
 import WelcomeModal from "@/components/WelcomeModal";
 import GuidedOnboarding from "@/components/tours/GuidedOnboarding";
 import PageTransition from "@/components/PageTransition";
@@ -122,14 +127,14 @@ const Dashboard = () => {
             />
           ) : (
             /* Main dashboard content */
-            <div className="space-y-6 animate-fade-in">
+            <div className="space-y-5 animate-fade-in">
               {/* Header Section - Compact */}
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <div>
                   <h1 className="text-2xl sm:text-3xl font-display font-bold">
                     {getGreeting()}, {getFirstName()}!
                   </h1>
-                  <p className="text-muted-foreground text-sm mt-1">
+                  <p className="text-muted-foreground text-sm mt-0.5">
                     Ready to make today count?
                   </p>
                 </div>
@@ -138,15 +143,15 @@ const Dashboard = () => {
                     variant="outline"
                     size="sm"
                     onClick={() => navigate("/timetables")}
-                    className="gap-2"
+                    className="gap-1.5"
                   >
                     <Calendar className="h-4 w-4" />
-                    View Timetable
+                    Timetable
                   </Button>
                   <Button
                     size="sm"
                     onClick={() => navigate("/timetables")}
-                    className="gap-2"
+                    className="gap-1.5"
                   >
                     <Play className="h-4 w-4" />
                     Start Session
@@ -154,17 +159,35 @@ const Dashboard = () => {
                 </div>
               </div>
 
+              {/* Quick Actions */}
+              <QuickActionsCard />
+
               {/* Today Overview */}
               <TodayOverviewCard userId={user?.id || ""} />
 
+              {/* Main Grid - 3 columns on desktop */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                {/* Weekly Goal */}
+                <WeeklyGoalCard userId={user?.id || ""} />
+
+                {/* Study Streak */}
+                <CompactStreakCard userId={user?.id || ""} />
+
+                {/* Upcoming Deadlines */}
+                <CompactDeadlinesCard userId={user?.id || ""} />
+              </div>
+
               {/* Two Column Layout */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Progress Card */}
-                <ProgressCard userId={user?.id || ""} />
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+                {/* Recent Practice */}
+                <RecentPracticeCard userId={user?.id || ""} />
 
                 {/* AI Insights Card */}
                 <AIInsightsCard userId={user?.id || ""} />
               </div>
+
+              {/* Progress Card - Full Width */}
+              <ProgressCard userId={user?.id || ""} />
             </div>
           )}
         </main>
