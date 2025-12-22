@@ -459,6 +459,15 @@ const Header = ({ onNewTimetable }: HeaderProps) => {
               <Users className="h-4 w-4 mr-1.5" />
               Groups
             </Button>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => navigate("/blurt-ai")} 
+              className={`text-sm font-medium transition-all ${isActivePath("/blurt-ai") ? "bg-secondary/15 text-secondary" : "hover:bg-secondary/10"}`}
+            >
+              <Sparkles className="h-4 w-4 mr-1.5 text-secondary" />
+              BlurtAI
+            </Button>
             
             {/* These items show directly on xl+ screens */}
             <Button 
