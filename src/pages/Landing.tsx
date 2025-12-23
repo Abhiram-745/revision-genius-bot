@@ -37,6 +37,7 @@ import PersonalTutorSection from "@/components/landing/PersonalTutorSection";
 import owlWithBook from "@/assets/owl-with-book.png";
 import pointingOwl from "@/assets/pointing-owl.png";
 import wavingOwl from "@/assets/waving-owl.png";
+import VistaraLogo from "@/components/VistaraLogo";
 
 const Landing = () => {
   const navigate = useNavigate();
@@ -831,11 +832,9 @@ const Landing = () => {
         {/* Footer */}
         <footer className="py-8 px-6 border-t bg-card/50">
           <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
-                <Sparkles className="w-4 h-4 text-white" />
-              </div>
-              <span className="font-display font-bold">Vistara</span>
+            <div className="flex items-center gap-2 cursor-pointer" onClick={() => scrollToTop()}>
+              <VistaraLogo size="sm" animate={false} />
+              <span className="font-display font-bold gradient-text">Vistara</span>
             </div>
 
             <div className="flex items-center gap-6 text-sm text-muted-foreground">
