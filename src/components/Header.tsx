@@ -271,30 +271,15 @@ const Header = ({ onNewTimetable }: HeaderProps) => {
         variant="ghost"
         size="sm"
         onClick={() => {
-          navigate("/groups");
+          navigate("/connect");
           onItemClick?.();
         }}
         className={`justify-start gap-3 w-full px-3 py-3 rounded-xl transition-all ${
-          isActivePath("/groups") ? "bg-primary/15 text-primary font-semibold" : "hover:bg-primary/10"
+          isActivePath("/connect") || isActivePath("/social") || isActivePath("/groups") ? "bg-primary/15 text-primary font-semibold" : "hover:bg-primary/10"
         }`}
       >
         <Users className="h-5 w-5 text-primary" />
-        <span className="font-medium">Study Groups</span>
-      </Button>
-
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={() => {
-          navigate("/social");
-          onItemClick?.();
-        }}
-        className={`justify-start gap-3 w-full px-3 py-3 rounded-xl transition-all ${
-          isActivePath("/social") ? "bg-primary/15 text-primary font-semibold" : "hover:bg-primary/10"
-        }`}
-      >
-        <Users className="h-5 w-5 text-primary" />
-        <span className="font-medium">Social</span>
+        <span className="font-medium">Connect</span>
       </Button>
 
       <Button
@@ -464,11 +449,11 @@ const Header = ({ onNewTimetable }: HeaderProps) => {
             <Button 
               variant="ghost" 
               size="sm" 
-              onClick={() => navigate("/groups")} 
-              className={`hidden xl:flex text-sm font-medium transition-all px-2.5 ${isActivePath("/groups") ? "bg-primary/15 text-primary" : ""}`}
+              onClick={() => navigate("/connect")} 
+              className={`hidden xl:flex text-sm font-medium transition-all px-2.5 ${isActivePath("/connect") || isActivePath("/social") || isActivePath("/groups") ? "bg-primary/15 text-primary" : ""}`}
             >
               <Users className="h-4 w-4 mr-1" />
-              Groups
+              Connect
             </Button>
             <Button 
               variant="ghost" 
@@ -504,7 +489,7 @@ const Header = ({ onNewTimetable }: HeaderProps) => {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48 bg-popover border border-border shadow-lg z-50">
-                {/* Calendar and Groups show in dropdown on lg only */}
+                {/* Calendar shows in dropdown on lg only */}
                 <DropdownMenuItem 
                   onClick={() => navigate("/calendar")} 
                   className={`xl:hidden cursor-pointer ${isActivePath("/calendar") ? "bg-primary/10 text-primary" : ""}`}
@@ -513,11 +498,11 @@ const Header = ({ onNewTimetable }: HeaderProps) => {
                   Calendar
                 </DropdownMenuItem>
                 <DropdownMenuItem 
-                  onClick={() => navigate("/groups")} 
-                  className={`xl:hidden cursor-pointer ${isActivePath("/groups") ? "bg-primary/10 text-primary" : ""}`}
+                  onClick={() => navigate("/connect")} 
+                  className={`xl:hidden cursor-pointer ${isActivePath("/connect") || isActivePath("/social") || isActivePath("/groups") ? "bg-primary/10 text-primary" : ""}`}
                 >
                   <Users className="h-4 w-4 mr-2" />
-                  Groups
+                  Connect
                 </DropdownMenuItem>
                 {/* Events and Scores show in dropdown on lg/xl */}
                 <DropdownMenuItem 
@@ -536,25 +521,11 @@ const Header = ({ onNewTimetable }: HeaderProps) => {
                 </DropdownMenuItem>
                 {/* Always in dropdown */}
                 <DropdownMenuItem 
-                  onClick={() => navigate("/social")} 
-                  className={`cursor-pointer ${isActivePath("/social") ? "bg-primary/10 text-primary" : ""}`}
-                >
-                  <Users className="h-4 w-4 mr-2" />
-                  Social
-                </DropdownMenuItem>
-                <DropdownMenuItem 
                   onClick={() => navigate("/ai-insights")} 
                   className={`cursor-pointer ${isActivePath("/ai-insights") ? "bg-primary/10 text-primary" : ""}`}
                 >
                   <Brain className="h-4 w-4 mr-2" />
                   Insights
-                </DropdownMenuItem>
-                <DropdownMenuItem 
-                  onClick={() => navigate("/revision-apps")} 
-                  className={`cursor-pointer ${isActivePath("/revision-apps") ? "bg-primary/10 text-primary" : ""}`}
-                >
-                  <BookOpen className="h-4 w-4 mr-2" />
-                  Revision Apps
                 </DropdownMenuItem>
                 {isAdmin && (
                   <DropdownMenuItem 

@@ -8,6 +8,7 @@ import TimetableView from "@/pages/TimetableView";
 import CalendarView from "@/pages/CalendarView";
 import Social from "@/pages/Social";
 import Groups from "@/pages/Groups";
+import Connect from "@/pages/Connect";
 import GroupDetail from "@/components/groups/GroupDetail";
 import ImportTimetable from "@/pages/ImportTimetable";
 import Events from "@/pages/Events";
@@ -26,7 +27,6 @@ import PMT from "@/pages/PMT";
 import Quizlet from "@/pages/Quizlet";
 import Gradlify from "@/pages/Gradlify";
 
-
 export const AnimatedRoutes = () => {
   const location = useLocation();
 
@@ -40,6 +40,7 @@ export const AnimatedRoutes = () => {
         <Route path="/calendar" element={<CalendarView />} />
         <Route path="/social" element={<Social />} />
         <Route path="/groups" element={<Groups />} />
+        <Route path="/connect" element={<Connect />} />
         <Route path="/groups/:id" element={<GroupDetail />} />
         <Route path="/import-timetable" element={<ImportTimetable />} />
         <Route path="/events" element={<Events />} />
@@ -52,7 +53,6 @@ export const AnimatedRoutes = () => {
         <Route path="/pmt" element={<PMT />} />
         <Route path="/quizlet" element={<Quizlet />} />
         <Route path="/gradlify" element={<Gradlify />} />
-        
         <Route path="/activity" element={<Activity />} />
         <Route path="/reflections" element={<Reflections />} />
         <Route path="/timetable/:id" element={<TimetableView />} />
