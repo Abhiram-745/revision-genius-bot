@@ -97,7 +97,7 @@ const PaywallDialog = ({ open, onOpenChange, limitType }: PaywallDialogProps) =>
               className="flex-1 gap-2 bg-gradient-to-r from-primary to-secondary hover:opacity-90"
             >
               <Sparkles className="h-4 w-4" />
-              Upgrade for £5/month
+              Upgrade for £2/month
             </Button>
         </div>
       </DialogContent>

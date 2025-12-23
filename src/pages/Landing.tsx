@@ -7,7 +7,7 @@ import {
   Calendar, Brain, Target, Users, Clock, Sparkles, ArrowRight, 
   CheckCircle2, Star, Heart, Zap, Laptop, TrendingUp, Award,
   BookOpen, RefreshCw, Shield, Rocket, BarChart3, MessageSquare, ChevronUp,
-  MousePointer
+  MousePointer, Gift, X
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import PageTransition from "@/components/PageTransition";
@@ -42,6 +42,7 @@ const Landing = () => {
   const navigate = useNavigate();
   const [showComingSoon, setShowComingSoon] = useState(false);
   const [showBackToTop, setShowBackToTop] = useState(false);
+  const [showOfferBanner, setShowOfferBanner] = useState(true);
   
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -99,8 +100,40 @@ const Landing = () => {
     <PageTransition>
       {/* Scroll Progress Bar */}
       <ScrollProgressBar />
+
+      {/* Opening Offer Banner */}
+      {showOfferBanner && (
+        <motion.div 
+          initial={{ y: -100, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          exit={{ y: -100, opacity: 0 }}
+          className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-primary via-accent to-secondary text-white py-3 px-4 shadow-lg"
+        >
+          <div className="max-w-7xl mx-auto flex items-center justify-center gap-2 sm:gap-4 text-center relative">
+            <Gift className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 animate-bounce" />
+            <span className="font-medium text-xs sm:text-sm md:text-base">
+              🎉 Opening Offer: <span className="font-bold">FREE Premium</span> for all who sign up by 1st December!
+            </span>
+            <Button 
+              size="sm" 
+              variant="secondary"
+              onClick={() => navigate("/auth")}
+              className="ml-2 text-xs sm:text-sm px-3 py-1 h-7 sm:h-8 bg-white text-primary hover:bg-white/90 font-semibold"
+            >
+              Claim Now
+            </Button>
+            <button
+              onClick={() => setShowOfferBanner(false)}
+              className="absolute right-0 sm:right-2 p-1 hover:bg-white/20 rounded-full transition-colors"
+              aria-label="Close banner"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        </motion.div>
+      )}
       
-      <div className="min-h-screen bg-background overflow-hidden">
+      <div className={`min-h-screen bg-background overflow-hidden ${showOfferBanner ? 'pt-12' : ''}`}>
         {/* Parallax Background */}
         <ParallaxBackground />
         
