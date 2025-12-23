@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Plus, Play, ChevronRight, Calendar, Sparkles, Trophy, Target } from "lucide-react";
+import { Plus, Play, ChevronRight, Sparkles, Trophy, Target } from "lucide-react";
 import { toast } from "sonner";
 import Header from "@/components/Header";
 import OnboardingWizard from "@/components/OnboardingWizard";
@@ -227,10 +227,9 @@ const Dashboard = () => {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 }}
-                className="grid grid-cols-4 gap-3"
+                className="grid grid-cols-3 gap-3"
               >
                 {[
-                  { icon: Calendar, label: "Agenda", path: "/agenda", color: "primary" },
                   { icon: Sparkles, label: "Practice", path: "/practice", color: "secondary" },
                   { icon: Trophy, label: "Achievements", path: "/insights", color: "amber-500" },
                   { icon: Target, label: "Goals", path: "/timetables", color: "emerald-500" },

@@ -13,6 +13,8 @@ import { GroupResources } from "./GroupResources";
 import { InviteFriendsDialog } from "./InviteFriendsDialog";
 import { GroupChallenge } from "./GroupChallenge";
 import { GroupAchievements } from "./GroupAchievements";
+import GroupStudyOverview from "@/components/social/GroupStudyOverview";
+import { BarChart3 } from "lucide-react";
 import { useSectionTour } from "@/hooks/useSectionTour";
 import SectionSpotlight from "@/components/tours/SectionSpotlight";
 import { groupDetailSectionSteps } from "@/components/tours/groupSectionSteps";
@@ -306,8 +308,15 @@ const GroupDetail = () => {
           <GroupAchievements groupId={id!} />
         </div>
 
-        <Tabs defaultValue="timetables" className="space-y-6">
+        <Tabs defaultValue="overview" className="space-y-6">
           <TabsList>
+            <TabsTrigger 
+              value="overview" 
+              onClick={() => handleSectionClick("overview")}
+            >
+              <BarChart3 className="h-4 w-4 mr-2" />
+              Overview
+            </TabsTrigger>
             <TabsTrigger 
               value="timetables" 
               onClick={() => handleSectionClick("timetables")}
@@ -327,6 +336,10 @@ const GroupDetail = () => {
               Resources
             </TabsTrigger>
           </TabsList>
+
+          <TabsContent value="overview" data-tour="group-overview">
+            <GroupStudyOverview groupId={id!} />
+          </TabsContent>
 
           <TabsContent value="timetables" data-tour="group-timetables">
             <GroupTimetables groupId={id!} />

@@ -18,7 +18,9 @@ import AddFriend from "@/components/social/AddFriend";
 import Leaderboard from "@/components/social/Leaderboard";
 import { GroupLeaderboard } from "@/components/social/GroupLeaderboard";
 import SocialStats from "@/components/social/SocialStats";
+import StudyOverview from "@/components/social/StudyOverview";
 import PageTransition from "@/components/PageTransition";
+import { BarChart3 } from "lucide-react";
 
 interface StudyGroup {
   id: string;
@@ -201,8 +203,12 @@ const Connect = () => {
 
               {/* Social Tab Content */}
               <TabsContent value="social" className="mt-6">
-                <Tabs defaultValue="friends" className="w-full">
-                  <TabsList className="grid w-full md:w-auto md:inline-grid grid-cols-3 gap-2 glass-card p-1 rounded-xl">
+                <Tabs defaultValue="overview" className="w-full">
+                  <TabsList className="grid w-full md:w-auto md:inline-grid grid-cols-4 gap-2 glass-card p-1 rounded-xl">
+                    <TabsTrigger value="overview" className="gap-2 data-[state=active]:bg-primary/20 data-[state=active]:text-primary rounded-lg">
+                      <BarChart3 className="h-4 w-4" />
+                      Overview
+                    </TabsTrigger>
                     <TabsTrigger value="friends" className="gap-2 data-[state=active]:bg-primary/20 data-[state=active]:text-primary rounded-lg">
                       <Users className="h-4 w-4" />
                       Friends
@@ -216,6 +222,10 @@ const Connect = () => {
                       Stats
                     </TabsTrigger>
                   </TabsList>
+
+                  <TabsContent value="overview" className="mt-6">
+                    <StudyOverview userId={userId} />
+                  </TabsContent>
 
                   <TabsContent value="friends" className="space-y-6 mt-6">
                     <GroupInvitations />
