@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { ArrowLeft, Brain, Sparkles, Target, Clock, TrendingUp, BookOpen, GraduationCap, Layers, ExternalLink, MessageSquarePlus, Send, Loader2, Filter } from "lucide-react";
+import { ArrowLeft, Brain, Sparkles, Target, Clock, TrendingUp, BookOpen, GraduationCap, Layers, ExternalLink, MessageSquarePlus, Send, Loader2, Filter, Gamepad2, FileText, Lightbulb, Repeat } from "lucide-react";
 import Header from "@/components/Header";
 import PageTransition from "@/components/PageTransition";
 import { supabase } from "@/integrations/supabase/client";
@@ -16,6 +16,7 @@ import { useAuth } from "@/context/AuthContext";
 import SaveMyExamsLogo from "@/components/SaveMyExamsLogo";
 import { OwlMascot } from "@/components/mascot/OwlMascot";
 import { toast } from "sonner";
+import { UniversalPracticeSession } from "@/components/UniversalPracticeSession";
 
 type Category = "all" | "ai" | "gcse" | "alevel" | "ap" | "flashcards";
 
@@ -30,6 +31,8 @@ interface PracticeApp {
   badge?: string;
   badgeColor?: string;
   categories: Category[];
+  supportsIframe: boolean;
+  appColor: string;
 }
 
 const Practice = () => {
@@ -42,6 +45,10 @@ const Practice = () => {
   const [requestDialogOpen, setRequestDialogOpen] = useState(false);
   const [requestLoading, setRequestLoading] = useState(false);
   const [requestForm, setRequestForm] = useState({ name: "", url: "", description: "" });
+  
+  // Universal session state
+  const [sessionOpen, setSessionOpen] = useState(false);
+  const [selectedApp, setSelectedApp] = useState<PracticeApp | null>(null);
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -117,112 +124,145 @@ const Practice = () => {
     {
       id: "blurt-ai",
       name: "BlurtAI",
-      description: "Active recall practice with AI-powered feedback. Test yourself on topics and get instant analysis.",
+      description: "Active recall practice with AI-powered feedback. Test yourself on topics and get instant analysis of your understanding.",
       icon: <Brain className="w-8 h-8 text-secondary" />,
-      gradient: "from-secondary/20 via-secondary/10 to-primary/10",
+      gradient: "from-secondary/20 via-secondary/10 to-accent/10",
       route: "/blurt-ai",
       badge: "AI-Powered",
       badgeColor: "bg-secondary/20 text-secondary border-secondary/30",
       categories: ["all", "ai", "gcse", "alevel", "ap", "flashcards"],
+      supportsIframe: true,
+      appColor: "bg-secondary/20",
     },
     {
       id: "savemyexams",
-      name: "SaveMyExams",
-      description: "Access revision notes, past papers, and practice questions for GCSE, A-Level and AP exams.",
+      name: "Save My Exams",
+      description: "The #1 revision resource for GCSE, IGCSE, A-Level and IB. Access topic notes, past papers, and mark schemes.",
       icon: <SaveMyExamsLogo className="w-8 h-8" />,
-      gradient: "from-emerald-500/20 via-emerald-500/10 to-teal-500/10",
+      gradient: "from-emerald-500/20 via-emerald-500/10 to-accent/10",
       route: "/savemyexams",
       badge: "Notes & Papers",
       badgeColor: "bg-emerald-500/20 text-emerald-600 border-emerald-500/30",
       categories: ["all", "gcse", "alevel", "ap"],
+      supportsIframe: true,
+      appColor: "bg-emerald-500/20",
     },
     {
       id: "pmt",
       name: "Physics & Maths Tutor",
-      description: "Comprehensive revision resources including notes, worksheets, and past papers for GCSE and A-Level.",
+      description: "Free comprehensive revision notes, worksheets, and past papers for GCSE and A-Level Maths, Physics, Chemistry & Biology.",
       icon: <GraduationCap className="w-8 h-8 text-blue-500" />,
-      gradient: "from-blue-500/20 via-blue-500/10 to-indigo-500/10",
+      gradient: "from-blue-500/20 via-blue-500/10 to-accent/10",
       route: "/pmt",
       badge: "STEM Focus",
       badgeColor: "bg-blue-500/20 text-blue-600 border-blue-500/30",
       categories: ["all", "gcse", "alevel"],
+      supportsIframe: true,
+      appColor: "bg-blue-500/20",
     },
     {
       id: "quizlet",
       name: "Quizlet",
-      description: "Flashcard-based learning for vocabulary and key terms. Perfect for language learning and memorization.",
+      description: "The world's largest student community with over 500 million flashcard sets. Learn with flashcards, games, and practice tests.",
       icon: <Layers className="w-8 h-8 text-indigo-500" />,
-      gradient: "from-indigo-500/20 via-indigo-500/10 to-purple-500/10",
-      route: "/quizlet",
+      gradient: "from-indigo-500/20 via-indigo-500/10 to-accent/10",
+      externalUrl: "https://quizlet.com",
       badge: "Flashcards",
       badgeColor: "bg-indigo-500/20 text-indigo-600 border-indigo-500/30",
       categories: ["all", "flashcards"],
+      supportsIframe: false,
+      appColor: "bg-indigo-500/20",
     },
     {
       id: "studyfetch",
       name: "StudyFetch",
-      description: "AI study companion that creates flashcards, quizzes, and notes from your documents automatically.",
+      description: "AI-powered study platform that creates personalized flashcards, notes, and quizzes from your uploaded course materials.",
       icon: <Sparkles className="w-8 h-8 text-pink-500" />,
-      gradient: "from-pink-500/20 via-pink-500/10 to-rose-500/10",
-      externalUrl: "https://studyfetch.com",
+      gradient: "from-pink-500/20 via-pink-500/10 to-accent/10",
+      externalUrl: "https://www.studyfetch.com",
       badge: "AI-Powered",
       badgeColor: "bg-pink-500/20 text-pink-600 border-pink-500/30",
       categories: ["all", "ai"],
+      supportsIframe: false,
+      appColor: "bg-pink-500/20",
     },
     {
-      id: "turbo-ai",
-      name: "Turbo.AI",
-      description: "AI tutoring platform that provides personalized homework help and step-by-step explanations.",
-      icon: <Brain className="w-8 h-8 text-cyan-500" />,
-      gradient: "from-cyan-500/20 via-cyan-500/10 to-teal-500/10",
-      externalUrl: "https://turbo.ai",
+      id: "turbolearn",
+      name: "TurboLearn AI",
+      description: "Transform any video, audio, or document into clear notes, flashcards, and quizzes instantly with AI technology.",
+      icon: <Lightbulb className="w-8 h-8 text-cyan-500" />,
+      gradient: "from-cyan-500/20 via-cyan-500/10 to-accent/10",
+      externalUrl: "https://www.turbolearn.ai",
       badge: "AI Tutor",
       badgeColor: "bg-cyan-500/20 text-cyan-600 border-cyan-500/30",
       categories: ["all", "ai"],
+      supportsIframe: false,
+      appColor: "bg-cyan-500/20",
     },
     {
       id: "mindgrasp",
-      name: "MindGrasp.AI",
-      description: "Upload notes, videos, or documents and AI generates summaries, flashcards, and practice questions.",
+      name: "Mindgrasp",
+      description: "Upload any content and AI generates detailed notes, summaries, flashcards, and practice questions automatically.",
       icon: <BookOpen className="w-8 h-8 text-violet-500" />,
-      gradient: "from-violet-500/20 via-violet-500/10 to-purple-500/10",
+      gradient: "from-violet-500/20 via-violet-500/10 to-accent/10",
       externalUrl: "https://mindgrasp.ai",
       badge: "AI Notes",
       badgeColor: "bg-violet-500/20 text-violet-600 border-violet-500/30",
       categories: ["all", "ai"],
+      supportsIframe: false,
+      appColor: "bg-violet-500/20",
     },
     {
-      id: "medly",
-      name: "Medly AI",
-      description: "AI-powered medical and science revision platform with interactive learning tools.",
-      icon: <Target className="w-8 h-8 text-red-500" />,
-      gradient: "from-red-500/20 via-red-500/10 to-orange-500/10",
-      externalUrl: "https://medly.ai",
-      badge: "Medical",
-      badgeColor: "bg-red-500/20 text-red-600 border-red-500/30",
-      categories: ["all", "gcse", "alevel"],
-    },
-    {
-      id: "anki",
-      name: "Anki",
-      description: "Powerful spaced repetition flashcard system. Perfect for long-term memorization.",
-      icon: <Layers className="w-8 h-8 text-slate-500" />,
-      gradient: "from-slate-500/20 via-slate-500/10 to-gray-500/10",
+      id: "ankiweb",
+      name: "AnkiWeb",
+      description: "Powerful open-source spaced repetition flashcard system. Proven to help you remember anything long-term.",
+      icon: <Repeat className="w-8 h-8 text-slate-600" />,
+      gradient: "from-slate-500/20 via-slate-500/10 to-accent/10",
       externalUrl: "https://ankiweb.net",
       badge: "Spaced Repetition",
       badgeColor: "bg-slate-500/20 text-slate-600 border-slate-500/30",
       categories: ["all", "flashcards"],
+      supportsIframe: false,
+      appColor: "bg-slate-500/20",
     },
     {
       id: "kahoot",
       name: "Kahoot!",
-      description: "Game-based learning platform with quizzes created by teachers and students worldwide.",
-      icon: <Sparkles className="w-8 h-8 text-purple-500" />,
-      gradient: "from-purple-500/20 via-purple-500/10 to-fuchsia-500/10",
+      description: "Game-based learning platform with millions of interactive quizzes. Join games or create your own educational quizzes.",
+      icon: <Gamepad2 className="w-8 h-8 text-purple-500" />,
+      gradient: "from-purple-500/20 via-purple-500/10 to-accent/10",
       externalUrl: "https://kahoot.com",
       badge: "Interactive",
       badgeColor: "bg-purple-500/20 text-purple-600 border-purple-500/30",
       categories: ["all", "gcse", "alevel"],
+      supportsIframe: false,
+      appColor: "bg-purple-500/20",
+    },
+    {
+      id: "remnote",
+      name: "RemNote",
+      description: "All-in-one knowledge management tool combining notes, flashcards, and spaced repetition for effective studying.",
+      icon: <FileText className="w-8 h-8 text-blue-600" />,
+      gradient: "from-blue-600/20 via-blue-600/10 to-accent/10",
+      externalUrl: "https://www.remnote.com",
+      badge: "Notes + Flashcards",
+      badgeColor: "bg-blue-600/20 text-blue-600 border-blue-600/30",
+      categories: ["all", "ai", "flashcards"],
+      supportsIframe: false,
+      appColor: "bg-blue-600/20",
+    },
+    {
+      id: "brainscape",
+      name: "Brainscape",
+      description: "Adaptive flashcard platform using cognitive science. Optimizes your learning with Confidence-Based Repetition.",
+      icon: <Brain className="w-8 h-8 text-orange-500" />,
+      gradient: "from-orange-500/20 via-orange-500/10 to-accent/10",
+      externalUrl: "https://www.brainscape.com",
+      badge: "Adaptive Learning",
+      badgeColor: "bg-orange-500/20 text-orange-600 border-orange-500/30",
+      categories: ["all", "flashcards"],
+      supportsIframe: false,
+      appColor: "bg-orange-500/20",
     },
   ];
 
@@ -231,16 +271,24 @@ const Practice = () => {
     : practiceApps.filter(app => app.categories.includes(activeCategory));
 
   const handleAppClick = (app: PracticeApp) => {
+    // Internal routes go directly
     if (app.route) {
       navigate(app.route);
     } else if (app.externalUrl) {
-      window.open(app.externalUrl, "_blank", "noopener,noreferrer");
+      // External apps open universal practice session
+      setSelectedApp(app);
+      setSessionOpen(true);
     }
+  };
+
+  const handleSessionComplete = () => {
+    setSessionOpen(false);
+    setSelectedApp(null);
   };
 
   return (
     <PageTransition>
-      <div className="min-h-screen bg-gradient-to-br from-background via-background to-secondary/5">
+      <div className="min-h-screen bg-gradient-to-br from-background via-background to-accent/5">
         <Header />
 
         <main className="container mx-auto px-4 py-6 space-y-6">
@@ -264,15 +312,15 @@ const Practice = () => {
             </Button>
           </div>
 
-          {/* Hero Section */}
+          {/* Hero Section with gradient */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
-            className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-primary/20 via-primary/10 to-secondary/10 border border-primary/30 p-6 md:p-8"
+            className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-primary/20 via-primary/10 to-accent/20 border border-primary/30 p-6 md:p-8"
           >
-            <div className="absolute top-4 right-4 w-20 h-20 bg-primary/20 rounded-full blur-2xl" />
-            <div className="absolute bottom-4 left-4 w-16 h-16 bg-secondary/20 rounded-full blur-xl" />
+            <div className="absolute top-4 right-4 w-20 h-20 bg-accent/30 rounded-full blur-2xl" />
+            <div className="absolute bottom-4 left-4 w-16 h-16 bg-primary/20 rounded-full blur-xl" />
 
             <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center gap-6">
               <div className="flex-shrink-0">
@@ -281,8 +329,8 @@ const Practice = () => {
 
               <div className="flex-1 space-y-2">
                 <div className="flex items-center gap-3 flex-wrap">
-                  <h1 className="text-2xl md:text-3xl font-bold text-foreground">Practice Hub</h1>
-                  <Badge variant="secondary" className="bg-primary/30 text-primary-foreground border-primary/50">
+                  <h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">Practice Hub</h1>
+                  <Badge variant="secondary" className="bg-gradient-to-r from-primary/30 to-accent/30 text-foreground border-primary/50">
                     <Sparkles className="w-3 h-3 mr-1" />
                     {practiceApps.length} Apps
                   </Badge>
@@ -296,9 +344,9 @@ const Practice = () => {
 
           {/* Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Card className="bg-card/50 border-border/50">
+            <Card className="bg-card/50 border-border/50 hover:border-primary/30 transition-colors">
               <CardContent className="p-4 flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
                   <Target className="w-5 h-5 text-primary" />
                 </div>
                 <div>
@@ -307,10 +355,10 @@ const Practice = () => {
                 </div>
               </CardContent>
             </Card>
-            <Card className="bg-card/50 border-border/50">
+            <Card className="bg-card/50 border-border/50 hover:border-primary/30 transition-colors">
               <CardContent className="p-4 flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-secondary/10 flex items-center justify-center">
-                  <Clock className="w-5 h-5 text-secondary" />
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
+                  <Clock className="w-5 h-5 text-accent" />
                 </div>
                 <div>
                   <p className="text-2xl font-bold text-foreground">{totalTime} min</p>
@@ -318,9 +366,9 @@ const Practice = () => {
                 </div>
               </CardContent>
             </Card>
-            <Card className="bg-card/50 border-border/50">
+            <Card className="bg-card/50 border-border/50 hover:border-primary/30 transition-colors">
               <CardContent className="p-4 flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-amber-500/10 flex items-center justify-center">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
                   <Sparkles className="w-5 h-5 text-amber-500" />
                 </div>
                 <div>
@@ -340,7 +388,7 @@ const Practice = () => {
                 variant={activeCategory === cat.id ? "default" : "outline"}
                 size="sm"
                 onClick={() => setActiveCategory(cat.id)}
-                className={activeCategory === cat.id ? "bg-primary" : ""}
+                className={activeCategory === cat.id ? "bg-gradient-to-r from-primary to-accent border-0" : ""}
               >
                 {cat.label}
               </Button>
@@ -407,7 +455,7 @@ const Practice = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
           >
-            <Card className="bg-gradient-to-r from-muted/50 to-muted/30 border-dashed border-2 border-border/70">
+            <Card className="bg-gradient-to-r from-muted/50 to-accent/10 border-dashed border-2 border-border/70">
               <CardContent className="p-6">
                 <div className="flex flex-col md:flex-row items-center gap-6">
                   <OwlMascot type="magnifying" size="lg" />
@@ -418,19 +466,16 @@ const Practice = () => {
                     </p>
                     <Dialog open={requestDialogOpen} onOpenChange={setRequestDialogOpen}>
                       <DialogTrigger asChild>
-                        <Button className="gap-2">
+                        <Button className="gap-2 bg-gradient-to-r from-primary to-accent border-0 hover:opacity-90">
                           <MessageSquarePlus className="h-4 w-4" />
                           Request an App
                         </Button>
                       </DialogTrigger>
                       <DialogContent>
                         <DialogHeader>
-                          <DialogTitle className="flex items-center gap-2">
-                            <MessageSquarePlus className="h-5 w-5" />
-                            Request a Study App
-                          </DialogTitle>
+                          <DialogTitle>Request a Study App</DialogTitle>
                           <DialogDescription>
-                            Tell us about the study app you'd like to see added to Vistara.
+                            Tell us about a study app you'd like to see in the Practice Hub.
                           </DialogDescription>
                         </DialogHeader>
                         <div className="space-y-4 py-4">
@@ -438,28 +483,27 @@ const Practice = () => {
                             <Label htmlFor="app-name">App Name *</Label>
                             <Input
                               id="app-name"
-                              placeholder="e.g., Khan Academy"
+                              placeholder="e.g., Notion"
                               value={requestForm.name}
-                              onChange={(e) => setRequestForm(p => ({ ...p, name: e.target.value }))}
+                              onChange={(e) => setRequestForm({ ...requestForm, name: e.target.value })}
                             />
                           </div>
                           <div className="space-y-2">
-                            <Label htmlFor="app-url">Website URL *</Label>
+                            <Label htmlFor="app-url">App URL *</Label>
                             <Input
                               id="app-url"
-                              placeholder="e.g., https://khanacademy.org"
+                              placeholder="https://notion.so"
                               value={requestForm.url}
-                              onChange={(e) => setRequestForm(p => ({ ...p, url: e.target.value }))}
+                              onChange={(e) => setRequestForm({ ...requestForm, url: e.target.value })}
                             />
                           </div>
                           <div className="space-y-2">
-                            <Label htmlFor="app-description">Why do you like it? (optional)</Label>
+                            <Label htmlFor="app-desc">Why is it useful? (optional)</Label>
                             <Textarea
-                              id="app-description"
-                              placeholder="Tell us what makes this app great for studying..."
+                              id="app-desc"
+                              placeholder="Tell us why this app would be helpful..."
                               value={requestForm.description}
-                              onChange={(e) => setRequestForm(p => ({ ...p, description: e.target.value }))}
-                              rows={3}
+                              onChange={(e) => setRequestForm({ ...requestForm, description: e.target.value })}
                             />
                           </div>
                         </div>
@@ -467,7 +511,11 @@ const Practice = () => {
                           <Button variant="outline" onClick={() => setRequestDialogOpen(false)}>
                             Cancel
                           </Button>
-                          <Button onClick={handleSubmitRequest} disabled={requestLoading} className="gap-2">
+                          <Button 
+                            onClick={handleSubmitRequest} 
+                            disabled={requestLoading}
+                            className="gap-2 bg-gradient-to-r from-primary to-accent border-0"
+                          >
                             {requestLoading ? (
                               <Loader2 className="h-4 w-4 animate-spin" />
                             ) : (
@@ -485,19 +533,28 @@ const Practice = () => {
           </motion.div>
 
           {/* Info Note */}
-          <Card className="bg-muted/30 border-dashed">
-            <CardContent className="p-4 flex items-start gap-3">
-              <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
-                <ExternalLink className="w-4 h-4 text-primary" />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">
-                  <span className="font-medium text-foreground">Note:</span> External platforms require signing in on their respective websites. Use the "Open in New Tab" option if you need to log in.
-                </p>
-              </div>
-            </CardContent>
-          </Card>
+          <div className="text-center text-sm text-muted-foreground">
+            <p>
+              💡 <strong>Tip:</strong> External apps open with session tracking. Your study time is automatically logged for insights!
+            </p>
+          </div>
         </main>
+
+        {/* Universal Practice Session */}
+        {selectedApp && (
+          <UniversalPracticeSession
+            open={sessionOpen}
+            onOpenChange={setSessionOpen}
+            appId={selectedApp.id}
+            appName={selectedApp.name}
+            appUrl={selectedApp.externalUrl || ""}
+            appIcon={selectedApp.icon}
+            appColor={selectedApp.appColor}
+            supportsIframe={selectedApp.supportsIframe}
+            onComplete={handleSessionComplete}
+            userId={user?.id}
+          />
+        )}
       </div>
     </PageTransition>
   );

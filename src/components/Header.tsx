@@ -28,7 +28,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Calendar, Plus, Home, LogOut, Settings, User, Sparkles, BookOpen, Users, Moon, Sun, ListTodo, CalendarClock, TrendingUp, Menu, Brain, HelpCircle, Crown } from "lucide-react";
+import { Calendar, Plus, Home, LogOut, Settings, User, Sparkles, BookOpen, Users, Moon, Sun, ListTodo, CalendarClock, Menu, Brain, HelpCircle, Crown } from "lucide-react";
 import { toast } from "sonner";
 import ProfileSettings from "./ProfileSettings";
 import { useUserRole, useUsageLimits } from "@/hooks/useUserRole";
@@ -172,7 +172,7 @@ const Header = ({ onNewTimetable }: HeaderProps) => {
   };
 
   const isActivePath = (path: string) => location.pathname === path;
-  const moreDropdownPaths = ["/test-scores", "/social", "/ai-insights", "/admin"];
+  const moreDropdownPaths = ["/social", "/ai-insights", "/admin"];
   const isMoreActive = moreDropdownPaths.some(p => location.pathname === p);
 
   const NavigationItems = ({ onItemClick }: { onItemClick?: () => void }) => (
@@ -440,14 +440,6 @@ const Header = ({ onNewTimetable }: HeaderProps) => {
                 >
                   <Users className="h-4 w-4 mr-2" />
                   Connect
-                </DropdownMenuItem>
-                {/* Test Scores shows in dropdown on lg/xl */}
-                <DropdownMenuItem 
-                  onClick={() => navigate("/test-scores")} 
-                  className={`2xl:hidden cursor-pointer ${isActivePath("/test-scores") ? "bg-primary/10 text-primary" : ""}`}
-                >
-                  <TrendingUp className="h-4 w-4 mr-2" />
-                  Test Scores
                 </DropdownMenuItem>
                 {/* Always in dropdown */}
                 <DropdownMenuItem 

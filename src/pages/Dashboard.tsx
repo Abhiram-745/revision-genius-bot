@@ -115,7 +115,7 @@ const Dashboard = () => {
         <DashboardFloatingElements />
         
         {/* Gradient background overlay */}
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-secondary/5 pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5 pointer-events-none" />
         
         <SimpleOnboarding />
         <Header onNewTimetable={() => setShowOnboarding(true)} />
@@ -131,7 +131,7 @@ const Dashboard = () => {
               <MotivationalBadge isNewUser />
               <OwlMascot type="waving" size="2xl" glow />
               <div className="text-center space-y-2">
-                <h2 className="text-3xl font-display font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+                <h2 className="text-3xl font-display font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
                   Welcome to Vistara!
                 </h2>
                 <p className="text-muted-foreground text-lg max-w-md">
@@ -145,7 +145,7 @@ const Dashboard = () => {
                 <Button
                   size="lg"
                   onClick={() => setShowOnboarding(true)}
-                  className="gap-2 rounded-full px-10 py-6 text-lg bg-gradient-to-r from-primary to-primary/80 shadow-xl shadow-primary/25 hover:shadow-2xl hover:shadow-primary/30 transition-all"
+                  className="gap-2 rounded-full px-10 py-6 text-lg bg-gradient-to-r from-primary to-accent shadow-xl shadow-primary/25 hover:shadow-2xl hover:shadow-primary/30 transition-all"
                 >
                   <Plus className="h-6 w-6" />
                   Get Started
@@ -168,11 +168,11 @@ const Dashboard = () => {
               <motion.div 
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary/10 via-background to-secondary/10 border border-border/50 shadow-xl"
+                className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary/10 via-background to-accent/10 border border-border/50 shadow-xl"
               >
                 {/* Decorative gradient orbs */}
                 <div className="absolute -top-20 -right-20 w-40 h-40 bg-primary/20 rounded-full blur-3xl" />
-                <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-secondary/20 rounded-full blur-3xl" />
+                <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-accent/20 rounded-full blur-3xl" />
                 
                 <div className="relative p-6 sm:p-8">
                   {/* Motivational Badge */}
@@ -211,7 +211,7 @@ const Dashboard = () => {
                         <Button
                           size="lg"
                           onClick={() => navigate("/timetables")}
-                          className="gap-3 px-8 py-6 text-lg bg-gradient-to-r from-primary via-primary to-primary/80 shadow-xl shadow-primary/30 hover:shadow-2xl hover:shadow-primary/40 transition-all rounded-2xl"
+                          className="gap-3 px-8 py-6 text-lg bg-gradient-to-r from-primary to-accent shadow-xl shadow-primary/30 hover:shadow-2xl hover:shadow-primary/40 transition-all rounded-2xl"
                         >
                           <Play className="h-6 w-6" />
                           Start Study Session
