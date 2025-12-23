@@ -12,7 +12,6 @@ import { CSS } from "@dnd-kit/utilities";
 import { toast } from "sonner";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import Header from "@/components/Header";
-import GuidedOnboarding from "@/components/tours/GuidedOnboarding";
 import { useSectionTour } from "@/hooks/useSectionTour";
 import PageTransition from "@/components/PageTransition";
 import { ScrollArea } from "@/components/ui/scroll-area";

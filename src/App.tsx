@@ -4,7 +4,6 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter } from "react-router-dom";
 import { PWAInstallPrompt } from "./components/PWAInstallPrompt";
-import TourManager from "./components/tours/TourManager";
 import AnimatedRoutes from "./components/AnimatedRoutes";
 import { AuthProvider } from "./context/AuthContext";
 
@@ -18,7 +17,6 @@ const App = () => (
         <Sonner />
         <PWAInstallPrompt />
         <BrowserRouter>
-          <TourManager />
           <AnimatedRoutes />
         </BrowserRouter>
       </TooltipProvider>

@@ -3,21 +3,21 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
-import { Plus, Calendar, Play } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Plus, Play, ChevronRight, Calendar, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import Header from "@/components/Header";
 import OnboardingWizard from "@/components/OnboardingWizard";
 import { TodayOverviewCard } from "@/components/dashboard/TodayOverviewCard";
-import { ProgressCard } from "@/components/dashboard/ProgressCard";
-import { AIInsightsCard } from "@/components/dashboard/AIInsightsCard";
-import { QuickActionsCard } from "@/components/dashboard/QuickActionsCard";
 import { CompactStreakCard } from "@/components/dashboard/CompactStreakCard";
 import { CompactDeadlinesCard } from "@/components/dashboard/CompactDeadlinesCard";
-import { RecentPracticeCard } from "@/components/dashboard/RecentPracticeCard";
 import { WeeklyGoalCard } from "@/components/dashboard/WeeklyGoalCard";
-import WelcomeModal from "@/components/WelcomeModal";
-import GuidedOnboarding from "@/components/tours/GuidedOnboarding";
+import { AIInsightsCard } from "@/components/dashboard/AIInsightsCard";
+import SimpleOnboarding from "@/components/onboarding/SimpleOnboarding";
 import PageTransition from "@/components/PageTransition";
+import { OwlMascot } from "@/components/mascot/OwlMascot";
+import { MascotMessage } from "@/components/mascot/MascotMessage";
+import { motion } from "framer-motion";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -81,7 +81,10 @@ const Dashboard = () => {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="animate-pulse text-muted-foreground">Loading...</div>
+        <div className="flex flex-col items-center gap-4">
+          <OwlMascot type="sleeping" size="lg" />
+          <p className="text-muted-foreground animate-pulse">Loading...</p>
+        </div>
       </div>
     );
   }
@@ -89,23 +92,23 @@ const Dashboard = () => {
   return (
     <PageTransition>
       <div className="min-h-screen bg-background">
-        <WelcomeModal />
-        <GuidedOnboarding />
-        
+        <SimpleOnboarding />
         <Header onNewTimetable={() => setShowOnboarding(true)} />
 
         <main className="max-w-5xl mx-auto px-4 sm:px-6 py-6">
           {!hasData && !showOnboarding ? (
-            /* Empty state - no data yet */
-            <div className="flex flex-col items-center justify-center py-16 space-y-6 animate-fade-in">
-              <div className="text-center space-y-3">
-                <h2 className="text-2xl sm:text-3xl font-display font-bold gradient-text">
-                  Welcome to Vistara!
-                </h2>
-                <p className="text-muted-foreground max-w-md">
-                  Create your personalized study timetable to get started.
-                </p>
-              </div>
+            /* Empty state with owl */
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="flex flex-col items-center justify-center py-16 space-y-6"
+            >
+              <MascotMessage
+                type="waving"
+                message="Welcome to Vistara!"
+                subMessage="Create your personalized study timetable to get started."
+                size="lg"
+              />
               <Button
                 size="lg"
                 onClick={() => setShowOnboarding(true)}
@@ -114,9 +117,8 @@ const Dashboard = () => {
                 <Plus className="h-5 w-5" />
                 Get Started
               </Button>
-            </div>
+            </motion.div>
           ) : showOnboarding ? (
-            /* Onboarding wizard */
             <OnboardingWizard
               onComplete={() => {
                 setShowOnboarding(false);
@@ -126,68 +128,94 @@ const Dashboard = () => {
               onCancel={() => setShowOnboarding(false)}
             />
           ) : (
-            /* Main dashboard content */
+            /* Main dashboard - F/Z reading pattern */
             <div className="space-y-5 animate-fade-in">
-              {/* Header Section - Compact */}
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                <div>
-                  <h1 className="text-2xl sm:text-3xl font-display font-bold">
-                    {getGreeting()}, {getFirstName()}!
-                  </h1>
-                  <p className="text-muted-foreground text-sm mt-0.5">
-                    Ready to make today count?
-                  </p>
+              {/* Hero Section - Greeting + Primary CTA */}
+              <motion.div 
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-2xl bg-gradient-to-r from-primary/5 via-transparent to-secondary/5 border border-border/50"
+              >
+                <div className="flex items-center gap-4">
+                  <OwlMascot type="waving" size="sm" />
+                  <div>
+                    <h1 className="text-xl sm:text-2xl font-display font-bold">
+                      {getGreeting()}, {getFirstName()}!
+                    </h1>
+                    <p className="text-sm text-muted-foreground">
+                      Ready to make today count?
+                    </p>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => navigate("/timetables")}
-                    className="gap-1.5"
-                  >
-                    <Calendar className="h-4 w-4" />
-                    Timetable
-                  </Button>
-                  <Button
-                    size="sm"
-                    onClick={() => navigate("/timetables")}
-                    className="gap-1.5"
-                  >
-                    <Play className="h-4 w-4" />
-                    Start Session
-                  </Button>
-                </div>
+                
+                {/* Primary CTA - Large and prominent */}
+                <Button
+                  size="lg"
+                  onClick={() => navigate("/timetables")}
+                  className="gap-2 bg-gradient-to-r from-primary to-primary/80 shadow-lg hover:shadow-xl transition-all"
+                >
+                  <Play className="h-5 w-5" />
+                  Start Session
+                </Button>
+              </motion.div>
+
+              {/* Quick Actions - Simplified to 3 primary + overflow */}
+              <div className="grid grid-cols-3 gap-2 sm:gap-3">
+                <Button
+                  variant="outline"
+                  className="flex flex-col h-auto py-4 gap-2 hover:bg-primary/5 hover:border-primary/30 transition-all"
+                  onClick={() => navigate("/agenda")}
+                >
+                  <Calendar className="h-5 w-5 text-primary" />
+                  <span className="text-xs font-medium">Agenda</span>
+                </Button>
+                <Button
+                  variant="outline"
+                  className="flex flex-col h-auto py-4 gap-2 hover:bg-secondary/5 hover:border-secondary/30 transition-all"
+                  onClick={() => navigate("/practice")}
+                >
+                  <Sparkles className="h-5 w-5 text-secondary" />
+                  <span className="text-xs font-medium">Practice</span>
+                </Button>
+                <Button
+                  variant="outline"
+                  className="flex flex-col h-auto py-4 gap-2 hover:bg-primary/5 hover:border-primary/30 transition-all"
+                  onClick={() => navigate("/timetables")}
+                >
+                  <Plus className="h-5 w-5 text-primary" />
+                  <span className="text-xs font-medium">Timetable</span>
+                </Button>
               </div>
 
-              {/* Quick Actions */}
-              <QuickActionsCard />
-
-              {/* Today Overview */}
+              {/* Today Overview - Full width, most important */}
               <TodayOverviewCard userId={user?.id || ""} />
 
-              {/* Main Grid - 3 columns on desktop */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                {/* Weekly Goal */}
+              {/* Key Metrics Row - 3 columns */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <WeeklyGoalCard userId={user?.id || ""} />
-
-                {/* Study Streak */}
                 <CompactStreakCard userId={user?.id || ""} />
-
-                {/* Upcoming Deadlines */}
                 <CompactDeadlinesCard userId={user?.id || ""} />
               </div>
 
-              {/* Two Column Layout */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-                {/* Recent Practice */}
-                <RecentPracticeCard userId={user?.id || ""} />
+              {/* AI Insights - Full width at bottom */}
+              <AIInsightsCard userId={user?.id || ""} />
 
-                {/* AI Insights Card */}
-                <AIInsightsCard userId={user?.id || ""} />
-              </div>
-
-              {/* Progress Card - Full Width */}
-              <ProgressCard userId={user?.id || ""} />
+              {/* View All Link */}
+              <Card className="border-dashed border-border/50 bg-muted/20">
+                <CardContent className="p-4">
+                  <Button
+                    variant="ghost"
+                    className="w-full justify-between text-muted-foreground hover:text-foreground"
+                    onClick={() => navigate("/insights")}
+                  >
+                    <span className="flex items-center gap-2">
+                      <OwlMascot type="chart" size="sm" animate={false} />
+                      <span>View all insights & analytics</span>
+                    </span>
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </CardContent>
+              </Card>
             </div>
           )}
         </main>

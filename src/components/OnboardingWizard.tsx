@@ -9,7 +9,6 @@ import SmartTopicsStep from "./onboarding/SmartTopicsStep";
 import SubjectPriorityStep, { SubjectPriority } from "./onboarding/SubjectPriorityStep";
 import SmartConfigStep from "./onboarding/SmartConfigStep";
 import GenerateStep from "./onboarding/GenerateStep";
-import WizardTour from "./tours/WizardTour";
 
 const WIZARD_STORAGE_KEY = "timetable-wizard-progress";
 
@@ -195,7 +194,6 @@ const OnboardingWizard = ({ onComplete, onCancel }: OnboardingWizardProps) => {
   return (
     <div className="fixed inset-0 z-50 bg-background/95 backdrop-blur-sm overflow-y-auto">
       <div className="min-h-full flex items-start justify-center py-4 px-2 sm:py-8 sm:px-4">
-        <WizardTour currentStep={step} />
         <Card className="w-full max-w-3xl shadow-lg flex flex-col max-h-[calc(100vh-2rem)] sm:max-h-[calc(100vh-4rem)]">
           <CardHeader className="flex-shrink-0 pb-2 sm:pb-4 px-4 sm:px-6">
             <div className="space-y-2">

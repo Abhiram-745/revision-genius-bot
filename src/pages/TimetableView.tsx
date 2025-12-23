@@ -4,8 +4,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Calendar as CalendarIcon, Edit2, Users, Share2 } from "lucide-react";
-import ProductTour from "@/components/tours/ProductTour";
-import { timetableViewTourSteps } from "@/components/tours/timetableViewTourSteps";
 import { toast } from "sonner";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Progress } from "@/components/ui/progress";
@@ -799,13 +797,6 @@ const TimetableView = () => {
         />
       )}
 
-      {/* Product Tour */}
-      <ProductTour
-        tourKey="timetable-view"
-        steps={timetableViewTourSteps}
-        run={showTour}
-        onComplete={() => setShowTour(false)}
-      />
     </div>
     </PageTransition>
   );
