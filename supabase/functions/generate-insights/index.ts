@@ -35,7 +35,21 @@ serve(async (req) => {
       });
     }
 
-    const { timetableId } = await req.json();
+    const body = await req.json();
+    const timetableId = body?.timetableId;
+
+    if (!timetableId || timetableId === 'undefined') {
+      console.error('Missing or invalid timetableId:', timetableId);
+      return new Response(JSON.stringify({ 
+        error: 'No timetable selected',
+        message: 'Please select a timetable to generate insights for.' 
+      }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    console.log('Generating insights for timetable:', timetableId);
 
     // Fetch all reflections for this timetable
     const { data: reflections, error: reflectionsError } = await supabase
