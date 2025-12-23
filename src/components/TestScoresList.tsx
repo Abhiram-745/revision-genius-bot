@@ -3,9 +3,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { TrendingUp, TrendingDown, CheckCircle2, XCircle, Sparkles, Target, ChevronDown, ChevronUp, PieChart } from "lucide-react";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { CheckCircle2, XCircle, ChevronDown, ChevronUp, PieChart } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import TestScoreCharts from "./TestScoreCharts";
 
 interface TestScore {
   id: string;
@@ -189,153 +189,74 @@ export const TestScoresList = ({ userId, refresh }: TestScoresListProps) => {
               </div>
             </CardHeader>
 
-            {isExpanded && (
+              {isExpanded && (
               <CardContent className="space-y-6 pt-0">
-                {/* Questions Summary Cards */}
+                {/* Visual Charts for AI Analysis */}
+                <TestScoreCharts score={score} />
+
+                {/* Questions Summary - Collapsed by default */}
                 {totalQuestions > 0 && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {/* Correct Answers */}
-                    <Card className="border-green-500/30 bg-green-500/5">
-                      <CardHeader className="pb-2">
-                        <CardTitle className="text-sm flex items-center gap-2 text-green-600 dark:text-green-400">
-                          <CheckCircle2 className="h-4 w-4" />
-                          Correct Answers
-                          <Badge className="bg-green-500/20 text-green-700 dark:text-green-300 border-green-500/30">
-                            {correctCount}
-                          </Badge>
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        {score.questions_correct && score.questions_correct.length > 0 ? (
-                          <ul className="space-y-2">
-                            {score.questions_correct.slice(0, 5).map((q: any, idx: number) => (
-                              <li key={idx} className="flex items-start gap-2 text-sm">
-                                <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0 mt-0.5" />
-                                <span className="text-muted-foreground">{q.question}</span>
-                              </li>
-                            ))}
-                            {score.questions_correct.length > 5 && (
-                              <li className="text-xs text-muted-foreground italic">
-                                +{score.questions_correct.length - 5} more...
-                              </li>
-                            )}
-                          </ul>
-                        ) : (
-                          <p className="text-sm text-muted-foreground italic">No details provided</p>
-                        )}
-                      </CardContent>
-                    </Card>
+                  <details className="group">
+                    <summary className="cursor-pointer text-sm font-medium text-muted-foreground hover:text-foreground flex items-center gap-2 py-2">
+                      <ChevronDown className="h-4 w-4 group-open:rotate-180 transition-transform" />
+                      View Question Details ({correctCount} correct, {incorrectCount} incorrect)
+                    </summary>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                      {/* Correct Answers */}
+                      <Card className="border-green-500/30 bg-green-500/5">
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-sm flex items-center gap-2 text-green-600 dark:text-green-400">
+                            <CheckCircle2 className="h-4 w-4" />
+                            Correct Answers
+                            <Badge className="bg-green-500/20 text-green-700 dark:text-green-300 border-green-500/30">
+                              {correctCount}
+                            </Badge>
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          {score.questions_correct && score.questions_correct.length > 0 ? (
+                            <ul className="space-y-2 max-h-40 overflow-y-auto">
+                              {score.questions_correct.map((q: any, idx: number) => (
+                                <li key={idx} className="flex items-start gap-2 text-sm">
+                                  <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0 mt-0.5" />
+                                  <span className="text-muted-foreground">{q.question}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          ) : (
+                            <p className="text-sm text-muted-foreground italic">No details provided</p>
+                          )}
+                        </CardContent>
+                      </Card>
 
-                    {/* Incorrect Answers */}
-                    <Card className="border-red-500/30 bg-red-500/5">
-                      <CardHeader className="pb-2">
-                        <CardTitle className="text-sm flex items-center gap-2 text-red-600 dark:text-red-400">
-                          <XCircle className="h-4 w-4" />
-                          Incorrect Answers
-                          <Badge className="bg-red-500/20 text-red-700 dark:text-red-300 border-red-500/30">
-                            {incorrectCount}
-                          </Badge>
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        {score.questions_incorrect && score.questions_incorrect.length > 0 ? (
-                          <ul className="space-y-2">
-                            {score.questions_incorrect.slice(0, 5).map((q: any, idx: number) => (
-                              <li key={idx} className="flex items-start gap-2 text-sm">
-                                <XCircle className="h-4 w-4 text-red-500 shrink-0 mt-0.5" />
-                                <span className="text-muted-foreground">{q.question}</span>
-                              </li>
-                            ))}
-                            {score.questions_incorrect.length > 5 && (
-                              <li className="text-xs text-muted-foreground italic">
-                                +{score.questions_incorrect.length - 5} more...
-                              </li>
-                            )}
-                          </ul>
-                        ) : (
-                          <p className="text-sm text-muted-foreground italic">No details provided</p>
-                        )}
-                      </CardContent>
-                    </Card>
-                  </div>
-                )}
-
-                {/* AI Analysis Section */}
-                {(score.strengths?.length > 0 || score.weaknesses?.length > 0 || score.recommendations?.length > 0) && (
-                  <div className="space-y-4">
-                    <div className="flex items-center gap-2">
-                      <Sparkles className="h-5 w-5 text-primary" />
-                      <h3 className="font-semibold">AI Analysis</h3>
+                      {/* Incorrect Answers */}
+                      <Card className="border-red-500/30 bg-red-500/5">
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-sm flex items-center gap-2 text-red-600 dark:text-red-400">
+                            <XCircle className="h-4 w-4" />
+                            Incorrect Answers
+                            <Badge className="bg-red-500/20 text-red-700 dark:text-red-300 border-red-500/30">
+                              {incorrectCount}
+                            </Badge>
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          {score.questions_incorrect && score.questions_incorrect.length > 0 ? (
+                            <ul className="space-y-2 max-h-40 overflow-y-auto">
+                              {score.questions_incorrect.map((q: any, idx: number) => (
+                                <li key={idx} className="flex items-start gap-2 text-sm">
+                                  <XCircle className="h-4 w-4 text-red-500 shrink-0 mt-0.5" />
+                                  <span className="text-muted-foreground">{q.question}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          ) : (
+                            <p className="text-sm text-muted-foreground italic">No details provided</p>
+                          )}
+                        </CardContent>
+                      </Card>
                     </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      {/* Strengths */}
-                      {score.strengths && score.strengths.length > 0 && (
-                        <Card className="border-green-500/30 bg-gradient-to-br from-green-500/5 to-emerald-500/5">
-                          <CardHeader className="pb-2">
-                            <CardTitle className="text-sm flex items-center gap-2 text-green-600 dark:text-green-400">
-                              <TrendingUp className="h-4 w-4" />
-                              Strengths
-                            </CardTitle>
-                          </CardHeader>
-                          <CardContent>
-                            <ul className="space-y-2">
-                              {score.strengths.map((strength, idx) => (
-                                <li key={idx} className="flex items-start gap-2 text-sm">
-                                  <div className="w-1.5 h-1.5 rounded-full bg-green-500 shrink-0 mt-2" />
-                                  <span className="text-muted-foreground">{strength}</span>
-                                </li>
-                              ))}
-                            </ul>
-                          </CardContent>
-                        </Card>
-                      )}
-
-                      {/* Weaknesses */}
-                      {score.weaknesses && score.weaknesses.length > 0 && (
-                        <Card className="border-amber-500/30 bg-gradient-to-br from-amber-500/5 to-orange-500/5">
-                          <CardHeader className="pb-2">
-                            <CardTitle className="text-sm flex items-center gap-2 text-amber-600 dark:text-amber-400">
-                              <TrendingDown className="h-4 w-4" />
-                              Areas to Improve
-                            </CardTitle>
-                          </CardHeader>
-                          <CardContent>
-                            <ul className="space-y-2">
-                              {score.weaknesses.map((weakness, idx) => (
-                                <li key={idx} className="flex items-start gap-2 text-sm">
-                                  <div className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0 mt-2" />
-                                  <span className="text-muted-foreground">{weakness}</span>
-                                </li>
-                              ))}
-                            </ul>
-                          </CardContent>
-                        </Card>
-                      )}
-
-                      {/* Recommendations */}
-                      {score.recommendations && score.recommendations.length > 0 && (
-                        <Card className="border-primary/30 bg-gradient-to-br from-primary/5 to-secondary/5">
-                          <CardHeader className="pb-2">
-                            <CardTitle className="text-sm flex items-center gap-2 text-primary">
-                              <Target className="h-4 w-4" />
-                              Next Steps
-                            </CardTitle>
-                          </CardHeader>
-                          <CardContent>
-                            <ul className="space-y-2">
-                              {score.recommendations.map((rec, idx) => (
-                                <li key={idx} className="flex items-start gap-2 text-sm">
-                                  <span className="text-primary font-bold shrink-0">{idx + 1}.</span>
-                                  <span className="text-muted-foreground">{rec}</span>
-                                </li>
-                              ))}
-                            </ul>
-                          </CardContent>
-                        </Card>
-                      )}
-                    </div>
-                  </div>
+                  </details>
                 )}
               </CardContent>
             )}
