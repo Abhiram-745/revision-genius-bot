@@ -2,11 +2,12 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, ClipboardList, CalendarDays, ListTodo, Calendar } from "lucide-react";
+import { ArrowLeft, ClipboardList, CalendarDays, ListTodo, CalendarClock, Clock } from "lucide-react";
 import Header from "@/components/Header";
 import { HomeworkList } from "@/components/HomeworkList";
 import { EventsWidget } from "@/components/EventsWidget";
 import { SchoolSchedule } from "@/components/SchoolSchedule";
+import CalendarGrid from "@/components/CalendarGrid";
 import { supabase } from "@/integrations/supabase/client";
 import GuidedOnboarding from "@/components/tours/GuidedOnboarding";
 import PageTransition from "@/components/PageTransition";
@@ -14,7 +15,7 @@ import PageTransition from "@/components/PageTransition";
 const Agenda = () => {
   const navigate = useNavigate();
   const [userId, setUserId] = useState<string>("");
-  const [activeTab, setActiveTab] = useState("homework");
+  const [activeTab, setActiveTab] = useState("calendar");
 
   useEffect(() => {
     loadUser();
@@ -44,66 +45,78 @@ const Agenda = () => {
 
         <Header />
         
-        <div className="container mx-auto px-3 sm:px-4 py-4 md:py-8 max-w-6xl relative z-10">
+        <div className="container mx-auto px-3 sm:px-4 py-4 md:py-6 max-w-7xl relative z-10">
           <Button
             variant="ghost"
             size="sm"
             onClick={() => navigate("/")}
-            className="mb-4 md:mb-6 gap-2 hover-lift text-sm"
+            className="mb-3 md:mb-4 gap-2 hover-lift text-sm"
           >
             <ArrowLeft className="w-3 h-3 sm:w-4 sm:h-4" /> Back to Dashboard
           </Button>
 
           {/* Header Section */}
-          <div className="mb-6 md:mb-8">
+          <div className="mb-4 md:mb-6">
             <div className="flex items-center gap-3 mb-2">
               <div className="p-2.5 rounded-xl bg-gradient-to-br from-primary/20 to-secondary/20 border border-primary/20">
-                <ListTodo className="w-6 h-6 text-primary" />
+                <ListTodo className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
               </div>
-              <h1 className="text-2xl sm:text-3xl md:text-4xl font-display font-bold gradient-text">Agenda</h1>
+              <h1 className="text-xl sm:text-2xl md:text-3xl font-display font-bold gradient-text">Agenda</h1>
             </div>
-            <p className="text-muted-foreground text-sm md:text-base ml-[52px]">
-              Manage your homework, events, and school schedule in one place
+            <p className="text-muted-foreground text-xs sm:text-sm ml-[48px] sm:ml-[52px]">
+              Your calendar, homework, events, and schedule
             </p>
           </div>
 
           {/* Tabs Navigation */}
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-            <TabsList className="grid w-full grid-cols-3 h-12 md:h-14 p-1 bg-muted/50 rounded-xl border border-border/50">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 sm:space-y-6">
+            <TabsList className="grid w-full grid-cols-4 h-11 sm:h-12 md:h-14 p-1 bg-muted/50 rounded-xl border border-border/50">
+              <TabsTrigger 
+                value="calendar" 
+                className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm md:text-base font-medium data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-lg transition-all"
+              >
+                <CalendarClock className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                <span className="hidden sm:inline">Calendar</span>
+                <span className="sm:hidden">Cal</span>
+              </TabsTrigger>
               <TabsTrigger 
                 value="homework" 
-                className="flex items-center gap-2 text-sm md:text-base font-medium data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-lg transition-all"
+                className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm md:text-base font-medium data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-lg transition-all"
               >
-                <ClipboardList className="w-4 h-4" />
+                <ClipboardList className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 <span className="hidden sm:inline">Homework</span>
                 <span className="sm:hidden">Tasks</span>
               </TabsTrigger>
               <TabsTrigger 
                 value="events" 
-                className="flex items-center gap-2 text-sm md:text-base font-medium data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-lg transition-all"
+                className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm md:text-base font-medium data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-lg transition-all"
               >
-                <CalendarDays className="w-4 h-4" />
+                <CalendarDays className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 <span>Events</span>
               </TabsTrigger>
               <TabsTrigger 
                 value="schedule" 
-                className="flex items-center gap-2 text-sm md:text-base font-medium data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-lg transition-all"
+                className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm md:text-base font-medium data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-lg transition-all"
               >
-                <Calendar className="w-4 h-4" />
+                <Clock className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 <span className="hidden sm:inline">Schedule</span>
                 <span className="sm:hidden">School</span>
               </TabsTrigger>
             </TabsList>
 
-            <TabsContent value="homework" className="mt-6 animate-fade-in">
+            <TabsContent value="calendar" className="mt-4 sm:mt-6 animate-fade-in">
+              <CalendarGrid userId={userId} />
+            </TabsContent>
+
+            <TabsContent value="homework" className="mt-4 sm:mt-6 animate-fade-in">
               {userId && <HomeworkList userId={userId} />}
             </TabsContent>
 
-            <TabsContent value="events" className="mt-6 animate-fade-in">
+            <TabsContent value="events" className="mt-4 sm:mt-6 animate-fade-in">
               <EventsWidget />
             </TabsContent>
 
-            <TabsContent value="schedule" className="mt-6 animate-fade-in">
+            <TabsContent value="schedule" className="mt-4 sm:mt-6 animate-fade-in">
               <SchoolSchedule />
             </TabsContent>
           </Tabs>
