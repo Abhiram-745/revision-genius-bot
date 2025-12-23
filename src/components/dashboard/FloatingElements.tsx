@@ -56,13 +56,13 @@ const FloatingIcon = ({
 export const DashboardFloatingElements = () => {
   const icons = [
     { Icon: BookOpen, x: "5%", y: "10%", size: 28, delay: 0, duration: 9, color: "primary" },
-    { Icon: Brain, x: "92%", y: "15%", size: 32, delay: 1.5, duration: 10, color: "secondary" },
+    { Icon: Brain, x: "92%", y: "15%", size: 32, delay: 1.5, duration: 10, color: "accent" },
     { Icon: Star, x: "88%", y: "60%", size: 24, delay: 0.8, duration: 8, color: "amber-400" },
-    { Icon: Target, x: "8%", y: "70%", size: 26, delay: 2, duration: 11, color: "emerald-400" },
+    { Icon: Target, x: "8%", y: "70%", size: 26, delay: 2, duration: 11, color: "accent" },
     { Icon: Sparkles, x: "95%", y: "35%", size: 22, delay: 1, duration: 7, color: "primary" },
     { Icon: Trophy, x: "3%", y: "40%", size: 24, delay: 2.5, duration: 9, color: "amber-400" },
-    { Icon: Zap, x: "90%", y: "80%", size: 20, delay: 0.5, duration: 8, color: "primary" },
-    { Icon: GraduationCap, x: "6%", y: "85%", size: 28, delay: 1.8, duration: 10, color: "secondary" },
+    { Icon: Zap, x: "90%", y: "80%", size: 20, delay: 0.5, duration: 8, color: "accent" },
+    { Icon: GraduationCap, x: "6%", y: "85%", size: 28, delay: 1.8, duration: 10, color: "primary" },
   ];
 
   return (
@@ -126,8 +126,8 @@ export const MotivationalBadge = ({ streak = 0, isNewUser = false }: Motivationa
         }}
         className="relative"
       >
-        <div className="absolute inset-0 bg-gradient-to-r from-cyan-400/30 to-emerald-400/30 blur-xl rounded-full" />
-        <div className="relative px-4 py-2 rounded-full bg-gradient-to-r from-cyan-500/90 to-emerald-500/90 text-white font-medium text-sm shadow-lg shadow-cyan-500/25 flex items-center gap-2">
+        <div className="absolute inset-0 bg-gradient-to-r from-primary/30 to-accent/30 blur-xl rounded-full" />
+        <div className="relative px-4 py-2 rounded-full bg-gradient-to-r from-primary/90 to-accent/90 text-white font-medium text-sm shadow-lg shadow-primary/25 flex items-center gap-2">
           <span className="text-base">{emoji}</span>
           <span>{text}</span>
         </div>
