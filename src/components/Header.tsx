@@ -450,15 +450,6 @@ const Header = ({ onNewTimetable }: HeaderProps) => {
               <Sparkles className="h-4 w-4 mr-1 text-secondary" />
               Practice
             </Button>
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={() => navigate("/revision-apps")} 
-              className={`text-sm font-medium transition-all px-2.5 ${isActivePath("/revision-apps") ? "bg-primary/15 text-primary" : ""}`}
-            >
-              <BookOpen className="h-4 w-4 mr-1" />
-              Revision Apps
-            </Button>
             
             {/* These items show directly on xl+ screens */}
             <Button 

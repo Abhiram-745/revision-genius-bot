@@ -25,7 +25,7 @@ import Practice from "@/pages/Practice";
 import PMT from "@/pages/PMT";
 import Quizlet from "@/pages/Quizlet";
 import Gradlify from "@/pages/Gradlify";
-import RevisionApps from "@/pages/RevisionApps";
+
 
 export const AnimatedRoutes = () => {
   const location = useLocation();
@@ -52,7 +52,7 @@ export const AnimatedRoutes = () => {
         <Route path="/pmt" element={<PMT />} />
         <Route path="/quizlet" element={<Quizlet />} />
         <Route path="/gradlify" element={<Gradlify />} />
-        <Route path="/revision-apps" element={<RevisionApps />} />
+        
         <Route path="/activity" element={<Activity />} />
         <Route path="/reflections" element={<Reflections />} />
         <Route path="/timetable/:id" element={<TimetableView />} />
