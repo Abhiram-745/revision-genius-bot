@@ -11,8 +11,7 @@ import Groups from "@/pages/Groups";
 import Connect from "@/pages/Connect";
 import GroupDetail from "@/components/groups/GroupDetail";
 import ImportTimetable from "@/pages/ImportTimetable";
-import Events from "@/pages/Events";
-import Homework from "@/pages/Homework";
+import Agenda from "@/pages/Agenda";
 import TestScores from "@/pages/TestScores";
 import AIInsights from "@/pages/AIInsights";
 import BlurtAI from "@/pages/BlurtAI";
@@ -43,8 +42,7 @@ export const AnimatedRoutes = () => {
         <Route path="/connect" element={<Connect />} />
         <Route path="/groups/:id" element={<GroupDetail />} />
         <Route path="/import-timetable" element={<ImportTimetable />} />
-        <Route path="/events" element={<Events />} />
-        <Route path="/homework" element={<Homework />} />
+        <Route path="/agenda" element={<Agenda />} />
         <Route path="/test-scores" element={<TestScores />} />
         <Route path="/ai-insights" element={<AIInsights />} />
         <Route path="/blurt-ai" element={<BlurtAI />} />

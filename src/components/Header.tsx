@@ -28,7 +28,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Calendar, Plus, Home, LogOut, Settings, User, Sparkles, BookOpen, Users, Moon, Sun, ClipboardList, CalendarClock, TrendingUp, Menu, Brain, HelpCircle, Crown } from "lucide-react";
+import { Calendar, Plus, Home, LogOut, Settings, User, Sparkles, BookOpen, Users, Moon, Sun, ListTodo, CalendarClock, TrendingUp, Menu, Brain, HelpCircle, Crown } from "lucide-react";
 import { toast } from "sonner";
 import ProfileSettings from "./ProfileSettings";
 import { useUserRole, useUsageLimits } from "@/hooks/useUserRole";
@@ -172,7 +172,7 @@ const Header = ({ onNewTimetable }: HeaderProps) => {
   };
 
   const isActivePath = (path: string) => location.pathname === path;
-  const moreDropdownPaths = ["/events", "/test-scores", "/social", "/ai-insights", "/admin"];
+  const moreDropdownPaths = ["/test-scores", "/social", "/ai-insights", "/admin"];
   const isMoreActive = moreDropdownPaths.some(p => location.pathname === p);
 
   const NavigationItems = ({ onItemClick }: { onItemClick?: () => void }) => (
@@ -226,30 +226,15 @@ const Header = ({ onNewTimetable }: HeaderProps) => {
         variant="ghost"
         size="sm"
         onClick={() => {
-          navigate("/homework");
+          navigate("/agenda");
           onItemClick?.();
         }}
         className={`justify-start gap-3 w-full px-3 py-3 rounded-xl transition-all ${
-          isActivePath("/homework") ? "bg-primary/15 text-primary font-semibold" : "hover:bg-primary/10"
+          isActivePath("/agenda") ? "bg-primary/15 text-primary font-semibold" : "hover:bg-primary/10"
         }`}
       >
-        <ClipboardList className="h-5 w-5 text-primary" />
-        <span className="font-medium">Homework</span>
-      </Button>
-
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={() => {
-          navigate("/events");
-          onItemClick?.();
-        }}
-        className={`justify-start gap-3 w-full px-3 py-3 rounded-xl transition-all ${
-          isActivePath("/events") ? "bg-primary/15 text-primary font-semibold" : "hover:bg-primary/10"
-        }`}
-      >
-        <CalendarClock className="h-5 w-5 text-primary" />
-        <span className="font-medium">Events</span>
+        <ListTodo className="h-5 w-5 text-primary" />
+        <span className="font-medium">Agenda</span>
       </Button>
 
       <Button
@@ -420,11 +405,11 @@ const Header = ({ onNewTimetable }: HeaderProps) => {
             <Button 
               variant="ghost" 
               size="sm" 
-              onClick={() => navigate("/homework")} 
-              className={`text-sm font-medium transition-all px-2.5 ${isActivePath("/homework") ? "bg-primary/15 text-primary" : ""}`}
+              onClick={() => navigate("/agenda")} 
+              className={`text-sm font-medium transition-all px-2.5 ${isActivePath("/agenda") ? "bg-primary/15 text-primary" : ""}`}
             >
-              <ClipboardList className="h-4 w-4 mr-1" />
-              Homework
+              <ListTodo className="h-4 w-4 mr-1" />
+              Agenda
             </Button>
             <Button 
               variant="ghost" 
@@ -454,15 +439,6 @@ const Header = ({ onNewTimetable }: HeaderProps) => {
             >
               <Users className="h-4 w-4 mr-1" />
               Connect
-            </Button>
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={() => navigate("/events")} 
-              className={`hidden 2xl:flex text-sm font-medium transition-all px-2.5 ${isActivePath("/events") ? "bg-primary/15 text-primary" : ""}`}
-            >
-              <CalendarClock className="h-4 w-4 mr-1" />
-              Events
             </Button>
             <Button 
               variant="ghost" 
@@ -504,14 +480,7 @@ const Header = ({ onNewTimetable }: HeaderProps) => {
                   <Users className="h-4 w-4 mr-2" />
                   Connect
                 </DropdownMenuItem>
-                {/* Events and Scores show in dropdown on lg/xl */}
-                <DropdownMenuItem 
-                  onClick={() => navigate("/events")} 
-                  className={`2xl:hidden cursor-pointer ${isActivePath("/events") ? "bg-primary/10 text-primary" : ""}`}
-                >
-                  <CalendarClock className="h-4 w-4 mr-2" />
-                  Events
-                </DropdownMenuItem>
+                {/* Test Scores shows in dropdown on lg/xl */}
                 <DropdownMenuItem 
                   onClick={() => navigate("/test-scores")} 
                   className={`2xl:hidden cursor-pointer ${isActivePath("/test-scores") ? "bg-primary/10 text-primary" : ""}`}
