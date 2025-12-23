@@ -594,7 +594,6 @@ const CalendarView = () => {
   return (
     <PageTransition>
       <div className="min-h-screen bg-background">
-        <GuidedOnboarding />
         <Header />
         
         <div className="p-3 sm:p-4 md:p-6 space-y-3 md:space-y-5">

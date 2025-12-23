@@ -56,6 +56,42 @@ export type Database = {
         }
         Relationships: []
       }
+      app_requests: {
+        Row: {
+          admin_notes: string | null
+          app_name: string
+          app_url: string
+          created_at: string
+          description: string | null
+          id: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          app_name: string
+          app_url: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          admin_notes?: string | null
+          app_name?: string
+          app_url?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       banned_users: {
         Row: {
           banned_at: string | null

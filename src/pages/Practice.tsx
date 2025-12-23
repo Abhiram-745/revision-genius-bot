@@ -1,15 +1,23 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Brain, Sparkles, Target, Clock, TrendingUp, BookOpen, GraduationCap, Layers, ExternalLink, Calculator } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { ArrowLeft, Brain, Sparkles, Target, Clock, TrendingUp, BookOpen, GraduationCap, Layers, ExternalLink, MessageSquarePlus, Send, Loader2, Filter } from "lucide-react";
 import Header from "@/components/Header";
 import PageTransition from "@/components/PageTransition";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
 import SaveMyExamsLogo from "@/components/SaveMyExamsLogo";
+import { OwlMascot } from "@/components/mascot/OwlMascot";
+import { toast } from "sonner";
+
+type Category = "all" | "ai" | "gcse" | "alevel" | "ap" | "flashcards";
 
 interface PracticeApp {
   id: string;
@@ -17,10 +25,11 @@ interface PracticeApp {
   description: string;
   icon: React.ReactNode;
   gradient: string;
-  route: string;
+  route?: string;
+  externalUrl?: string;
   badge?: string;
   badgeColor?: string;
-  recommended?: string;
+  categories: Category[];
 }
 
 const Practice = () => {
@@ -29,6 +38,10 @@ const Practice = () => {
   const [totalSessions, setTotalSessions] = useState(0);
   const [totalTime, setTotalTime] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [activeCategory, setActiveCategory] = useState<Category>("all");
+  const [requestDialogOpen, setRequestDialogOpen] = useState(false);
+  const [requestLoading, setRequestLoading] = useState(false);
+  const [requestForm, setRequestForm] = useState({ name: "", url: "", description: "" });
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -57,6 +70,49 @@ const Practice = () => {
     fetchStats();
   }, [user]);
 
+  const handleSubmitRequest = async () => {
+    if (!user) {
+      toast.error("Please log in to submit a request");
+      return;
+    }
+    if (!requestForm.name.trim() || !requestForm.url.trim()) {
+      toast.error("Please fill in app name and URL");
+      return;
+    }
+
+    setRequestLoading(true);
+    try {
+      const { error } = await supabase
+        .from("app_requests")
+        .insert({
+          user_id: user.id,
+          app_name: requestForm.name.trim(),
+          app_url: requestForm.url.trim(),
+          description: requestForm.description.trim() || null,
+        });
+
+      if (error) throw error;
+
+      toast.success("Request submitted! We'll review it soon.");
+      setRequestDialogOpen(false);
+      setRequestForm({ name: "", url: "", description: "" });
+    } catch (err) {
+      console.error("Error submitting request:", err);
+      toast.error("Failed to submit request");
+    } finally {
+      setRequestLoading(false);
+    }
+  };
+
+  const categories: { id: Category; label: string }[] = [
+    { id: "all", label: "All Apps" },
+    { id: "ai", label: "AI Tools" },
+    { id: "gcse", label: "GCSE" },
+    { id: "alevel", label: "A-Level" },
+    { id: "ap", label: "AP Exams" },
+    { id: "flashcards", label: "Flashcards" },
+  ];
+
   const practiceApps: PracticeApp[] = [
     {
       id: "blurt-ai",
@@ -67,16 +123,18 @@ const Practice = () => {
       route: "/blurt-ai",
       badge: "AI-Powered",
       badgeColor: "bg-secondary/20 text-secondary border-secondary/30",
+      categories: ["all", "ai", "gcse", "alevel", "ap", "flashcards"],
     },
     {
       id: "savemyexams",
       name: "SaveMyExams",
-      description: "Access revision notes, past papers, and practice questions from SaveMyExams.",
+      description: "Access revision notes, past papers, and practice questions for GCSE, A-Level and AP exams.",
       icon: <SaveMyExamsLogo className="w-8 h-8" />,
       gradient: "from-emerald-500/20 via-emerald-500/10 to-teal-500/10",
       route: "/savemyexams",
-      badge: "External",
+      badge: "Notes & Papers",
       badgeColor: "bg-emerald-500/20 text-emerald-600 border-emerald-500/30",
+      categories: ["all", "gcse", "alevel", "ap"],
     },
     {
       id: "pmt",
@@ -85,8 +143,9 @@ const Practice = () => {
       icon: <GraduationCap className="w-8 h-8 text-blue-500" />,
       gradient: "from-blue-500/20 via-blue-500/10 to-indigo-500/10",
       route: "/pmt",
-      badge: "External",
+      badge: "STEM Focus",
       badgeColor: "bg-blue-500/20 text-blue-600 border-blue-500/30",
+      categories: ["all", "gcse", "alevel"],
     },
     {
       id: "quizlet",
@@ -97,20 +156,87 @@ const Practice = () => {
       route: "/quizlet",
       badge: "Flashcards",
       badgeColor: "bg-indigo-500/20 text-indigo-600 border-indigo-500/30",
-      recommended: "Recommended for vocabulary practice",
+      categories: ["all", "flashcards"],
     },
     {
-      id: "gradlify",
-      name: "Gradlify",
-      description: "Interactive maths practice with step-by-step solutions. Perfect for GCSE and A-Level maths revision.",
-      icon: <Calculator className="w-8 h-8 text-orange-500" />,
-      gradient: "from-orange-500/20 via-orange-500/10 to-amber-500/10",
-      route: "/gradlify",
-      badge: "Maths",
-      badgeColor: "bg-orange-500/20 text-orange-600 border-orange-500/30",
-      recommended: "Recommended for maths",
+      id: "studyfetch",
+      name: "StudyFetch",
+      description: "AI study companion that creates flashcards, quizzes, and notes from your documents automatically.",
+      icon: <Sparkles className="w-8 h-8 text-pink-500" />,
+      gradient: "from-pink-500/20 via-pink-500/10 to-rose-500/10",
+      externalUrl: "https://studyfetch.com",
+      badge: "AI-Powered",
+      badgeColor: "bg-pink-500/20 text-pink-600 border-pink-500/30",
+      categories: ["all", "ai"],
+    },
+    {
+      id: "turbo-ai",
+      name: "Turbo.AI",
+      description: "AI tutoring platform that provides personalized homework help and step-by-step explanations.",
+      icon: <Brain className="w-8 h-8 text-cyan-500" />,
+      gradient: "from-cyan-500/20 via-cyan-500/10 to-teal-500/10",
+      externalUrl: "https://turbo.ai",
+      badge: "AI Tutor",
+      badgeColor: "bg-cyan-500/20 text-cyan-600 border-cyan-500/30",
+      categories: ["all", "ai"],
+    },
+    {
+      id: "mindgrasp",
+      name: "MindGrasp.AI",
+      description: "Upload notes, videos, or documents and AI generates summaries, flashcards, and practice questions.",
+      icon: <BookOpen className="w-8 h-8 text-violet-500" />,
+      gradient: "from-violet-500/20 via-violet-500/10 to-purple-500/10",
+      externalUrl: "https://mindgrasp.ai",
+      badge: "AI Notes",
+      badgeColor: "bg-violet-500/20 text-violet-600 border-violet-500/30",
+      categories: ["all", "ai"],
+    },
+    {
+      id: "medly",
+      name: "Medly AI",
+      description: "AI-powered medical and science revision platform with interactive learning tools.",
+      icon: <Target className="w-8 h-8 text-red-500" />,
+      gradient: "from-red-500/20 via-red-500/10 to-orange-500/10",
+      externalUrl: "https://medly.ai",
+      badge: "Medical",
+      badgeColor: "bg-red-500/20 text-red-600 border-red-500/30",
+      categories: ["all", "gcse", "alevel"],
+    },
+    {
+      id: "anki",
+      name: "Anki",
+      description: "Powerful spaced repetition flashcard system. Perfect for long-term memorization.",
+      icon: <Layers className="w-8 h-8 text-slate-500" />,
+      gradient: "from-slate-500/20 via-slate-500/10 to-gray-500/10",
+      externalUrl: "https://ankiweb.net",
+      badge: "Spaced Repetition",
+      badgeColor: "bg-slate-500/20 text-slate-600 border-slate-500/30",
+      categories: ["all", "flashcards"],
+    },
+    {
+      id: "kahoot",
+      name: "Kahoot!",
+      description: "Game-based learning platform with quizzes created by teachers and students worldwide.",
+      icon: <Sparkles className="w-8 h-8 text-purple-500" />,
+      gradient: "from-purple-500/20 via-purple-500/10 to-fuchsia-500/10",
+      externalUrl: "https://kahoot.com",
+      badge: "Interactive",
+      badgeColor: "bg-purple-500/20 text-purple-600 border-purple-500/30",
+      categories: ["all", "gcse", "alevel"],
     },
   ];
+
+  const filteredApps = activeCategory === "all" 
+    ? practiceApps 
+    : practiceApps.filter(app => app.categories.includes(activeCategory));
+
+  const handleAppClick = (app: PracticeApp) => {
+    if (app.route) {
+      navigate(app.route);
+    } else if (app.externalUrl) {
+      window.open(app.externalUrl, "_blank", "noopener,noreferrer");
+    }
+  };
 
   return (
     <PageTransition>
@@ -150,9 +276,7 @@ const Practice = () => {
 
             <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center gap-6">
               <div className="flex-shrink-0">
-                <div className="w-16 h-16 md:w-20 md:h-20 rounded-2xl bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center shadow-lg">
-                  <BookOpen className="w-8 h-8 md:w-10 md:h-10 text-primary-foreground" />
-                </div>
+                <OwlMascot type="lightbulb" size="lg" />
               </div>
 
               <div className="flex-1 space-y-2">
@@ -160,11 +284,11 @@ const Practice = () => {
                   <h1 className="text-2xl md:text-3xl font-bold text-foreground">Practice Hub</h1>
                   <Badge variant="secondary" className="bg-primary/30 text-primary-foreground border-primary/50">
                     <Sparkles className="w-3 h-3 mr-1" />
-                    All-in-One
+                    {practiceApps.length} Apps
                   </Badge>
                 </div>
                 <p className="text-muted-foreground text-sm md:text-base max-w-2xl">
-                  Access all your revision tools in one place. Track your practice sessions across different platforms.
+                  Access all your revision tools in one place. Track practice sessions across different platforms.
                 </p>
               </div>
             </div>
@@ -207,56 +331,158 @@ const Practice = () => {
             </Card>
           </div>
 
+          {/* Category Filters */}
+          <div className="flex items-center gap-2 flex-wrap">
+            <Filter className="w-4 h-4 text-muted-foreground" />
+            {categories.map((cat) => (
+              <Button
+                key={cat.id}
+                variant={activeCategory === cat.id ? "default" : "outline"}
+                size="sm"
+                onClick={() => setActiveCategory(cat.id)}
+                className={activeCategory === cat.id ? "bg-primary" : ""}
+              >
+                {cat.label}
+              </Button>
+            ))}
+          </div>
+
           {/* Practice Apps Grid */}
           <div className="space-y-4">
-            <h2 className="text-xl font-semibold text-foreground">Choose a Practice App</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {practiceApps.map((app, index) => (
-                <motion.div
-                  key={app.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                >
-                  <Card
-                    className={`cursor-pointer hover:shadow-lg transition-all duration-300 border-2 hover:border-primary/30 bg-gradient-to-r ${app.gradient}`}
-                    onClick={() => navigate(app.route)}
+            <h2 className="text-xl font-semibold text-foreground">
+              {activeCategory === "all" ? "All Study Apps" : `${categories.find(c => c.id === activeCategory)?.label} Apps`}
+            </h2>
+            <AnimatePresence mode="popLayout">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {filteredApps.map((app, index) => (
+                  <motion.div
+                    key={app.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    transition={{ delay: index * 0.05 }}
+                    layout
                   >
-                    <CardHeader className="pb-2">
-                      <div className="flex items-start justify-between">
-                        <div className="flex items-center gap-3">
-                          <div className="w-12 h-12 rounded-xl bg-background/50 flex items-center justify-center shadow-sm">
-                            {app.icon}
+                    <Card
+                      className={`cursor-pointer hover:shadow-lg transition-all duration-300 border-2 hover:border-primary/30 bg-gradient-to-r ${app.gradient}`}
+                      onClick={() => handleAppClick(app)}
+                    >
+                      <CardHeader className="pb-2">
+                        <div className="flex items-start justify-between">
+                          <div className="flex items-center gap-3">
+                            <div className="w-12 h-12 rounded-xl bg-background/50 flex items-center justify-center shadow-sm">
+                              {app.icon}
+                            </div>
+                            <div>
+                              <CardTitle className="text-lg flex items-center gap-2">
+                                {app.name}
+                                {app.badge && (
+                                  <Badge className={app.badgeColor} variant="outline">
+                                    {app.badge}
+                                  </Badge>
+                                )}
+                              </CardTitle>
+                            </div>
                           </div>
-                          <div>
-                            <CardTitle className="text-lg flex items-center gap-2">
-                              {app.name}
-                              {app.badge && (
-                                <Badge className={app.badgeColor} variant="outline">
-                                  {app.badge}
-                                </Badge>
-                              )}
-                            </CardTitle>
-                            {app.recommended && (
-                              <p className="text-xs text-muted-foreground mt-1">{app.recommended}</p>
-                            )}
+                          <Button size="sm" variant="ghost" className="shrink-0">
+                            <ExternalLink className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </CardHeader>
+                      <CardContent>
+                        <CardDescription className="text-sm">
+                          {app.description}
+                        </CardDescription>
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                ))}
+              </div>
+            </AnimatePresence>
+          </div>
+
+          {/* Request App Section */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+          >
+            <Card className="bg-gradient-to-r from-muted/50 to-muted/30 border-dashed border-2 border-border/70">
+              <CardContent className="p-6">
+                <div className="flex flex-col md:flex-row items-center gap-6">
+                  <OwlMascot type="magnifying" size="lg" />
+                  <div className="flex-1 text-center md:text-left">
+                    <h3 className="text-lg font-semibold mb-1">Don't see your favourite study app?</h3>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      Request it to be added! We review all suggestions and add the best ones.
+                    </p>
+                    <Dialog open={requestDialogOpen} onOpenChange={setRequestDialogOpen}>
+                      <DialogTrigger asChild>
+                        <Button className="gap-2">
+                          <MessageSquarePlus className="h-4 w-4" />
+                          Request an App
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent>
+                        <DialogHeader>
+                          <DialogTitle className="flex items-center gap-2">
+                            <MessageSquarePlus className="h-5 w-5" />
+                            Request a Study App
+                          </DialogTitle>
+                          <DialogDescription>
+                            Tell us about the study app you'd like to see added to Vistara.
+                          </DialogDescription>
+                        </DialogHeader>
+                        <div className="space-y-4 py-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="app-name">App Name *</Label>
+                            <Input
+                              id="app-name"
+                              placeholder="e.g., Khan Academy"
+                              value={requestForm.name}
+                              onChange={(e) => setRequestForm(p => ({ ...p, name: e.target.value }))}
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="app-url">Website URL *</Label>
+                            <Input
+                              id="app-url"
+                              placeholder="e.g., https://khanacademy.org"
+                              value={requestForm.url}
+                              onChange={(e) => setRequestForm(p => ({ ...p, url: e.target.value }))}
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="app-description">Why do you like it? (optional)</Label>
+                            <Textarea
+                              id="app-description"
+                              placeholder="Tell us what makes this app great for studying..."
+                              value={requestForm.description}
+                              onChange={(e) => setRequestForm(p => ({ ...p, description: e.target.value }))}
+                              rows={3}
+                            />
                           </div>
                         </div>
-                        <Button size="sm" variant="ghost" className="shrink-0">
-                          <ExternalLink className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      <CardDescription className="text-sm">
-                        {app.description}
-                      </CardDescription>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              ))}
-            </div>
-          </div>
+                        <DialogFooter>
+                          <Button variant="outline" onClick={() => setRequestDialogOpen(false)}>
+                            Cancel
+                          </Button>
+                          <Button onClick={handleSubmitRequest} disabled={requestLoading} className="gap-2">
+                            {requestLoading ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <Send className="h-4 w-4" />
+                            )}
+                            Submit Request
+                          </Button>
+                        </DialogFooter>
+                      </DialogContent>
+                    </Dialog>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
 
           {/* Info Note */}
           <Card className="bg-muted/30 border-dashed">
@@ -266,8 +492,7 @@ const Practice = () => {
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">
-                  <span className="font-medium text-foreground">Note:</span> External platforms (SaveMyExams, PMT, Quizlet) 
-                  require signing in on their respective websites. Use the "Open in New Tab" option if you need to log in.
+                  <span className="font-medium text-foreground">Note:</span> External platforms require signing in on their respective websites. Use the "Open in New Tab" option if you need to log in.
                 </p>
               </div>
             </CardContent>
