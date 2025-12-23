@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import Header from "@/components/Header";
-import { Users, Crown, Ban, Search, Eye, Calendar, BookOpen, Clock, AlertTriangle, CheckCircle, XCircle, Loader2, ChevronRight, ArrowLeft } from "lucide-react";
+import { Users, Crown, Ban, Search, Eye, Calendar, BookOpen, Clock, AlertTriangle, CheckCircle, XCircle, Loader2, ChevronRight, ArrowLeft, MessageSquare, ExternalLink } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -40,6 +40,19 @@ interface UserStats {
   completedSessions: number;
 }
 
+interface AppRequest {
+  id: string;
+  user_id: string;
+  app_name: string;
+  app_url: string;
+  description: string | null;
+  status: string;
+  admin_notes: string | null;
+  created_at: string;
+  user_email?: string;
+  user_name?: string;
+}
+
 const ADMIN_EMAILS = [
   'abhiramkakarla1@gmail.com',
   'dhrishiv.panjabi@gmail.com'
@@ -60,6 +73,9 @@ const Admin = () => {
   const [selectedHomework, setSelectedHomework] = useState<any | null>(null);
   const [selectedSession, setSelectedSession] = useState<any | null>(null);
   const [selectedScore, setSelectedScore] = useState<any | null>(null);
+  const [activeTab, setActiveTab] = useState("users");
+  const [appRequests, setAppRequests] = useState<AppRequest[]>([]);
+  const [appRequestsLoading, setAppRequestsLoading] = useState(false);
 
   // Dialog states
   const [banDialogOpen, setBanDialogOpen] = useState(false);
@@ -92,12 +108,65 @@ const Admin = () => {
       }
 
       setIsAdmin(true);
-      await loadUsers();
+      await Promise.all([loadUsers(), loadAppRequests()]);
     } catch (error) {
       console.error("Error:", error);
       navigate("/dashboard");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadAppRequests = async () => {
+    setAppRequestsLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from("app_requests")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+
+      // Fetch user info for each request
+      const userIds = [...new Set((data || []).map(r => r.user_id))];
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("id, full_name")
+        .in("id", userIds);
+
+      const requestsWithUsers = (data || []).map(req => {
+        const profile = profiles?.find(p => p.id === req.user_id);
+        return {
+          ...req,
+          user_name: profile?.full_name || "Unknown User",
+        };
+      });
+
+      setAppRequests(requestsWithUsers);
+    } catch (error) {
+      console.error("Error loading app requests:", error);
+    } finally {
+      setAppRequestsLoading(false);
+    }
+  };
+
+  const handleUpdateRequestStatus = async (requestId: string, status: string) => {
+    setActionLoading(requestId);
+    try {
+      const { error } = await supabase
+        .from("app_requests")
+        .update({ status })
+        .eq("id", requestId);
+
+      if (error) throw error;
+
+      toast.success(`Request marked as ${status}`);
+      await loadAppRequests();
+    } catch (error) {
+      console.error("Error updating request:", error);
+      toast.error("Failed to update request");
+    } finally {
+      setActionLoading(null);
     }
   };
 
@@ -366,7 +435,7 @@ const Admin = () => {
           </div>
 
           {/* Stats Overview */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8">
             <Card className="hover:shadow-lg transition-shadow">
               <CardContent className="pt-6">
                 <div className="flex items-center gap-3">
@@ -419,8 +488,40 @@ const Admin = () => {
                 </div>
               </CardContent>
             </Card>
+            <Card className="hover:shadow-lg transition-shadow">
+              <CardContent className="pt-6">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-secondary/10 rounded-lg">
+                    <MessageSquare className="h-8 w-8 text-secondary" />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold">{appRequests.filter(r => r.status === 'pending').length}</p>
+                    <p className="text-sm text-muted-foreground">App Requests</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </div>
 
+          {/* Tabs for Users and App Requests */}
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+            <TabsList>
+              <TabsTrigger value="users" className="gap-2">
+                <Users className="h-4 w-4" />
+                Users
+              </TabsTrigger>
+              <TabsTrigger value="requests" className="gap-2">
+                <MessageSquare className="h-4 w-4" />
+                App Requests
+                {appRequests.filter(r => r.status === 'pending').length > 0 && (
+                  <Badge variant="secondary" className="ml-1 h-5 w-5 p-0 flex items-center justify-center text-xs">
+                    {appRequests.filter(r => r.status === 'pending').length}
+                  </Badge>
+                )}
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="users">
           {/* Users List */}
           <Card>
             <CardHeader>
@@ -1114,6 +1215,91 @@ const Admin = () => {
               ) : null}
             </DialogContent>
           </Dialog>
+            </TabsContent>
+
+            <TabsContent value="requests">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <MessageSquare className="h-5 w-5" />
+                    App Requests ({appRequests.length})
+                  </CardTitle>
+                  <CardDescription>Review and manage user-submitted app requests</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {appRequestsLoading ? (
+                    <div className="flex items-center justify-center py-8">
+                      <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                    </div>
+                  ) : appRequests.length === 0 ? (
+                    <p className="text-center text-muted-foreground py-8">No app requests yet</p>
+                  ) : (
+                    <div className="space-y-3">
+                      {appRequests.map((request) => (
+                        <motion.div
+                          key={request.id}
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className="p-4 border rounded-lg hover:bg-muted/30 transition-all"
+                        >
+                          <div className="flex items-start justify-between gap-4">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-1">
+                                <h4 className="font-semibold">{request.app_name}</h4>
+                                <Badge variant={
+                                  request.status === 'approved' ? 'default' :
+                                  request.status === 'rejected' ? 'destructive' : 'secondary'
+                                }>
+                                  {request.status}
+                                </Badge>
+                              </div>
+                              <a 
+                                href={request.app_url} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="text-sm text-primary hover:underline flex items-center gap-1"
+                              >
+                                {request.app_url}
+                                <ExternalLink className="h-3 w-3" />
+                              </a>
+                              {request.description && (
+                                <p className="text-sm text-muted-foreground mt-2">{request.description}</p>
+                              )}
+                              <p className="text-xs text-muted-foreground mt-2">
+                                Requested by {request.user_name} • {new Date(request.created_at).toLocaleDateString()}
+                              </p>
+                            </div>
+                            {request.status === 'pending' && (
+                              <div className="flex gap-2">
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => handleUpdateRequestStatus(request.id, 'approved')}
+                                  disabled={actionLoading === request.id}
+                                  className="hover:bg-green-500/10 hover:text-green-600"
+                                >
+                                  {actionLoading === request.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle className="h-4 w-4" />}
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => handleUpdateRequestStatus(request.id, 'rejected')}
+                                  disabled={actionLoading === request.id}
+                                  className="hover:bg-destructive/10 hover:text-destructive"
+                                >
+                                  <XCircle className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            )}
+                          </div>
+                        </motion.div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
         </main>
       </div>
     </PageTransition>
