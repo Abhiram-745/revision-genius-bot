@@ -9,7 +9,6 @@ import { EventsWidget } from "@/components/EventsWidget";
 import { SchoolSchedule } from "@/components/SchoolSchedule";
 import CalendarGrid from "@/components/CalendarGrid";
 import { supabase } from "@/integrations/supabase/client";
-import GuidedOnboarding from "@/components/tours/GuidedOnboarding";
 import PageTransition from "@/components/PageTransition";
 
 const Agenda = () => {
@@ -33,8 +32,6 @@ const Agenda = () => {
   return (
     <PageTransition>
       <div className="min-h-screen bg-background relative overflow-hidden">
-        {/* Guided Onboarding Tour */}
-        <GuidedOnboarding />
         
         {/* Floating background elements - hidden on mobile */}
         <div className="fixed inset-0 overflow-hidden pointer-events-none hidden md:block" style={{ zIndex: 1 }}>

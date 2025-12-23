@@ -3,9 +3,10 @@ import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Clock, AlertTriangle, CheckCircle, ChevronRight } from "lucide-react";
+import { Clock, AlertTriangle, ChevronRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { format, isPast, isToday, isTomorrow, differenceInDays, parseISO } from "date-fns";
+import { MascotMessage } from "@/components/mascot/MascotMessage";
 
 interface Homework {
   id: string;
@@ -86,7 +87,7 @@ export const CompactDeadlinesCard = ({ userId }: CompactDeadlinesCardProps) => {
             variant="ghost"
             size="sm"
             className="h-7 px-2 text-xs"
-            onClick={() => navigate("/homework")}
+            onClick={() => navigate("/agenda")}
           >
             View All
             <ChevronRight className="h-3 w-3 ml-1" />
@@ -95,10 +96,12 @@ export const CompactDeadlinesCard = ({ userId }: CompactDeadlinesCardProps) => {
       </CardHeader>
       <CardContent>
         {deadlines.length === 0 ? (
-          <div className="text-center py-4">
-            <CheckCircle className="h-8 w-8 mx-auto text-green-500 mb-2" />
-            <p className="text-sm text-muted-foreground">No upcoming deadlines!</p>
-          </div>
+          <MascotMessage
+            type="sleeping"
+            message="No upcoming deadlines!"
+            subMessage="Time to relax or get ahead."
+            size="sm"
+          />
         ) : (
           <div className="space-y-2">
             {deadlines.map((deadline) => {
@@ -107,7 +110,7 @@ export const CompactDeadlinesCard = ({ userId }: CompactDeadlinesCardProps) => {
                 <div
                   key={deadline.id}
                   className="flex items-center justify-between p-2 rounded-lg bg-muted/50 hover:bg-muted transition-colors cursor-pointer"
-                  onClick={() => navigate("/homework")}
+                  onClick={() => navigate("/agenda")}
                 >
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium truncate">{deadline.title}</p>
