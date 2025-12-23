@@ -211,26 +211,11 @@ const Header = ({ onNewTimetable }: HeaderProps) => {
         variant="ghost"
         size="sm"
         onClick={() => {
-          navigate("/calendar");
-          onItemClick?.();
-        }}
-        className={`justify-start gap-3 w-full px-3 py-3 rounded-xl transition-all ${
-          isActivePath("/calendar") ? "bg-primary/15 text-primary font-semibold" : "hover:bg-primary/10"
-        }`}
-      >
-        <CalendarClock className="h-5 w-5 text-primary" />
-        <span className="font-medium">Calendar</span>
-      </Button>
-
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={() => {
           navigate("/agenda");
           onItemClick?.();
         }}
         className={`justify-start gap-3 w-full px-3 py-3 rounded-xl transition-all ${
-          isActivePath("/agenda") ? "bg-primary/15 text-primary font-semibold" : "hover:bg-primary/10"
+          isActivePath("/agenda") || isActivePath("/calendar") ? "bg-primary/15 text-primary font-semibold" : "hover:bg-primary/10"
         }`}
       >
         <ListTodo className="h-5 w-5 text-primary" />
@@ -241,15 +226,15 @@ const Header = ({ onNewTimetable }: HeaderProps) => {
         variant="ghost"
         size="sm"
         onClick={() => {
-          navigate("/test-scores");
+          navigate("/insights");
           onItemClick?.();
         }}
         className={`justify-start gap-3 w-full px-3 py-3 rounded-xl transition-all ${
-          isActivePath("/test-scores") ? "bg-primary/15 text-primary font-semibold" : "hover:bg-primary/10"
+          isActivePath("/insights") || isActivePath("/test-scores") || isActivePath("/ai-insights") ? "bg-primary/15 text-primary font-semibold" : "hover:bg-primary/10"
         }`}
       >
-        <TrendingUp className="h-5 w-5 text-primary" />
-        <span className="font-medium">Test Scores</span>
+        <Brain className="h-5 w-5 text-primary" />
+        <span className="font-medium">Insights</span>
       </Button>
 
       <Button
@@ -265,21 +250,6 @@ const Header = ({ onNewTimetable }: HeaderProps) => {
       >
         <Users className="h-5 w-5 text-primary" />
         <span className="font-medium">Connect</span>
-      </Button>
-
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={() => {
-          navigate("/ai-insights");
-          onItemClick?.();
-        }}
-        className={`justify-start gap-3 w-full px-3 py-3 rounded-xl transition-all ${
-          isActivePath("/ai-insights") ? "bg-primary/15 text-primary font-semibold" : "hover:bg-primary/10"
-        }`}
-      >
-        <Brain className="h-5 w-5 text-primary" />
-        <span className="font-medium">Insights</span>
       </Button>
 
       <Button
@@ -406,10 +376,19 @@ const Header = ({ onNewTimetable }: HeaderProps) => {
               variant="ghost" 
               size="sm" 
               onClick={() => navigate("/agenda")} 
-              className={`text-sm font-medium transition-all px-2.5 ${isActivePath("/agenda") ? "bg-primary/15 text-primary" : ""}`}
+              className={`text-sm font-medium transition-all px-2.5 ${isActivePath("/agenda") || isActivePath("/calendar") ? "bg-primary/15 text-primary" : ""}`}
             >
               <ListTodo className="h-4 w-4 mr-1" />
               Agenda
+            </Button>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => navigate("/insights")} 
+              className={`text-sm font-medium transition-all px-2.5 ${isActivePath("/insights") || isActivePath("/test-scores") || isActivePath("/ai-insights") ? "bg-primary/15 text-primary" : ""}`}
+            >
+              <Brain className="h-4 w-4 mr-1" />
+              Insights
             </Button>
             <Button 
               variant="ghost" 
@@ -425,29 +404,11 @@ const Header = ({ onNewTimetable }: HeaderProps) => {
             <Button 
               variant="ghost" 
               size="sm" 
-              onClick={() => navigate("/calendar")} 
-              className={`hidden xl:flex text-sm font-medium transition-all px-2.5 ${isActivePath("/calendar") ? "bg-primary/15 text-primary" : ""}`}
-            >
-              <CalendarClock className="h-4 w-4 mr-1" />
-              Calendar
-            </Button>
-            <Button 
-              variant="ghost" 
-              size="sm" 
               onClick={() => navigate("/connect")} 
               className={`hidden xl:flex text-sm font-medium transition-all px-2.5 ${isActivePath("/connect") || isActivePath("/social") || isActivePath("/groups") ? "bg-primary/15 text-primary" : ""}`}
             >
               <Users className="h-4 w-4 mr-1" />
               Connect
-            </Button>
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={() => navigate("/test-scores")} 
-              className={`hidden 2xl:flex text-sm font-medium transition-all px-2.5 ${isActivePath("/test-scores") ? "bg-primary/15 text-primary" : ""}`}
-            >
-              <TrendingUp className="h-4 w-4 mr-1" />
-              Scores
             </Button>
 
             {/* More dropdown - shows on lg/xl, hidden on 2xl+ */}

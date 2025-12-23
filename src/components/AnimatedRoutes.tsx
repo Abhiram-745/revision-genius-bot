@@ -5,15 +5,11 @@ import Auth from "@/pages/Auth";
 import Dashboard from "@/pages/Dashboard";
 import Timetables from "@/pages/Timetables";
 import TimetableView from "@/pages/TimetableView";
-import CalendarView from "@/pages/CalendarView";
-import Social from "@/pages/Social";
-import Groups from "@/pages/Groups";
 import Connect from "@/pages/Connect";
 import GroupDetail from "@/components/groups/GroupDetail";
 import ImportTimetable from "@/pages/ImportTimetable";
 import Agenda from "@/pages/Agenda";
-import TestScores from "@/pages/TestScores";
-import AIInsights from "@/pages/AIInsights";
+import Insights from "@/pages/Insights";
 import BlurtAI from "@/pages/BlurtAI";
 import Activity from "@/pages/Activity";
 import Reflections from "@/pages/Reflections";
@@ -36,15 +32,17 @@ export const AnimatedRoutes = () => {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/timetables" element={<Timetables />} />
         <Route path="/auth" element={<Auth />} />
-        <Route path="/calendar" element={<CalendarView />} />
-        <Route path="/social" element={<Social />} />
-        <Route path="/groups" element={<Groups />} />
         <Route path="/connect" element={<Connect />} />
         <Route path="/groups/:id" element={<GroupDetail />} />
         <Route path="/import-timetable" element={<ImportTimetable />} />
         <Route path="/agenda" element={<Agenda />} />
-        <Route path="/test-scores" element={<TestScores />} />
-        <Route path="/ai-insights" element={<AIInsights />} />
+        <Route path="/insights" element={<Insights />} />
+        {/* Legacy routes - redirect to new pages */}
+        <Route path="/calendar" element={<Agenda />} />
+        <Route path="/test-scores" element={<Insights />} />
+        <Route path="/ai-insights" element={<Insights />} />
+        <Route path="/social" element={<Connect />} />
+        <Route path="/groups" element={<Connect />} />
         <Route path="/blurt-ai" element={<BlurtAI />} />
         <Route path="/savemyexams" element={<SaveMyExams />} />
         <Route path="/practice" element={<Practice />} />
