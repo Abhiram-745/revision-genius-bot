@@ -12,6 +12,7 @@ export const OfferCountdown = () => {
   const [timeLeft, setTimeLeft] = useState<TimeLeft>({ days: 0, hours: 0, minutes: 0, seconds: 0 });
 
   useEffect(() => {
+    // End date: January 27, 2025 at 11:59:59 PM UTC
     const targetDate = new Date('2025-01-27T23:59:59Z');
 
     const calculateTimeLeft = () => {
@@ -26,6 +27,7 @@ export const OfferCountdown = () => {
           seconds: Math.floor((difference / 1000) % 60),
         });
       } else {
+        // Offer has ended
         setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
       }
     };

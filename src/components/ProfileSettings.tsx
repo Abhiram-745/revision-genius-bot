@@ -10,12 +10,14 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2, User, Camera, RotateCcw } from "lucide-react";
+import { Loader2, User, Camera, RotateCcw, Crown, Sparkles } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
 import { Separator } from "@/components/ui/separator";
 import { useTourReset } from "@/hooks/useTourReset";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Card, CardContent } from "@/components/ui/card";
+import { format, formatDistanceToNow } from "date-fns";
 
 interface ProfileSettingsProps {
   open: boolean;
@@ -29,6 +31,8 @@ const ProfileSettings = ({ open, onOpenChange, onProfileUpdate }: ProfileSetting
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [premiumExpiry, setPremiumExpiry] = useState<Date | null>(null);
+  const [hasPremium, setHasPremium] = useState(false);
   const { resetAllTours } = useTourReset();
 
   useEffect(() => {
@@ -42,15 +46,25 @@ const ProfileSettings = ({ open, onOpenChange, onProfileUpdate }: ProfileSetting
     if (user) {
       setEmail(user.email || "");
       
-      const { data } = await supabase
-        .from("profiles")
-        .select("full_name, avatar_url")
-        .eq("id", user.id)
-        .maybeSingle();
+      // Load profile and premium status in parallel
+      const [profileResult, premiumResult] = await Promise.all([
+        supabase
+          .from("profiles")
+          .select("full_name, avatar_url")
+          .eq("id", user.id)
+          .maybeSingle(),
+        supabase
+          .from("premium_grants")
+          .select("expires_at")
+          .eq("user_id", user.id)
+          .gte("expires_at", new Date().toISOString())
+          .order("expires_at", { ascending: false })
+          .limit(1)
+      ]);
       
-      if (data) {
-        setFullName(data.full_name || "");
-        setAvatarUrl(data.avatar_url || null);
+      if (profileResult.data) {
+        setFullName(profileResult.data.full_name || "");
+        setAvatarUrl(profileResult.data.avatar_url || null);
       } else {
         // Create profile if doesn't exist
         const emailUsername = user.email?.split('@')[0] || "User";
@@ -62,6 +76,15 @@ const ProfileSettings = ({ open, onOpenChange, onProfileUpdate }: ProfileSetting
         });
         
         setFullName(fallbackName);
+      }
+      
+      // Check premium status
+      if (premiumResult.data && premiumResult.data.length > 0) {
+        setHasPremium(true);
+        setPremiumExpiry(new Date(premiumResult.data[0].expires_at));
+      } else {
+        setHasPremium(false);
+        setPremiumExpiry(null);
       }
     }
   };
@@ -219,6 +242,66 @@ const ProfileSettings = ({ open, onOpenChange, onProfileUpdate }: ProfileSetting
                 <span className="inline-block w-1.5 h-1.5 bg-muted-foreground/50 rounded-full"></span>
                 Email address cannot be changed
               </p>
+            </div>
+
+            <Separator />
+
+            {/* Premium Status Section */}
+            <div className="space-y-4">
+              <div>
+                <h3 className="text-lg font-display font-semibold flex items-center gap-2">
+                  <Crown className="h-5 w-5 text-accent" />
+                  Premium Status
+                </h3>
+              </div>
+              
+              <Card className={`border-2 ${hasPremium ? 'border-primary/30 bg-gradient-to-br from-primary/5 to-accent/5' : 'border-border bg-muted/30'}`}>
+                <CardContent className="p-4">
+                  {hasPremium && premiumExpiry ? (
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2">
+                        <div className="p-2 bg-gradient-primary rounded-full">
+                          <Sparkles className="h-4 w-4 text-primary-foreground" />
+                        </div>
+                        <div>
+                          <p className="font-semibold text-primary">Premium Active</p>
+                          <p className="text-xs text-muted-foreground">Early Supporter Bonus</p>
+                        </div>
+                      </div>
+                      <div className="bg-background/50 rounded-lg p-3 space-y-1">
+                        <p className="text-sm">
+                          <span className="text-muted-foreground">Expires:</span>{' '}
+                          <span className="font-medium">{format(premiumExpiry, 'MMMM d, yyyy')}</span>
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          ({formatDistanceToNow(premiumExpiry, { addSuffix: true })})
+                        </p>
+                      </div>
+                      <div className="text-xs text-muted-foreground space-y-1">
+                        <p className="flex items-center gap-1.5">
+                          <span className="w-1.5 h-1.5 bg-primary rounded-full"></span>
+                          Unlimited timetable generations
+                        </p>
+                        <p className="flex items-center gap-1.5">
+                          <span className="w-1.5 h-1.5 bg-primary rounded-full"></span>
+                          Unlimited AI insights
+                        </p>
+                        <p className="flex items-center gap-1.5">
+                          <span className="w-1.5 h-1.5 bg-primary rounded-full"></span>
+                          Full access to all features
+                        </p>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="text-center py-2">
+                      <p className="text-muted-foreground text-sm">Free Plan</p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Upgrade to unlock unlimited features
+                      </p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
             </div>
 
             <Separator />
