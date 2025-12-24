@@ -1676,6 +1676,74 @@ VERIFICATION BEFORE RESPONDING:
         }
       }
 
+      // ========================================================================
+      // PHASE 7: Inject Events as Blocked Time Entries for Visual Display
+      // ========================================================================
+      
+      console.log('📅 Adding events as visual blockers in schedule...');
+      
+      for (const event of events) {
+        const eventStart = new Date(event.start_time);
+        const eventEnd = new Date(event.end_time);
+        
+        // Handle multi-day events
+        const currentDay = new Date(eventStart);
+        currentDay.setHours(0, 0, 0, 0);
+        
+        const endDay = new Date(eventEnd);
+        endDay.setHours(0, 0, 0, 0);
+        
+        while (currentDay <= endDay) {
+          const dateStr = currentDay.toISOString().split('T')[0];
+          
+          // Calculate effective start/end times for this specific day
+          const dayStartTime = new Date(currentDay);
+          dayStartTime.setHours(0, 0, 0, 0);
+          const dayEndTime = new Date(currentDay);
+          dayEndTime.setHours(23, 59, 59, 999);
+          
+          const effectiveStart = eventStart > dayStartTime ? eventStart : dayStartTime;
+          const effectiveEnd = eventEnd < dayEndTime ? eventEnd : dayEndTime;
+          
+          const startTimeStr = `${effectiveStart.getHours().toString().padStart(2, '0')}:${effectiveStart.getMinutes().toString().padStart(2, '0')}`;
+          const durationMins = Math.round((effectiveEnd.getTime() - effectiveStart.getTime()) / (1000 * 60));
+          
+          // Only add if duration is positive
+          if (durationMins > 0) {
+            if (!scheduleData.schedule[dateStr]) {
+              scheduleData.schedule[dateStr] = [];
+            }
+            
+            // Add event as a visual blocker
+            scheduleData.schedule[dateStr].push({
+              time: startTimeStr,
+              duration: durationMins,
+              subject: event.title,
+              topic: event.description || 'Blocked Time',
+              type: 'event',
+              mode: timetableMode || 'balanced',
+            });
+            
+            console.log(`  ✅ Added event "${event.title}" on ${dateStr} at ${startTimeStr} (${durationMins}min)`);
+          }
+          
+          currentDay.setDate(currentDay.getDate() + 1);
+        }
+      }
+      
+      // Re-sort after adding events
+      for (const dateStr of Object.keys(scheduleData.schedule)) {
+        if (Array.isArray(scheduleData.schedule[dateStr])) {
+          scheduleData.schedule[dateStr].sort((a: any, b: any) => {
+            const aTime = timeToMinutes(a.time || '00:00');
+            const bTime = timeToMinutes(b.time || '00:00');
+            return aTime - bTime;
+          });
+        }
+      }
+      
+      console.log('✅ Events added to schedule for visual display');
+
     } catch (validationError) {
       console.error("Schedule validation error:", validationError);
       throw validationError;
