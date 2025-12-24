@@ -20,7 +20,7 @@ import { AmbassadorApprovalNotification } from "@/components/dashboard/Ambassado
 import { format } from "date-fns";
 
 // Import owl mascot images only
-import owlStudying from "@/assets/owl-studying.png";
+import studyingOwl from "@/assets/studying-owl.png";
 import owlThumbsup from "@/assets/owl-thumbsup.png";
 import owlChart from "@/assets/owl-chart.png";
 import owlChecklist from "@/assets/owl-checklist.png";
@@ -399,7 +399,7 @@ const Dashboard = () => {
                     <CardContent className="p-6">
                       <div className="flex items-start gap-4 mb-6">
                         <motion.img 
-                          src={owlStudying} 
+                          src={studyingOwl} 
                           alt="Studying owl" 
                           className="w-16 h-16 object-contain"
                           animate={floatAnimation}
