@@ -34,6 +34,7 @@ import pointingOwl from "@/assets/pointing-owl.png";
 import wavingOwl from "@/assets/waving-owl.png";
 import VistaraLogo from "@/components/VistaraLogo";
 import InstallAppButton from "@/components/InstallAppButton";
+import OfferCountdown from "@/components/landing/OfferCountdown";
 const Landing = () => {
   const navigate = useNavigate();
   const [showComingSoon, setShowComingSoon] = useState(false);
@@ -97,7 +98,7 @@ const Landing = () => {
       {/* Scroll Progress Bar */}
       <ScrollProgressBar />
 
-      {/* Opening Offer Banner */}
+      {/* Opening Offer Banner with Countdown */}
       {showOfferBanner && <motion.div initial={{
       y: -100,
       opacity: 0
@@ -107,15 +108,17 @@ const Landing = () => {
     }} exit={{
       y: -100,
       opacity: 0
-    }} className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-primary via-accent to-secondary text-white py-3 px-4 shadow-lg">
-          <div className="max-w-7xl mx-auto flex items-center justify-center gap-2 sm:gap-4 text-center relative">
-            <Gift className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 animate-bounce" />
-            <span className="font-medium text-xs sm:text-sm md:text-base">🎉 Opening Offer: FREE Premium for all who sign up by 1st Jan!<span className="font-bold">FREE Premium</span> for all who sign up by 1st December!
+    }} className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-primary via-secondary to-accent text-white py-3 px-4 shadow-lg">
+          <div className="max-w-7xl mx-auto flex items-center justify-center gap-2 sm:gap-4 text-center relative flex-wrap">
+            <Gift className="w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0 animate-bounce" />
+            <span className="font-semibold text-xs sm:text-sm md:text-base">
+              🎉 Opening Offer: <span className="font-bold">FREE Premium</span> for all who sign up!
             </span>
-            <Button size="sm" variant="secondary" onClick={() => navigate("/auth")} className="ml-2 text-xs sm:text-sm px-3 py-1 h-7 sm:h-8 bg-white text-primary hover:bg-white/90 font-semibold">
+            <OfferCountdown />
+            <Button size="sm" variant="secondary" onClick={() => navigate("/auth")} className="text-xs sm:text-sm px-4 py-1 h-8 sm:h-9 bg-white text-primary hover:bg-white/90 font-bold shadow-lg">
               Claim Now
             </Button>
-            <button onClick={() => setShowOfferBanner(false)} className="absolute right-0 sm:right-2 p-1 hover:bg-white/20 rounded-full transition-colors" aria-label="Close banner">
+            <button onClick={() => setShowOfferBanner(false)} className="absolute right-1 sm:right-2 p-1.5 hover:bg-white/20 rounded-full transition-colors" aria-label="Close banner">
               <X className="w-4 h-4" />
             </button>
           </div>
@@ -133,8 +136,8 @@ const Landing = () => {
         y: heroY,
         opacity: heroOpacity
       }} className="relative min-h-[70vh] md:min-h-[85vh] flex items-center justify-center px-4 md:px-6 pt-16 md:pt-20 pb-8 md:pb-16">
-          {/* Waving Owl Mascot - Top Right - smaller on mobile */}
-          <motion.img src={wavingOwl} alt="Waving owl mascot" className="absolute top-20 md:top-24 right-2 md:right-8 lg:right-16 w-16 h-16 md:w-36 md:h-36 lg:w-44 lg:h-44 object-contain drop-shadow-xl z-20" initial={{
+          {/* Waving Owl Mascot - Top Right - bigger sizes */}
+          <motion.img src={wavingOwl} alt="Waving owl mascot" className="absolute top-20 md:top-24 right-2 md:right-8 lg:right-16 w-24 h-24 md:w-48 md:h-48 lg:w-56 lg:h-56 object-contain drop-shadow-xl z-20" initial={{
           opacity: 0,
           x: 50,
           rotate: 15
@@ -410,8 +413,8 @@ const Landing = () => {
 
         {/* How It Works Section with Step-by-Step Reveal */}
         <section ref={howItWorksRef} className="py-24 px-6 relative">
-          {/* Owl with Book - floating left */}
-          <motion.img src={owlWithBook} alt="" className="hidden lg:block absolute left-0 xl:left-8 bottom-16 w-48 h-48 lg:w-56 lg:h-56 object-contain pointer-events-none drop-shadow-lg" initial={{
+          {/* Owl with Book - floating left - bigger */}
+          <motion.img src={owlWithBook} alt="" className="hidden lg:block absolute left-0 xl:left-8 bottom-16 w-56 h-56 lg:w-72 lg:h-72 object-contain pointer-events-none drop-shadow-lg" initial={{
           opacity: 0,
           x: -40,
           rotate: -5
