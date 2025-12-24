@@ -33,7 +33,7 @@ const archetypes: Record<ArchetypeType, ArchetypeData> = {
     description: "You thrive in the quiet hours when the world sleeps. Your best focus comes after sunset.",
     traits: ["Night Focus", "Deep Thinker", "Creative"],
     image: archetypeNightOwl,
-    glowColor: "rgba(99, 102, 241, 0.6)",
+    glowColor: "hsl(var(--primary))",
     gradient: "from-indigo-500 via-purple-500 to-violet-600",
   },
   "early-bird": {
@@ -42,7 +42,7 @@ const archetypes: Record<ArchetypeType, ArchetypeData> = {
     description: "You seize the day at dawn. Morning hours fuel your sharpest thinking and productivity.",
     traits: ["Morning Person", "Energetic", "Productive"],
     image: archetypeEarlyBird,
-    glowColor: "rgba(251, 191, 36, 0.6)",
+    glowColor: "hsl(var(--accent))",
     gradient: "from-amber-400 via-orange-400 to-yellow-500",
   },
   "planner": {
@@ -51,7 +51,7 @@ const archetypes: Record<ArchetypeType, ArchetypeData> = {
     description: "Structure is your superpower. You excel with schedules and hit every milestone.",
     traits: ["Organized", "Consistent", "Reliable"],
     image: archetypePlanner,
-    glowColor: "rgba(34, 197, 94, 0.6)",
+    glowColor: "hsl(var(--primary))",
     gradient: "from-emerald-400 via-teal-400 to-cyan-500",
   },
   "perfectionist": {
@@ -60,7 +60,7 @@ const archetypes: Record<ArchetypeType, ArchetypeData> = {
     description: "Quality over quantity defines you. Your deep focus leads to mastery.",
     traits: ["Detail-Oriented", "High Focus", "Mastery"],
     image: archetypePerfectionist,
-    glowColor: "rgba(244, 63, 94, 0.6)",
+    glowColor: "hsl(var(--destructive))",
     gradient: "from-rose-400 via-pink-500 to-fuchsia-500",
   },
 };
@@ -72,17 +72,21 @@ export const StudyArchetypeCard = ({ userId }: StudyArchetypeCardProps) => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
 
+  // Calibration refs for gyroscope
+  const calibratedBeta = useRef<number | null>(null);
+  const calibratedGamma = useRef<number | null>(null);
+
   // Mouse/gyro position for 3D effect
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
 
   // Smoother spring animation for premium feel
-  const springConfig = { stiffness: 100, damping: 15, mass: 0.5 };
-  const rotateX = useSpring(useTransform(mouseY, [-0.5, 0.5], [25, -25]), springConfig);
-  const rotateY = useSpring(useTransform(mouseX, [-0.5, 0.5], [-25, 25]), springConfig);
+  const springConfig = { stiffness: 150, damping: 20, mass: 0.5 };
+  const rotateX = useSpring(useTransform(mouseY, [-0.5, 0.5], [30, -30]), springConfig);
+  const rotateY = useSpring(useTransform(mouseX, [-0.5, 0.5], [-30, 30]), springConfig);
 
   // Shine position with faster response
-  const shineSpringConfig = { stiffness: 200, damping: 25 };
+  const shineSpringConfig = { stiffness: 250, damping: 30 };
   const shineX = useSpring(useTransform(mouseX, [-0.5, 0.5], [0, 100]), shineSpringConfig);
   const shineY = useSpring(useTransform(mouseY, [-0.5, 0.5], [0, 100]), shineSpringConfig);
 
@@ -93,52 +97,65 @@ export const StudyArchetypeCard = ({ userId }: StudyArchetypeCardProps) => {
   const shineBackground = useTransform(
     [shineX, shineY],
     ([x, y]) =>
-      `radial-gradient(circle at ${x}% ${y}%, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0.3) 20%, transparent 60%)`
+      `radial-gradient(circle at ${x}% ${y}%, rgba(255,255,255,1) 0%, rgba(255,255,255,0.6) 15%, rgba(255,255,255,0.2) 35%, transparent 60%)`
   );
 
   const holoBackground = useTransform(
     [shineX, shineY],
     ([x, y]) =>
       `linear-gradient(${Number(x) * 3.6}deg, 
-        rgba(255,0,150,0.15) 0%, 
-        rgba(0,255,255,0.15) 25%, 
-        rgba(255,255,0,0.15) 50%, 
-        rgba(0,255,150,0.15) 75%, 
-        rgba(255,0,150,0.15) 100%)`
+        hsl(var(--primary) / 0.3) 0%, 
+        hsl(var(--accent) / 0.3) 25%, 
+        hsl(var(--primary) / 0.2) 50%, 
+        hsl(var(--accent) / 0.3) 75%, 
+        hsl(var(--primary) / 0.3) 100%)`
   );
 
   const sparkleBackground = useTransform(
     [shineX, shineY],
     ([x, y]) =>
       `conic-gradient(from ${Number(x) * 3.6}deg at ${x}% ${y}%, 
-        rgba(255,255,255,0.8) 0deg, 
-        transparent 60deg, 
-        rgba(255,255,255,0.4) 120deg, 
-        transparent 180deg,
-        rgba(255,255,255,0.6) 240deg,
-        transparent 300deg,
-        rgba(255,255,255,0.8) 360deg)`
+        rgba(255,255,255,1) 0deg, 
+        transparent 40deg, 
+        rgba(255,255,255,0.7) 90deg, 
+        transparent 130deg,
+        rgba(255,255,255,0.9) 180deg,
+        transparent 220deg,
+        rgba(255,255,255,0.7) 270deg,
+        transparent 310deg,
+        rgba(255,255,255,1) 360deg)`
   );
 
-  const glowOpacity = useTransform(glowIntensity, [0, 1], [0.3, 0.7]);
+  const glowOpacity = useTransform(glowIntensity, [0, 1], [0.4, 1]);
+  const glowScale = useTransform(glowIntensity, [0, 1], [1, 1.1]);
 
-  // Gyroscope support for mobile
+  // Gyroscope support for mobile with calibration
   useEffect(() => {
+    let isActive = true;
+
     const handleOrientation = (event: DeviceOrientationEvent) => {
-      if (isFlipped || isRefreshing) return;
+      if (!isActive) return;
       
-      // Beta is front-to-back tilt in degrees, where front is positive
-      // Gamma is left-to-right tilt in degrees, where right is positive
-      const beta = event.beta || 0;
-      const gamma = event.gamma || 0;
+      const beta = event.beta ?? 0;
+      const gamma = event.gamma ?? 0;
       
-      // Normalize to -0.5 to 0.5 range (using ±30 degrees as max)
-      const normalizedX = Math.max(-0.5, Math.min(0.5, gamma / 60));
-      const normalizedY = Math.max(-0.5, Math.min(0.5, beta / 60));
+      // Calibrate on first reading
+      if (calibratedBeta.current === null) {
+        calibratedBeta.current = beta;
+        calibratedGamma.current = gamma;
+      }
+      
+      // Calculate delta from calibrated position
+      const deltaBeta = beta - (calibratedBeta.current || 0);
+      const deltaGamma = gamma - (calibratedGamma.current || 0);
+      
+      // Normalize to -0.5 to 0.5 range (using ±25 degrees as max for more sensitivity)
+      const normalizedX = Math.max(-0.5, Math.min(0.5, deltaGamma / 50));
+      const normalizedY = Math.max(-0.5, Math.min(0.5, deltaBeta / 50));
       
       mouseX.set(normalizedX);
       mouseY.set(normalizedY);
-      glowIntensity.set(0.7);
+      glowIntensity.set(0.8);
     };
 
     // Request permission for iOS 13+
@@ -164,9 +181,10 @@ export const StudyArchetypeCard = ({ userId }: StudyArchetypeCardProps) => {
     }
 
     return () => {
+      isActive = false;
       window.removeEventListener('deviceorientation', handleOrientation);
     };
-  }, [isFlipped, isRefreshing, mouseX, mouseY, glowIntensity]);
+  }, [mouseX, mouseY, glowIntensity]);
 
   useEffect(() => {
     determineArchetype();
@@ -186,7 +204,7 @@ export const StudyArchetypeCard = ({ userId }: StudyArchetypeCardProps) => {
           .from("study_preferences")
           .select("*")
           .eq("user_id", userId)
-          .maybeSingle(), // Use maybeSingle to handle no preferences gracefully
+          .maybeSingle(),
       ]);
 
       const sessions = sessionsResult.data || [];
@@ -204,15 +222,15 @@ export const StudyArchetypeCard = ({ userId }: StudyArchetypeCardProps) => {
       let scores = {
         "night-owl": 0,
         "early-bird": 0,
-        "planner": 10, // Slight base score so planner is default if no strong signals
+        "planner": 10,
         "perfectionist": 0,
       };
 
       // Analyze session timing patterns
-      let morningCount = 0; // Before 10am
-      let eveningCount = 0; // After 6pm
-      let lateNightCount = 0; // After 10pm
-      let earlyMorningCount = 0; // Before 8am
+      let morningCount = 0;
+      let eveningCount = 0;
+      let lateNightCount = 0;
+      let earlyMorningCount = 0;
       let completedCount = 0;
       let skippedCount = 0;
       let totalFocusScore = 0;
@@ -224,25 +242,12 @@ export const StudyArchetypeCard = ({ userId }: StudyArchetypeCardProps) => {
         if (session.planned_start) {
           const hour = new Date(session.planned_start).getHours();
           
-          // Early morning sessions (before 8am)
-          if (hour < 8) {
-            earlyMorningCount++;
-          }
-          // Morning sessions (8am-10am)
-          if (hour >= 8 && hour < 10) {
-            morningCount++;
-          }
-          // Evening sessions (6pm-10pm)
-          if (hour >= 18 && hour < 22) {
-            eveningCount++;
-          }
-          // Late night sessions (after 10pm or before 5am)
-          if (hour >= 22 || hour < 5) {
-            lateNightCount++;
-          }
+          if (hour < 8) earlyMorningCount++;
+          if (hour >= 8 && hour < 10) morningCount++;
+          if (hour >= 18 && hour < 22) eveningCount++;
+          if (hour >= 22 || hour < 5) lateNightCount++;
         }
 
-        // Track completion rate for Planner
         if (session.status === "completed") {
           completedCount++;
           sessionCount++;
@@ -253,7 +258,6 @@ export const StudyArchetypeCard = ({ userId }: StudyArchetypeCardProps) => {
           skippedCount++;
         }
 
-        // Track focus scores for Perfectionist
         if (session.focus_score && session.focus_score > 0) {
           totalFocusScore += session.focus_score;
           focusCount++;
@@ -261,75 +265,47 @@ export const StudyArchetypeCard = ({ userId }: StudyArchetypeCardProps) => {
       });
 
       const totalSessions = sessions.length;
-
-      // 1. Time-based scoring - require significant percentage
       const earlyMorningRatio = earlyMorningCount / totalSessions;
       const morningRatio = morningCount / totalSessions;
       const eveningRatio = eveningCount / totalSessions;
       const lateNightRatio = lateNightCount / totalSessions;
 
-      // Early Bird - needs significant morning activity
-      if (earlyMorningRatio > 0.2) {
-        scores["early-bird"] += 35;
-      } else if (morningRatio > 0.25) {
-        scores["early-bird"] += 20;
-      }
+      // Early Bird scoring
+      if (earlyMorningRatio > 0.2) scores["early-bird"] += 35;
+      else if (morningRatio > 0.25) scores["early-bird"] += 20;
+      if (preferences?.study_before_school === true) scores["early-bird"] += 25;
 
-      // Check study_before_school preference
-      if (preferences?.study_before_school === true) {
-        scores["early-bird"] += 25;
-      }
+      // Night Owl scoring
+      if (lateNightRatio > 0.15) scores["night-owl"] += 40;
+      else if (eveningRatio > 0.35) scores["night-owl"] += 25;
 
-      // Night Owl - needs significant evening/night activity
-      if (lateNightRatio > 0.15) {
-        scores["night-owl"] += 40;
-      } else if (eveningRatio > 0.35) {
-        scores["night-owl"] += 25;
-      }
-
-      // 2. Calculate metrics for Planner and Perfectionist
+      // Planner and Perfectionist metrics
       const totalTracked = completedCount + skippedCount;
       const completionRate = totalTracked > 0 ? completedCount / totalTracked : 0;
       const avgFocus = focusCount > 0 ? totalFocusScore / focusCount : 0;
       const avgDuration = sessionCount > 0 ? totalDuration / sessionCount : 0;
       const missedRate = totalTracked > 0 ? skippedCount / totalTracked : 0;
 
-      // Planner scoring - high completion, low missed sessions
-      if (completionRate >= 0.85 && missedRate < 0.15) {
-        scores["planner"] += 40;
-      } else if (completionRate >= 0.7) {
-        scores["planner"] += 25;
-      } else if (completionRate >= 0.5) {
-        scores["planner"] += 10;
-      }
+      // Planner scoring
+      if (completionRate >= 0.85 && missedRate < 0.15) scores["planner"] += 40;
+      else if (completionRate >= 0.7) scores["planner"] += 25;
+      else if (completionRate >= 0.5) scores["planner"] += 10;
 
-      // Perfectionist scoring - high focus and quality
-      if (avgFocus >= 4.5) {
-        scores["perfectionist"] += 40;
-      } else if (avgFocus >= 4) {
-        scores["perfectionist"] += 25;
-      } else if (avgFocus >= 3.5) {
-        scores["perfectionist"] += 15;
-      }
+      // Perfectionist scoring
+      if (avgFocus >= 4.5) scores["perfectionist"] += 40;
+      else if (avgFocus >= 4) scores["perfectionist"] += 25;
+      else if (avgFocus >= 3.5) scores["perfectionist"] += 15;
+      if (avgDuration >= 50) scores["perfectionist"] += 20;
+      else if (avgDuration >= 40) scores["perfectionist"] += 10;
 
-      // Longer focused sessions = Perfectionist trait
-      if (avgDuration >= 50) {
-        scores["perfectionist"] += 20;
-      } else if (avgDuration >= 40) {
-        scores["perfectionist"] += 10;
-      }
-
-      // 3. Check preferred study time from preferences
+      // Check preferred study time
       if (preferences?.preferred_start_time) {
         const startHour = parseInt(preferences.preferred_start_time.split(':')[0]);
-        if (startHour < 7) {
-          scores["early-bird"] += 15;
-        } else if (startHour >= 20) {
-          scores["night-owl"] += 15;
-        }
+        if (startHour < 7) scores["early-bird"] += 15;
+        else if (startHour >= 20) scores["night-owl"] += 15;
       }
 
-      // 4. Determine winning archetype
+      // Determine winning archetype
       let determinedType: ArchetypeType = "planner";
       let maxScore = scores["planner"];
 
@@ -341,7 +317,6 @@ export const StudyArchetypeCard = ({ userId }: StudyArchetypeCardProps) => {
       });
 
       console.log("Archetype scores:", scores, "Winner:", determinedType);
-
       setArchetype(archetypes[determinedType]);
     } catch (error) {
       console.error("Error determining archetype:", error);
@@ -355,13 +330,15 @@ export const StudyArchetypeCard = ({ userId }: StudyArchetypeCardProps) => {
   const handleRefresh = async () => {
     setIsRefreshing(true);
     setIsFlipped(false);
-    // Add a small delay for the animation effect
+    // Reset calibration for next gyro reading
+    calibratedBeta.current = null;
+    calibratedGamma.current = null;
     await new Promise(resolve => setTimeout(resolve, 1500));
     await determineArchetype();
   };
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!cardRef.current || isFlipped || isRefreshing) return;
+    if (!cardRef.current || isRefreshing) return;
     const rect = cardRef.current.getBoundingClientRect();
     const x = (e.clientX - rect.left) / rect.width - 0.5;
     const y = (e.clientY - rect.top) / rect.height - 0.5;
@@ -382,14 +359,11 @@ export const StudyArchetypeCard = ({ userId }: StudyArchetypeCardProps) => {
     }
   };
 
-  // Get current glow color (use default if archetype not loaded yet)
-  const currentGlowColor = archetype?.glowColor || "rgba(34, 197, 94, 0.6)";
-
   if (loading) {
     return (
       <div className="flex flex-col items-center py-4">
         <p className="text-sm font-medium text-muted-foreground mb-3">Your Study Archetype</p>
-        <div className="w-[220px] h-[320px] flex items-center justify-center bg-gradient-to-br from-primary/5 to-accent/5 rounded-[20px] border border-primary/10">
+        <div className="w-[200px] h-[280px] sm:w-[220px] sm:h-[320px] flex items-center justify-center bg-gradient-to-br from-primary/5 to-accent/5 rounded-[20px] border border-primary/10">
           <div className="flex flex-col items-center gap-3">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
             <p className="text-xs text-muted-foreground">Analyzing patterns...</p>
@@ -436,12 +410,21 @@ export const StudyArchetypeCard = ({ userId }: StudyArchetypeCardProps) => {
           transition={{ type: "spring", stiffness: 100, damping: 20 }}
           whileHover={!isFlipped && !isRefreshing ? { scale: 1.05, z: 50 } : {}}
         >
-          {/* Outer glow effect */}
+          {/* Enhanced outer glow effect with pulsing */}
           <motion.div
-            className="absolute -inset-4 rounded-[28px] blur-xl transition-opacity duration-300"
+            className="absolute -inset-6 rounded-[32px] blur-2xl"
             style={{
-              background: currentGlowColor,
+              background: `radial-gradient(circle, ${archetype.glowColor} 0%, transparent 70%)`,
               opacity: glowOpacity,
+              scale: glowScale,
+            }}
+          />
+          
+          {/* Secondary glow ring */}
+          <motion.div
+            className="absolute -inset-3 rounded-[26px] blur-xl opacity-0 group-hover:opacity-70 transition-opacity duration-300"
+            style={{
+              background: `conic-gradient(from 0deg, ${archetype.glowColor}, hsl(var(--accent)), ${archetype.glowColor})`,
             }}
           />
 
@@ -472,17 +455,17 @@ export const StudyArchetypeCard = ({ userId }: StudyArchetypeCardProps) => {
 
           {/* FRONT CARD - The Image */}
           <div
-            className="relative w-[220px] h-[320px] rounded-[20px] overflow-hidden backface-hidden"
+            className="relative w-[200px] h-[280px] sm:w-[220px] sm:h-[320px] rounded-[20px] overflow-hidden backface-hidden"
             style={{
               boxShadow: `
-                0 25px 50px -12px rgba(0, 0, 0, 0.4),
-                0 0 30px ${currentGlowColor}
+                0 25px 50px -12px rgba(0, 0, 0, 0.5),
+                0 0 40px ${archetype.glowColor}
               `,
               backfaceVisibility: "hidden",
             }}
           >
             {/* Card border gradient */}
-            <div className="absolute inset-0 rounded-[20px] bg-gradient-to-br from-white/40 via-white/10 to-white/30 p-[3px]">
+            <div className="absolute inset-0 rounded-[20px] bg-gradient-to-br from-white/50 via-white/20 to-white/40 p-[3px]">
               <div className="absolute inset-[3px] rounded-[17px] bg-card overflow-hidden">
                 {/* The archetype image as the card background */}
                 <img
@@ -494,7 +477,7 @@ export const StudyArchetypeCard = ({ userId }: StudyArchetypeCardProps) => {
               </div>
             </div>
 
-            {/* Holographic rainbow overlay */}
+            {/* Holographic rainbow overlay with theme colors */}
             <motion.div
               className="absolute inset-0 rounded-[20px] opacity-0 group-hover:opacity-100 pointer-events-none mix-blend-overlay transition-opacity duration-200"
               style={{
@@ -502,7 +485,7 @@ export const StudyArchetypeCard = ({ userId }: StudyArchetypeCardProps) => {
               }}
             />
 
-            {/* Primary shine effect - more prominent */}
+            {/* Primary shine effect - enhanced brightness */}
             <motion.div
               className="absolute inset-0 rounded-[20px] opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-200"
               style={{
@@ -510,56 +493,56 @@ export const StudyArchetypeCard = ({ userId }: StudyArchetypeCardProps) => {
               }}
             />
 
-            {/* Secondary sparkle effect */}
+            {/* Secondary sparkle effect - enhanced */}
             <motion.div
-              className="absolute inset-0 rounded-[20px] opacity-0 group-hover:opacity-60 pointer-events-none transition-opacity duration-200 mix-blend-soft-light"
+              className="absolute inset-0 rounded-[20px] opacity-0 group-hover:opacity-80 pointer-events-none transition-opacity duration-200 mix-blend-soft-light"
               style={{
                 background: sparkleBackground,
               }}
             />
 
             {/* Edge highlight for 3D effect */}
-            <div className="absolute inset-0 rounded-[20px] pointer-events-none border border-white/20" />
+            <div className="absolute inset-0 rounded-[20px] pointer-events-none border-2 border-white/30" />
 
             {/* Inner shadow for depth */}
             <div
               className="absolute inset-0 rounded-[20px] pointer-events-none"
               style={{
-                boxShadow: "inset 0 2px 4px rgba(255,255,255,0.3), inset 0 -2px 4px rgba(0,0,0,0.2)",
+                boxShadow: "inset 0 2px 6px rgba(255,255,255,0.4), inset 0 -2px 6px rgba(0,0,0,0.3)",
               }}
             />
           </div>
 
-          {/* BACK CARD - The Details */}
+          {/* BACK CARD - The Details (uses same archetype data) */}
           <div
-            className="absolute inset-0 w-[220px] h-[320px] rounded-[20px] overflow-hidden backface-hidden"
+            className="absolute inset-0 w-[200px] h-[280px] sm:w-[220px] sm:h-[320px] rounded-[20px] overflow-hidden backface-hidden"
             style={{
               transform: "rotateY(180deg)",
               backfaceVisibility: "hidden",
               boxShadow: `
-                0 25px 50px -12px rgba(0, 0, 0, 0.4),
-                0 0 30px ${currentGlowColor}
+                0 25px 50px -12px rgba(0, 0, 0, 0.5),
+                0 0 40px ${archetype.glowColor}
               `,
             }}
           >
             <div className={`absolute inset-0 rounded-[20px] bg-gradient-to-br ${archetype.gradient} p-[3px]`}>
-              <div className="absolute inset-[3px] rounded-[17px] bg-card/95 backdrop-blur-sm flex flex-col items-center justify-center p-5 text-center">
+              <div className="absolute inset-[3px] rounded-[17px] bg-card/95 backdrop-blur-sm flex flex-col items-center justify-center p-4 sm:p-5 text-center">
                 {/* Title */}
-                <h3 className={`text-xl font-bold bg-gradient-to-r ${archetype.gradient} bg-clip-text text-transparent mb-3`}>
+                <h3 className={`text-lg sm:text-xl font-bold bg-gradient-to-r ${archetype.gradient} bg-clip-text text-transparent mb-2 sm:mb-3`}>
                   {archetype.title}
                 </h3>
 
                 {/* Description */}
-                <p className="text-sm text-muted-foreground leading-relaxed mb-4">
+                <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed mb-3 sm:mb-4">
                   {archetype.description}
                 </p>
 
                 {/* Traits */}
-                <div className="flex flex-wrap justify-center gap-2 mb-4">
+                <div className="flex flex-wrap justify-center gap-1.5 sm:gap-2 mb-3 sm:mb-4">
                   {archetype.traits.map((trait, i) => (
                     <span
                       key={i}
-                      className={`px-3 py-1 rounded-full text-xs font-medium bg-gradient-to-r ${archetype.gradient} text-white`}
+                      className={`px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-[10px] sm:text-xs font-medium bg-gradient-to-r ${archetype.gradient} text-white`}
                     >
                       {trait}
                     </span>
@@ -567,7 +550,7 @@ export const StudyArchetypeCard = ({ userId }: StudyArchetypeCardProps) => {
                 </div>
 
                 {/* Flip back hint */}
-                <p className="text-xs text-muted-foreground/60 mt-auto">
+                <p className="text-[10px] sm:text-xs text-muted-foreground/60 mt-auto">
                   Click to flip back
                 </p>
               </div>
