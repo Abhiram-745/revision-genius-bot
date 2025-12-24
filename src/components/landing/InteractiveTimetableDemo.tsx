@@ -542,81 +542,82 @@ const InteractiveTimetableDemo = ({ onArrowClick }: InteractiveTimetableDemoProp
                   </FloatingIcon>
                 </motion.div>
 
-              {/* Center Progress Indicator */}
-              <motion.div 
-                className="flex flex-col items-center justify-center py-32"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-              >
-                <div className="relative w-32 h-32 mb-6">
-                  {/* Animated rings */}
-                  <motion.div
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
-                    className="absolute inset-0 border-4 border-dashed border-primary/20 rounded-full"
-                  />
-                  <motion.div
-                    animate={{ rotate: -360 }}
-                    transition={{ duration: 12, repeat: Infinity, ease: "linear" }}
-                    className="absolute inset-2 border-4 border-dashed border-secondary/20 rounded-full"
-                  />
-                  <motion.div
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 6, repeat: Infinity, ease: "linear" }}
-                    className="absolute inset-4 border-4 border-dashed border-accent/20 rounded-full"
-                  />
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <motion.div
-                      animate={{ scale: [1, 1.2, 1] }}
-                      transition={{ duration: 2, repeat: Infinity }}
-                      className="w-16 h-16 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center"
-                    >
-                      <Wand2 className="w-8 h-8 text-white" />
-                    </motion.div>
-                  </div>
-                </div>
-                
-                <motion.p 
-                  className="text-lg font-medium mb-2"
-                  animate={{ opacity: [0.5, 1, 0.5] }}
-                  transition={{ duration: 2, repeat: Infinity }}
+                {/* Center Progress Indicator */}
+                <motion.div 
+                  className="flex flex-col items-center justify-center py-32"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
                 >
-                  {generationStep === 0 && "Analyzing your notes..."}
-                  {generationStep === 1 && "Extracting topics..."}
-                  {generationStep === 2 && "Identifying focus areas..."}
-                  {generationStep === 3 && "Building your schedule..."}
-                  {generationStep >= 4 && "Timetable ready! ✨"}
-                </motion.p>
-                
-                <div className="flex gap-2 mb-6">
-                  {[0, 1, 2, 3].map((step) => (
+                  <div className="relative w-32 h-32 mb-6">
+                    {/* Animated rings */}
                     <motion.div
-                      key={step}
-                      className={`w-3 h-3 rounded-full ${
-                        step <= generationStep ? "bg-primary" : "bg-muted"
-                      }`}
-                      animate={{ scale: step === generationStep ? [1, 1.3, 1] : 1 }}
-                      transition={{ duration: 0.5, repeat: step === generationStep ? Infinity : 0 }}
+                      animate={{ rotate: 360 }}
+                      transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
+                      className="absolute inset-0 border-4 border-dashed border-primary/20 rounded-full"
                     />
-                  ))}
-                </div>
+                    <motion.div
+                      animate={{ rotate: -360 }}
+                      transition={{ duration: 12, repeat: Infinity, ease: "linear" }}
+                      className="absolute inset-2 border-4 border-dashed border-secondary/20 rounded-full"
+                    />
+                    <motion.div
+                      animate={{ rotate: 360 }}
+                      transition={{ duration: 6, repeat: Infinity, ease: "linear" }}
+                      className="absolute inset-4 border-4 border-dashed border-accent/20 rounded-full"
+                    />
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <motion.div
+                        animate={{ scale: [1, 1.2, 1] }}
+                        transition={{ duration: 2, repeat: Infinity }}
+                        className="w-16 h-16 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center"
+                      >
+                        <Wand2 className="w-8 h-8 text-white" />
+                      </motion.div>
+                    </div>
+                  </div>
+                  
+                  <motion.p 
+                    className="text-lg font-medium mb-2"
+                    animate={{ opacity: [0.5, 1, 0.5] }}
+                    transition={{ duration: 2, repeat: Infinity }}
+                  >
+                    {generationStep === 0 && "Analyzing your notes..."}
+                    {generationStep === 1 && "Extracting topics..."}
+                    {generationStep === 2 && "Identifying focus areas..."}
+                    {generationStep === 3 && "Building your schedule..."}
+                    {generationStep >= 4 && "Timetable ready! ✨"}
+                  </motion.p>
+                  
+                  <div className="flex gap-2 mb-6">
+                    {[0, 1, 2, 3].map((step) => (
+                      <motion.div
+                        key={step}
+                        className={`w-3 h-3 rounded-full ${
+                          step <= generationStep ? "bg-primary" : "bg-muted"
+                        }`}
+                        animate={{ scale: step === generationStep ? [1, 1.3, 1] : 1 }}
+                        transition={{ duration: 0.5, repeat: step === generationStep ? Infinity : 0 }}
+                      />
+                    ))}
+                  </div>
 
-                <Button 
-                  onClick={skipToTimetable}
-                  variant={generationStep >= 4 ? "default" : "outline"}
-                  className={generationStep >= 4 ? "bg-gradient-to-r from-primary to-secondary hover:opacity-90" : ""}
-                >
-                  {generationStep >= 4 ? (
-                    <>
-                      View Your Timetable
-                      <ArrowRight className="ml-2 w-4 h-4" />
-                    </>
-                  ) : (
-                    "Skip Preview"
-                  )}
-                </Button>
-              </motion.div>
-            </div>
+                  <Button 
+                    onClick={skipToTimetable}
+                    variant={generationStep >= 4 ? "default" : "outline"}
+                    className={generationStep >= 4 ? "bg-gradient-to-r from-primary to-secondary hover:opacity-90" : ""}
+                  >
+                    {generationStep >= 4 ? (
+                      <>
+                        View Your Timetable
+                        <ArrowRight className="ml-2 w-4 h-4" />
+                      </>
+                    ) : (
+                      "Skip Preview"
+                    )}
+                  </Button>
+                </motion.div>
+              </div>
+            )}
           </motion.div>
         )}
 
