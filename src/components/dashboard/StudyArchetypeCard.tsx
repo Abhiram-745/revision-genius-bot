@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2 } from "lucide-react";
+import { Loader2, RefreshCw } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 // Import archetype images
 import archetypeNightOwl from "@/assets/archetype-night-owl.png";
@@ -68,6 +69,7 @@ export const StudyArchetypeCard = ({ userId }: StudyArchetypeCardProps) => {
   const [archetype, setArchetype] = useState<ArchetypeData | null>(null);
   const [loading, setLoading] = useState(true);
   const [isFlipped, setIsFlipped] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
 
   // Mouse position for 3D effect
@@ -138,26 +140,29 @@ export const StudyArchetypeCard = ({ userId }: StudyArchetypeCardProps) => {
           .from("study_preferences")
           .select("*")
           .eq("user_id", userId)
-          .single(),
+          .maybeSingle(), // Use maybeSingle to handle no preferences gracefully
       ]);
 
       const sessions = sessionsResult.data || [];
       const preferences = preferencesResult.data;
 
-      // Scoring system for each archetype
+      // Default to planner for new users with insufficient data
+      if (!sessions || sessions.length < 5) {
+        setArchetype(archetypes["planner"]);
+        setLoading(false);
+        setIsRefreshing(false);
+        return;
+      }
+
+      // Scoring system for each archetype - start all at 0
       let scores = {
         "night-owl": 0,
         "early-bird": 0,
-        "planner": 0,
+        "planner": 10, // Slight base score so planner is default if no strong signals
         "perfectionist": 0,
       };
 
-      // 1. Check study preferences for before-school study preference
-      if (preferences?.study_before_school) {
-        scores["early-bird"] += 30;
-      }
-
-      // 2. Analyze session timing patterns
+      // Analyze session timing patterns
       let morningCount = 0; // Before 10am
       let eveningCount = 0; // After 6pm
       let lateNightCount = 0; // After 10pm
@@ -176,22 +181,18 @@ export const StudyArchetypeCard = ({ userId }: StudyArchetypeCardProps) => {
           // Early morning sessions (before 8am)
           if (hour < 8) {
             earlyMorningCount++;
-            scores["early-bird"] += 3;
           }
           // Morning sessions (8am-10am)
           if (hour >= 8 && hour < 10) {
             morningCount++;
-            scores["early-bird"] += 2;
           }
           // Evening sessions (6pm-10pm)
           if (hour >= 18 && hour < 22) {
             eveningCount++;
-            scores["night-owl"] += 2;
           }
-          // Late night sessions (after 10pm)
+          // Late night sessions (after 10pm or before 5am)
           if (hour >= 22 || hour < 5) {
             lateNightCount++;
-            scores["night-owl"] += 4;
           }
         }
 
@@ -213,61 +214,78 @@ export const StudyArchetypeCard = ({ userId }: StudyArchetypeCardProps) => {
         }
       });
 
-      // 3. Calculate metrics
+      const totalSessions = sessions.length;
+
+      // 1. Time-based scoring - require significant percentage
+      const earlyMorningRatio = earlyMorningCount / totalSessions;
+      const morningRatio = morningCount / totalSessions;
+      const eveningRatio = eveningCount / totalSessions;
+      const lateNightRatio = lateNightCount / totalSessions;
+
+      // Early Bird - needs significant morning activity
+      if (earlyMorningRatio > 0.2) {
+        scores["early-bird"] += 35;
+      } else if (morningRatio > 0.25) {
+        scores["early-bird"] += 20;
+      }
+
+      // Check study_before_school preference
+      if (preferences?.study_before_school === true) {
+        scores["early-bird"] += 25;
+      }
+
+      // Night Owl - needs significant evening/night activity
+      if (lateNightRatio > 0.15) {
+        scores["night-owl"] += 40;
+      } else if (eveningRatio > 0.35) {
+        scores["night-owl"] += 25;
+      }
+
+      // 2. Calculate metrics for Planner and Perfectionist
       const totalTracked = completedCount + skippedCount;
       const completionRate = totalTracked > 0 ? completedCount / totalTracked : 0;
       const avgFocus = focusCount > 0 ? totalFocusScore / focusCount : 0;
       const avgDuration = sessionCount > 0 ? totalDuration / sessionCount : 0;
-
-      // 4. Score based on completion rate (Planner)
-      if (completionRate >= 0.9) {
-        scores["planner"] += 40;
-      } else if (completionRate >= 0.75) {
-        scores["planner"] += 25;
-      } else if (completionRate >= 0.6) {
-        scores["planner"] += 15;
-      }
-
-      // Low missed sessions = Planner trait
       const missedRate = totalTracked > 0 ? skippedCount / totalTracked : 0;
-      if (missedRate < 0.1) {
-        scores["planner"] += 20;
-      } else if (missedRate < 0.2) {
+
+      // Planner scoring - high completion, low missed sessions
+      if (completionRate >= 0.85 && missedRate < 0.15) {
+        scores["planner"] += 40;
+      } else if (completionRate >= 0.7) {
+        scores["planner"] += 25;
+      } else if (completionRate >= 0.5) {
         scores["planner"] += 10;
       }
 
-      // 5. Score based on focus and quality (Perfectionist)
+      // Perfectionist scoring - high focus and quality
       if (avgFocus >= 4.5) {
-        scores["perfectionist"] += 35;
+        scores["perfectionist"] += 40;
       } else if (avgFocus >= 4) {
         scores["perfectionist"] += 25;
       } else if (avgFocus >= 3.5) {
         scores["perfectionist"] += 15;
       }
 
-      // Longer focused sessions = Perfectionist
-      if (avgDuration >= 45) {
-        scores["perfectionist"] += 15;
-      } else if (avgDuration >= 30) {
-        scores["perfectionist"] += 8;
+      // Longer focused sessions = Perfectionist trait
+      if (avgDuration >= 50) {
+        scores["perfectionist"] += 20;
+      } else if (avgDuration >= 40) {
+        scores["perfectionist"] += 10;
       }
 
-      // 6. Time-based preferences from study_preferences
-      if (preferences) {
-        const preferredStart = preferences.preferred_start_time;
-        if (preferredStart) {
-          const startHour = parseInt(preferredStart.split(':')[0]);
-          if (startHour < 8) {
-            scores["early-bird"] += 20;
-          } else if (startHour >= 20) {
-            scores["night-owl"] += 20;
-          }
+      // 3. Check preferred study time from preferences
+      if (preferences?.preferred_start_time) {
+        const startHour = parseInt(preferences.preferred_start_time.split(':')[0]);
+        if (startHour < 7) {
+          scores["early-bird"] += 15;
+        } else if (startHour >= 20) {
+          scores["night-owl"] += 15;
         }
       }
 
-      // 7. Determine winning archetype
+      // 4. Determine winning archetype
       let determinedType: ArchetypeType = "planner";
-      let maxScore = 0;
+      let maxScore = scores["planner"];
 
       (Object.entries(scores) as [ArchetypeType, number][]).forEach(([type, score]) => {
         if (score > maxScore) {
@@ -276,10 +294,7 @@ export const StudyArchetypeCard = ({ userId }: StudyArchetypeCardProps) => {
         }
       });
 
-      // Default to planner if no clear signals (new users)
-      if (maxScore === 0 || sessions.length < 3) {
-        determinedType = "planner";
-      }
+      console.log("Archetype scores:", scores, "Winner:", determinedType);
 
       setArchetype(archetypes[determinedType]);
     } catch (error) {
@@ -287,11 +302,20 @@ export const StudyArchetypeCard = ({ userId }: StudyArchetypeCardProps) => {
       setArchetype(archetypes["planner"]);
     } finally {
       setLoading(false);
+      setIsRefreshing(false);
     }
   };
 
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    setIsFlipped(false);
+    // Add a small delay for the animation effect
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    await determineArchetype();
+  };
+
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!cardRef.current || isFlipped) return;
+    if (!cardRef.current || isFlipped || isRefreshing) return;
     const rect = cardRef.current.getBoundingClientRect();
     const x = (e.clientX - rect.left) / rect.width - 0.5;
     const y = (e.clientY - rect.top) / rect.height - 0.5;
@@ -307,7 +331,9 @@ export const StudyArchetypeCard = ({ userId }: StudyArchetypeCardProps) => {
   };
 
   const handleClick = () => {
-    setIsFlipped(!isFlipped);
+    if (!isRefreshing) {
+      setIsFlipped(!isFlipped);
+    }
   };
 
   // Get current glow color (use default if archetype not loaded yet)
@@ -318,7 +344,10 @@ export const StudyArchetypeCard = ({ userId }: StudyArchetypeCardProps) => {
       <div className="flex flex-col items-center py-4">
         <p className="text-sm font-medium text-muted-foreground mb-3">Your Study Archetype</p>
         <div className="w-[220px] h-[320px] flex items-center justify-center bg-gradient-to-br from-primary/5 to-accent/5 rounded-[20px] border border-primary/10">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <div className="flex flex-col items-center gap-3">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <p className="text-xs text-muted-foreground">Analyzing patterns...</p>
+          </div>
         </div>
       </div>
     );
@@ -328,8 +357,19 @@ export const StudyArchetypeCard = ({ userId }: StudyArchetypeCardProps) => {
 
   return (
     <div className="flex flex-col items-center py-4">
-      <p className="text-sm font-medium text-muted-foreground mb-3">Your Study Archetype</p>
-      <p className="text-xs text-muted-foreground/70 mb-4">Click to flip</p>
+      <div className="flex items-center gap-2 mb-3">
+        <p className="text-sm font-medium text-muted-foreground">Your Study Archetype</p>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={handleRefresh}
+          disabled={isRefreshing}
+          className="h-7 w-7 p-0 rounded-full hover:bg-primary/10"
+        >
+          <RefreshCw className={`h-4 w-4 text-muted-foreground ${isRefreshing ? 'animate-spin' : ''}`} />
+        </Button>
+      </div>
+      <p className="text-xs text-muted-foreground/70 mb-4">Click card to flip</p>
       
       <div className="perspective-1000" style={{ perspective: "1200px" }}>
         <motion.div
@@ -343,9 +383,12 @@ export const StudyArchetypeCard = ({ userId }: StudyArchetypeCardProps) => {
             transformStyle: "preserve-3d",
           }}
           className="relative cursor-pointer group"
-          animate={{ rotateY: isFlipped ? 180 : 0 }}
+          animate={{ 
+            rotateY: isFlipped ? 180 : 0,
+            scale: isRefreshing ? 0.95 : 1,
+          }}
           transition={{ type: "spring", stiffness: 100, damping: 20 }}
-          whileHover={!isFlipped ? { scale: 1.05, z: 50 } : {}}
+          whileHover={!isFlipped && !isRefreshing ? { scale: 1.05, z: 50 } : {}}
         >
           {/* Outer glow effect */}
           <motion.div
@@ -355,6 +398,31 @@ export const StudyArchetypeCard = ({ userId }: StudyArchetypeCardProps) => {
               opacity: glowOpacity,
             }}
           />
+
+          {/* Refreshing overlay */}
+          {isRefreshing && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="absolute inset-0 z-50 flex items-center justify-center rounded-[20px] bg-background/80 backdrop-blur-sm"
+            >
+              <div className="flex flex-col items-center gap-3">
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                >
+                  <RefreshCw className="h-8 w-8 text-primary" />
+                </motion.div>
+                <motion.p 
+                  className="text-sm font-medium text-primary"
+                  animate={{ opacity: [0.5, 1, 0.5] }}
+                  transition={{ duration: 1.5, repeat: Infinity }}
+                >
+                  AI is thinking...
+                </motion.p>
+              </div>
+            </motion.div>
+          )}
 
           {/* FRONT CARD - The Image */}
           <div
