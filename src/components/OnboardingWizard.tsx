@@ -9,6 +9,7 @@ import SmartTopicsStep from "./onboarding/SmartTopicsStep";
 import SubjectPriorityStep, { SubjectPriority } from "./onboarding/SubjectPriorityStep";
 import SmartConfigStep from "./onboarding/SmartConfigStep";
 import GenerateStep from "./onboarding/GenerateStep";
+import AgendaStep from "./onboarding/AgendaStep";
 
 const WIZARD_STORAGE_KEY = "timetable-wizard-progress";
 
@@ -103,6 +104,7 @@ const OnboardingWizard = ({ onComplete, onCancel }: OnboardingWizardProps) => {
   const [testDates, setTestDates] = useState<TestDate[]>(savedProgress?.testDates || []);
   const [preferences, setPreferences] = useState<StudyPreferences>(savedProgress?.preferences || defaultPreferences);
   const [homeworks, setHomeworks] = useState<any[]>(savedProgress?.homeworks || []);
+  const [events, setEvents] = useState<any[]>(savedProgress?.events || []);
   const [timetableName, setTimetableName] = useState(savedProgress?.timetableName || "My Study Timetable");
   const [startDate, setStartDate] = useState(savedProgress?.startDate || "");
   const [endDate, setEndDate] = useState(savedProgress?.endDate || "");
@@ -118,13 +120,14 @@ const OnboardingWizard = ({ onComplete, onCancel }: OnboardingWizardProps) => {
       testDates,
       preferences,
       homeworks,
+      events,
       timetableName,
       startDate,
       endDate,
       subjectPriorities,
     };
     localStorage.setItem(WIZARD_STORAGE_KEY, JSON.stringify(progress));
-  }, [step, subjects, topics, topicAnalysis, testDates, preferences, homeworks, timetableName, startDate, endDate, subjectPriorities]);
+  }, [step, subjects, topics, topicAnalysis, testDates, preferences, homeworks, events, timetableName, startDate, endDate, subjectPriorities]);
 
   useEffect(() => {
     saveProgress();
@@ -136,7 +139,7 @@ const OnboardingWizard = ({ onComplete, onCancel }: OnboardingWizardProps) => {
     onComplete();
   };
 
-  const totalSteps = 5;
+  const totalSteps = 6;
   const progress = (step / totalSteps) * 100;
 
   const handleNext = () => {
@@ -157,6 +160,7 @@ const OnboardingWizard = ({ onComplete, onCancel }: OnboardingWizardProps) => {
     "Your Subjects",
     "Topics & Confidence",
     "Subject Priority",
+    "Your Agenda",
     "Schedule & Preferences",
     "Generate Timetable",
   ];
@@ -165,6 +169,7 @@ const OnboardingWizard = ({ onComplete, onCancel }: OnboardingWizardProps) => {
     "Add the subjects you're studying - click to quickly add or customize each one",
     "Add your topics and rate your confidence (optional - you can skip this step)",
     "Set how much time to dedicate to each subject",
+    "Add homework and events so AI can schedule around them",
     "Set your exam dates, study schedule, and preferences",
     "Review and generate your personalized AI study timetable",
   ];
@@ -185,6 +190,8 @@ const OnboardingWizard = ({ onComplete, onCancel }: OnboardingWizardProps) => {
       case 3:
         return true; // Priorities are optional
       case 4:
+        return true; // Agenda is optional
+      case 5:
         return startDate && endDate && timetableName.trim();
       default:
         return true;
@@ -233,6 +240,17 @@ const OnboardingWizard = ({ onComplete, onCancel }: OnboardingWizardProps) => {
                 </div>
               )}
               {step === 4 && (
+                <div data-tour="agenda-step">
+                  <AgendaStep
+                    subjects={subjects}
+                    homeworks={homeworks}
+                    setHomeworks={setHomeworks}
+                    events={events}
+                    setEvents={setEvents}
+                  />
+                </div>
+              )}
+              {step === 5 && (
                 <div data-tour="config-step">
                   <SmartConfigStep
                     subjects={subjects}
@@ -249,7 +267,7 @@ const OnboardingWizard = ({ onComplete, onCancel }: OnboardingWizardProps) => {
                   />
                 </div>
               )}
-              {step === 5 && (
+              {step === 6 && (
                 <div data-tour="generate-step">
                   <GenerateStep
                     subjects={subjects}

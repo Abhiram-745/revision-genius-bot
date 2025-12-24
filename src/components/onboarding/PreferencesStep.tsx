@@ -43,6 +43,21 @@ const PreferencesStep = ({ preferences, setPreferences }: PreferencesStepProps) 
 
   return (
     <div className="space-y-6">
+      {/* AI Scheduling Notice */}
+      <Card className="p-4 bg-primary/5 border-primary/20">
+        <div className="flex items-start gap-3">
+          <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+            <Brain className="h-4 w-4 text-primary" />
+          </div>
+          <div>
+            <p className="text-sm font-medium text-foreground">AI-Optimized Scheduling</p>
+            <p className="text-xs text-muted-foreground mt-1">
+              Don't worry about your events, homework, and other commitments - the AI will automatically schedule around them and ensure your study sessions fit perfectly into your day.
+            </p>
+          </div>
+        </div>
+      </Card>
+
       {/* Daily Study Hours */}
       <div className="space-y-3">
         <div className="flex items-center gap-2">
