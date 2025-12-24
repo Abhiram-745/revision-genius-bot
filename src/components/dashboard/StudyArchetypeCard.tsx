@@ -72,7 +72,7 @@ export const StudyArchetypeCard = ({ userId }: StudyArchetypeCardProps) => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
 
-  // Mouse position for 3D effect
+  // Mouse/gyro position for 3D effect
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
 
@@ -121,6 +121,52 @@ export const StudyArchetypeCard = ({ userId }: StudyArchetypeCardProps) => {
   );
 
   const glowOpacity = useTransform(glowIntensity, [0, 1], [0.3, 0.7]);
+
+  // Gyroscope support for mobile
+  useEffect(() => {
+    const handleOrientation = (event: DeviceOrientationEvent) => {
+      if (isFlipped || isRefreshing) return;
+      
+      // Beta is front-to-back tilt in degrees, where front is positive
+      // Gamma is left-to-right tilt in degrees, where right is positive
+      const beta = event.beta || 0;
+      const gamma = event.gamma || 0;
+      
+      // Normalize to -0.5 to 0.5 range (using ±30 degrees as max)
+      const normalizedX = Math.max(-0.5, Math.min(0.5, gamma / 60));
+      const normalizedY = Math.max(-0.5, Math.min(0.5, beta / 60));
+      
+      mouseX.set(normalizedX);
+      mouseY.set(normalizedY);
+      glowIntensity.set(0.7);
+    };
+
+    // Request permission for iOS 13+
+    const requestPermission = async () => {
+      if (typeof (DeviceOrientationEvent as any).requestPermission === 'function') {
+        try {
+          const permission = await (DeviceOrientationEvent as any).requestPermission();
+          if (permission === 'granted') {
+            window.addEventListener('deviceorientation', handleOrientation);
+          }
+        } catch (e) {
+          console.log('Gyro permission denied');
+        }
+      } else {
+        // Non-iOS or older iOS
+        window.addEventListener('deviceorientation', handleOrientation);
+      }
+    };
+
+    // Check if device has gyro
+    if (window.DeviceOrientationEvent) {
+      requestPermission();
+    }
+
+    return () => {
+      window.removeEventListener('deviceorientation', handleOrientation);
+    };
+  }, [isFlipped, isRefreshing, mouseX, mouseY, glowIntensity]);
 
   useEffect(() => {
     determineArchetype();
