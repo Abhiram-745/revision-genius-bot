@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Loader2, RefreshCw, TrendingUp, Brain, Target, Sparkles } from "lucide-react";
+import { Loader2, RefreshCw, TrendingUp, Brain, Target, Sparkles, Lightbulb, Clock, BookOpen } from "lucide-react";
 import { motion } from "framer-motion";
 import {
   Select,
@@ -24,10 +24,9 @@ import {
   XAxis,
   YAxis,
   Tooltip,
-  BarChart,
-  Bar,
 } from "recharts";
 import { toast } from "sonner";
+import owlChart from "@/assets/owl-chart.png";
 
 interface AIInsightsCardProps {
   userId: string;
@@ -41,7 +40,8 @@ interface Insight {
   peakStudyHours?: number | null;
 }
 
-const COLORS = ["hsl(142, 76%, 36%)", "hsl(142, 69%, 58%)", "hsl(45, 93%, 47%)", "hsl(24, 95%, 53%)", "hsl(262, 83%, 58%)"];
+// Green-to-yellow gradient colors
+const COLORS = ["hsl(142, 76%, 36%)", "hsl(142, 69%, 48%)", "hsl(65, 70%, 45%)", "hsl(45, 93%, 47%)", "hsl(35, 90%, 50%)"];
 
 export const AIInsightsCard = ({ userId }: AIInsightsCardProps) => {
   const [timetables, setTimetables] = useState<{ id: string; name: string }[]>([]);
@@ -52,7 +52,6 @@ export const AIInsightsCard = ({ userId }: AIInsightsCardProps) => {
   const [studyData, setStudyData] = useState<any[]>([]);
   const [subjectData, setSubjectData] = useState<any[]>([]);
   const [weeklyTrend, setWeeklyTrend] = useState<any[]>([]);
-  const [hourlyData, setHourlyData] = useState<any[]>([]);
 
   useEffect(() => {
     fetchTimetables();
@@ -89,14 +88,14 @@ export const AIInsightsCard = ({ userId }: AIInsightsCardProps) => {
         .limit(100);
 
       if (sessions && sessions.length > 0) {
-        // Subject breakdown for pie chart
+        // Subject breakdown for donut chart
         const subjectBreakdown: Record<string, number> = {};
         sessions.forEach((s) => {
           subjectBreakdown[s.subject] = (subjectBreakdown[s.subject] || 0) + (s.actual_duration_minutes || 0);
         });
 
         const pieData = Object.entries(subjectBreakdown).map(([name, value]) => ({
-          name: name.length > 10 ? name.slice(0, 10) + '...' : name,
+          name: name.length > 8 ? name.slice(0, 8) + '…' : name,
           value: Math.round(value),
           fullName: name,
         }));
@@ -129,25 +128,6 @@ export const AIInsightsCard = ({ userId }: AIInsightsCardProps) => {
         }));
         setWeeklyTrend(trendData);
 
-        // Hourly distribution
-        const hourlyBreakdown: Record<number, number> = {};
-        for (let h = 6; h <= 22; h++) hourlyBreakdown[h] = 0;
-        
-        sessions.forEach((s) => {
-          if (s.planned_start) {
-            const hour = new Date(s.planned_start).getHours();
-            if (hourlyBreakdown[hour] !== undefined) {
-              hourlyBreakdown[hour] += s.actual_duration_minutes || 30;
-            }
-          }
-        });
-        
-        const hourData = Object.entries(hourlyBreakdown).map(([hour, mins]) => ({
-          hour: `${hour}:00`,
-          minutes: Math.round(mins),
-        }));
-        setHourlyData(hourData);
-
         // Radar chart data for study patterns
         const totalMinutes = sessions.reduce((a, s) => a + (s.actual_duration_minutes || 0), 0);
         const avgSessionLength = totalMinutes / sessions.length;
@@ -161,37 +141,28 @@ export const AIInsightsCard = ({ userId }: AIInsightsCardProps) => {
         ];
         setStudyData(patterns);
       } else {
-        // Default data for new users - varied values
+        // Default varied data for new users
         setStudyData([
-          { subject: "Focus", value: 25, fullMark: 100 },
-          { subject: "Consistency", value: 20, fullMark: 100 },
-          { subject: "Depth", value: 15, fullMark: 100 },
+          { subject: "Focus", value: 35, fullMark: 100 },
+          { subject: "Consistency", value: 25, fullMark: 100 },
+          { subject: "Depth", value: 40, fullMark: 100 },
           { subject: "Variety", value: 30, fullMark: 100 },
-          { subject: "Completion", value: 10, fullMark: 100 },
+          { subject: "Completion", value: 20, fullMark: 100 },
         ]);
         setWeeklyTrend([
-          { day: "Mon", minutes: 5, hours: 0.1 },
-          { day: "Tue", minutes: 10, hours: 0.2 },
-          { day: "Wed", minutes: 0, hours: 0 },
-          { day: "Thu", minutes: 15, hours: 0.3 },
-          { day: "Fri", minutes: 8, hours: 0.1 },
-          { day: "Sat", minutes: 0, hours: 0 },
+          { day: "Mon", minutes: 15, hours: 0.3 },
+          { day: "Tue", minutes: 25, hours: 0.4 },
+          { day: "Wed", minutes: 10, hours: 0.2 },
+          { day: "Thu", minutes: 35, hours: 0.6 },
+          { day: "Fri", minutes: 20, hours: 0.3 },
+          { day: "Sat", minutes: 5, hours: 0.1 },
           { day: "Sun", minutes: 0, hours: 0 },
         ]);
-        // Default hourly data
-        setHourlyData([
-          { hour: "8:00", minutes: 5 },
-          { hour: "9:00", minutes: 10 },
-          { hour: "10:00", minutes: 15 },
-          { hour: "14:00", minutes: 8 },
-          { hour: "16:00", minutes: 12 },
-          { hour: "18:00", minutes: 6 },
-        ]);
-        // Default subject data
         setSubjectData([
-          { name: "Maths", value: 30, fullName: "Mathematics" },
-          { name: "Science", value: 25, fullName: "Science" },
-          { name: "English", value: 20, fullName: "English" },
+          { name: "Maths", value: 45, fullName: "Mathematics" },
+          { name: "Science", value: 35, fullName: "Science" },
+          { name: "English", value: 25, fullName: "English" },
+          { name: "History", value: 15, fullName: "History" },
         ]);
       }
     } catch (error) {
@@ -247,7 +218,7 @@ export const AIInsightsCard = ({ userId }: AIInsightsCardProps) => {
       };
       
       setInsights(insightsData);
-      await fetchStudyAnalytics(); // Refresh charts too
+      await fetchStudyAnalytics();
       
       localStorage.setItem(`insights-${selectedTimetableId}`, JSON.stringify({
         data: insightsData,
@@ -280,10 +251,10 @@ export const AIInsightsCard = ({ userId }: AIInsightsCardProps) => {
   if (initialLoading) {
     return (
       <div className="space-y-4">
-        <div className="h-24 animate-pulse bg-muted rounded-xl" />
-        <div className="grid grid-cols-2 gap-3">
-          <div className="h-32 animate-pulse bg-muted rounded-xl" />
-          <div className="h-32 animate-pulse bg-muted rounded-xl" />
+        <div className="h-24 animate-pulse bg-muted/30 rounded-3xl" />
+        <div className="grid grid-cols-2 gap-4">
+          <div className="h-40 animate-pulse bg-muted/30 rounded-3xl" />
+          <div className="h-40 animate-pulse bg-muted/30 rounded-3xl" />
         </div>
       </div>
     );
@@ -291,7 +262,7 @@ export const AIInsightsCard = ({ userId }: AIInsightsCardProps) => {
 
   if (timetables.length === 0) {
     return (
-      <div className="text-center py-6">
+      <div className="text-center py-8">
         <Brain className="h-12 w-12 mx-auto mb-3 text-muted-foreground/50" />
         <p className="text-sm text-muted-foreground">
           Create a timetable to get AI-powered study insights
@@ -301,12 +272,21 @@ export const AIInsightsCard = ({ userId }: AIInsightsCardProps) => {
   }
 
   return (
-    <div className="space-y-4">
-      {/* Header with Refresh Button */}
+    <div className="space-y-6">
+      {/* Header with organic design */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Sparkles className="h-5 w-5 text-primary" />
-          <h3 className="font-bold text-lg">AI Insights</h3>
+        <div className="flex items-center gap-3">
+          <motion.div
+            className="p-3 rounded-2xl bg-gradient-to-br from-primary to-accent"
+            animate={{ rotate: [0, 5, -5, 0] }}
+            transition={{ duration: 4, repeat: Infinity }}
+          >
+            <Sparkles className="h-6 w-6 text-white" />
+          </motion.div>
+          <div>
+            <h3 className="font-bold text-xl">AI Study Insights</h3>
+            <p className="text-sm text-muted-foreground">Powered by your study patterns</p>
+          </div>
         </div>
         <div className="flex items-center gap-2">
           {timetables.length > 1 && !loading && (
@@ -314,7 +294,7 @@ export const AIInsightsCard = ({ userId }: AIInsightsCardProps) => {
               setSelectedTimetableId(value);
               setInsights(null);
             }}>
-              <SelectTrigger className="h-8 text-xs w-28">
+              <SelectTrigger className="h-9 text-xs w-32 rounded-xl">
                 <SelectValue placeholder="Select" />
               </SelectTrigger>
               <SelectContent>
@@ -331,9 +311,9 @@ export const AIInsightsCard = ({ userId }: AIInsightsCardProps) => {
             size="sm"
             onClick={handleRefresh}
             disabled={loading}
-            className="h-8 gap-1.5 text-xs"
+            className="h-9 gap-2 rounded-xl border-primary/20 hover:bg-primary/10"
           >
-            <RefreshCw className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
             Refresh
           </Button>
         </div>
@@ -341,80 +321,111 @@ export const AIInsightsCard = ({ userId }: AIInsightsCardProps) => {
 
       {/* Loading state */}
       {loading && (
-        <div className="flex items-center justify-center py-8 bg-muted/20 rounded-xl">
-          <Loader2 className="h-6 w-6 animate-spin text-primary mr-2" />
-          <span className="text-sm text-muted-foreground">Analyzing your study data...</span>
-        </div>
+        <motion.div 
+          className="flex items-center justify-center py-12 rounded-3xl bg-gradient-to-br from-primary/5 to-accent/5 border border-primary/10"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+        >
+          <Loader2 className="h-8 w-8 animate-spin text-primary mr-3" />
+          <span className="text-muted-foreground font-medium">Analyzing your study data...</span>
+        </motion.div>
       )}
 
       {!loading && (
         <>
-          {/* Key Insight Summary */}
+          {/* Key Insight Card with mascot */}
           {insights && (
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="p-4 rounded-xl bg-gradient-to-br from-primary/10 to-accent/10 border border-primary/20"
+              className="relative p-6 rounded-3xl bg-gradient-to-br from-primary/10 via-primary/5 to-accent/10 border border-primary/20 overflow-hidden"
             >
-              <div className="flex items-start gap-3">
-                <div className="p-2 rounded-lg bg-primary/20">
-                  <Brain className="h-5 w-5 text-primary" />
+              {/* Decorative circles */}
+              <div className="absolute -top-10 -right-10 w-40 h-40 bg-primary/10 rounded-full blur-3xl" />
+              <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-accent/10 rounded-full blur-3xl" />
+              
+              <div className="relative flex items-start gap-4">
+                <motion.img
+                  src={owlChart}
+                  alt="Owl mascot"
+                  className="w-20 h-20 object-contain flex-shrink-0"
+                  animate={{ y: [0, -5, 0] }}
+                  transition={{ duration: 3, repeat: Infinity }}
+                />
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Brain className="h-5 w-5 text-primary" />
+                    <span className="text-sm font-semibold text-primary">AI Analysis</span>
+                  </div>
+                  <p className="text-foreground font-medium leading-relaxed">{insights.summary}</p>
                 </div>
-                <p className="text-sm font-medium text-foreground flex-1">{insights.summary}</p>
               </div>
             </motion.div>
           )}
 
-          {/* Charts Grid - 2x2 layout */}
-          <div className="grid grid-cols-2 gap-3">
-            {/* Study Pattern Radar */}
+          {/* Charts in organic containers */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Study Pattern - Radar */}
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.1 }}
-              className="p-3 rounded-xl bg-gradient-to-br from-emerald-500/10 to-teal-500/10 border border-emerald-500/20"
+              className="p-5 rounded-3xl bg-gradient-to-br from-primary/10 via-transparent to-accent/5 border border-primary/15 backdrop-blur-sm"
             >
-              <div className="flex items-center gap-2 mb-2">
-                <Target className="h-4 w-4 text-emerald-600" />
-                <p className="text-xs font-semibold text-foreground">Study Pattern</p>
+              <div className="flex items-center gap-2 mb-4">
+                <div className="p-2 rounded-xl bg-primary/20">
+                  <Target className="h-4 w-4 text-primary" />
+                </div>
+                <p className="font-semibold">Study Pattern</p>
               </div>
-              <ResponsiveContainer width="100%" height={110}>
+              <ResponsiveContainer width="100%" height={160}>
                 <RadarChart data={studyData}>
                   <PolarGrid stroke="hsl(var(--border))" strokeDasharray="3 3" />
-                  <PolarAngleAxis dataKey="subject" tick={{ fontSize: 8, fill: "hsl(var(--muted-foreground))" }} />
+                  <PolarAngleAxis 
+                    dataKey="subject" 
+                    tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} 
+                  />
                   <Radar
                     dataKey="value"
                     stroke="hsl(142, 76%, 36%)"
-                    fill="hsl(142, 76%, 36%)"
-                    fillOpacity={0.4}
+                    fill="url(#radarGradient)"
+                    fillOpacity={0.6}
                     strokeWidth={2}
                   />
+                  <defs>
+                    <linearGradient id="radarGradient" x1="0" y1="0" x2="1" y2="1">
+                      <stop offset="0%" stopColor="hsl(142, 76%, 36%)" />
+                      <stop offset="100%" stopColor="hsl(45, 93%, 47%)" />
+                    </linearGradient>
+                  </defs>
                 </RadarChart>
               </ResponsiveContainer>
             </motion.div>
 
-            {/* Subject Focus Pie */}
+            {/* Subject Focus - Donut */}
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.15 }}
-              className="p-3 rounded-xl bg-gradient-to-br from-amber-500/10 to-yellow-500/10 border border-amber-500/20"
+              className="p-5 rounded-3xl bg-gradient-to-br from-accent/10 via-transparent to-primary/5 border border-accent/15 backdrop-blur-sm"
             >
-              <div className="flex items-center gap-2 mb-2">
-                <TrendingUp className="h-4 w-4 text-amber-600" />
-                <p className="text-xs font-semibold text-foreground">Subject Focus</p>
+              <div className="flex items-center gap-2 mb-4">
+                <div className="p-2 rounded-xl bg-accent/20">
+                  <BookOpen className="h-4 w-4 text-accent-foreground" />
+                </div>
+                <p className="font-semibold">Subject Focus</p>
               </div>
               {subjectData.length > 0 ? (
-                <ResponsiveContainer width="100%" height={110}>
+                <ResponsiveContainer width="100%" height={160}>
                   <PieChart>
                     <Pie
                       data={subjectData}
                       cx="50%"
                       cy="50%"
-                      innerRadius={25}
-                      outerRadius={45}
+                      innerRadius={40}
+                      outerRadius={65}
                       dataKey="value"
-                      strokeWidth={2}
+                      strokeWidth={3}
                       stroke="hsl(var(--background))"
                     >
                       {subjectData.map((_, index) => (
@@ -425,107 +436,101 @@ export const AIInsightsCard = ({ userId }: AIInsightsCardProps) => {
                       contentStyle={{
                         background: "hsl(var(--card))",
                         border: "1px solid hsl(var(--border))",
-                        borderRadius: "8px",
-                        fontSize: "11px",
+                        borderRadius: "12px",
+                        fontSize: "12px",
                       }}
                       formatter={(value: any, name: any, props: any) => [`${value} min`, props.payload.fullName || name]}
                     />
                   </PieChart>
                 </ResponsiveContainer>
               ) : (
-                <div className="h-[110px] flex items-center justify-center text-xs text-muted-foreground">
+                <div className="h-[160px] flex items-center justify-center text-sm text-muted-foreground">
                   Complete sessions to see data
                 </div>
               )}
             </motion.div>
-
-            {/* Weekly Trend - Full Width */}
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="col-span-2 p-3 rounded-xl bg-gradient-to-br from-blue-500/10 to-cyan-500/10 border border-blue-500/20"
-            >
-              <p className="text-xs font-semibold text-foreground mb-2">Weekly Activity</p>
-              <ResponsiveContainer width="100%" height={80}>
-                <AreaChart data={weeklyTrend}>
-                  <defs>
-                    <linearGradient id="colorMinutesGreen" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="hsl(142, 76%, 36%)" stopOpacity={0.4} />
-                      <stop offset="95%" stopColor="hsl(142, 76%, 36%)" stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <XAxis dataKey="day" tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
-                  <YAxis hide />
-                  <Tooltip
-                    contentStyle={{
-                      background: "hsl(var(--card))",
-                      border: "1px solid hsl(var(--border))",
-                      borderRadius: "8px",
-                      fontSize: "11px",
-                    }}
-                    formatter={(value: any) => [`${value} min`, "Study time"]}
-                  />
-                  <Area
-                    type="monotone"
-                    dataKey="minutes"
-                    stroke="hsl(142, 76%, 36%)"
-                    strokeWidth={2}
-                    fillOpacity={1}
-                    fill="url(#colorMinutesGreen)"
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
-            </motion.div>
-
-            {/* Peak Hours Bar Chart */}
-            {hourlyData.length > 0 && hourlyData.some(h => h.minutes > 0) && (
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.25 }}
-                className="col-span-2 p-3 rounded-xl bg-gradient-to-br from-violet-500/10 to-purple-500/10 border border-violet-500/20"
-              >
-                <p className="text-xs font-semibold text-foreground mb-2">Peak Study Hours</p>
-                <ResponsiveContainer width="100%" height={60}>
-                  <BarChart data={hourlyData}>
-                    <XAxis dataKey="hour" tick={{ fontSize: 8, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} interval={2} />
-                    <Tooltip
-                      contentStyle={{
-                        background: "hsl(var(--card))",
-                        border: "1px solid hsl(var(--border))",
-                        borderRadius: "8px",
-                        fontSize: "11px",
-                      }}
-                      formatter={(value: any) => [`${value} min`, "Study time"]}
-                    />
-                    <Bar dataKey="minutes" fill="hsl(262, 83%, 58%)" radius={[2, 2, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </motion.div>
-            )}
           </div>
 
-          {/* Tips */}
-          {insights && insights.tips.length > 0 && (
+          {/* Weekly Activity - Full Width Flowing Area */}
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="p-5 rounded-3xl bg-gradient-to-r from-primary/10 via-accent/5 to-primary/10 border border-primary/15 backdrop-blur-sm"
+          >
+            <div className="flex items-center gap-2 mb-4">
+              <div className="p-2 rounded-xl bg-gradient-to-br from-primary to-accent">
+                <TrendingUp className="h-4 w-4 text-white" />
+              </div>
+              <p className="font-semibold">Weekly Activity</p>
+              <span className="ml-auto text-xs text-muted-foreground">Last 7 days</span>
+            </div>
+            <ResponsiveContainer width="100%" height={100}>
+              <AreaChart data={weeklyTrend}>
+                <defs>
+                  <linearGradient id="colorMinutesFlow" x1="0" y1="0" x2="1" y2="0">
+                    <stop offset="0%" stopColor="hsl(142, 76%, 36%)" stopOpacity={0.4} />
+                    <stop offset="50%" stopColor="hsl(45, 93%, 47%)" stopOpacity={0.3} />
+                    <stop offset="100%" stopColor="hsl(142, 76%, 36%)" stopOpacity={0.4} />
+                  </linearGradient>
+                  <linearGradient id="strokeFlow" x1="0" y1="0" x2="1" y2="0">
+                    <stop offset="0%" stopColor="hsl(142, 76%, 36%)" />
+                    <stop offset="50%" stopColor="hsl(45, 93%, 47%)" />
+                    <stop offset="100%" stopColor="hsl(142, 76%, 36%)" />
+                  </linearGradient>
+                </defs>
+                <XAxis 
+                  dataKey="day" 
+                  tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} 
+                  axisLine={false} 
+                  tickLine={false} 
+                />
+                <YAxis hide />
+                <Tooltip
+                  contentStyle={{
+                    background: "hsl(var(--card))",
+                    border: "1px solid hsl(var(--border))",
+                    borderRadius: "12px",
+                    fontSize: "12px",
+                  }}
+                  formatter={(value: any) => [`${value} min`, "Study time"]}
+                />
+                <Area
+                  type="monotone"
+                  dataKey="minutes"
+                  stroke="url(#strokeFlow)"
+                  strokeWidth={3}
+                  fill="url(#colorMinutesFlow)"
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </motion.div>
+
+          {/* Tips Section */}
+          {insights && insights.tips && insights.tips.length > 0 && (
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-              className="p-3 rounded-xl bg-muted/30 border border-border/50"
+              transition={{ delay: 0.25 }}
+              className="grid grid-cols-1 sm:grid-cols-3 gap-3"
             >
-              <p className="text-xs font-semibold text-foreground mb-2">Quick Tips</p>
-              <div className="space-y-1.5">
-                {insights.tips.slice(0, 3).map((tip, index) => (
-                  <div
-                    key={index}
-                    className="flex items-start gap-2 text-xs text-muted-foreground"
-                  >
-                    <span className="text-primary mt-0.5 font-bold">•</span>
-                    <span>{tip}</span>
+              {insights.tips.slice(0, 3).map((tip, i) => (
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.3 + i * 0.1 }}
+                  className="p-4 rounded-2xl bg-gradient-to-br from-muted/50 to-muted/30 border border-border/50 hover:border-primary/20 transition-colors"
+                  whileHover={{ scale: 1.02 }}
+                >
+                  <div className="flex items-start gap-3">
+                    <div className="p-1.5 rounded-lg bg-primary/10 mt-0.5">
+                      <Lightbulb className="h-3.5 w-3.5 text-primary" />
+                    </div>
+                    <p className="text-sm text-foreground/80 leading-relaxed">{tip}</p>
                   </div>
-                ))}
-              </div>
+                </motion.div>
+              ))}
             </motion.div>
           )}
         </>
