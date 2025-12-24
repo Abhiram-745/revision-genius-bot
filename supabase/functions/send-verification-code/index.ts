@@ -123,7 +123,7 @@ const handler = async (req: Request): Promise<Response> => {
     
     console.log("[send-verification-code] Using from address:", fromAddress);
 
-    // Send email via Resend
+    // Send email via Resend with green-orange gradient theme
     const { data, error: emailError } = await resend.emails.send({
       from: fromAddress,
       to: [email],
@@ -135,27 +135,28 @@ const handler = async (req: Request): Promise<Response> => {
           <meta charset="utf-8">
           <meta name="viewport" content="width=device-width, initial-scale=1.0">
         </head>
-        <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
-          <div style="background: linear-gradient(135deg, #8B5CF6 0%, #6366F1 100%); padding: 30px; border-radius: 12px 12px 0 0; text-align: center;">
-            <h1 style="color: white; margin: 0; font-size: 28px;">Vistara</h1>
-            <p style="color: rgba(255,255,255,0.9); margin: 10px 0 0 0;">Email Verification</p>
+        <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #fefce8;">
+          <div style="background: linear-gradient(135deg, #22c55e 0%, #f97316 100%); padding: 30px; border-radius: 16px 16px 0 0; text-align: center;">
+            <img src="https://ectqhxyfuvssgyouwjnp.supabase.co/storage/v1/object/public/assets/vistara-mascot-logo.png" alt="Vistara Owl" style="width: 80px; height: 80px; margin-bottom: 12px; border-radius: 50%; background: white; padding: 8px;" />
+            <h1 style="color: white; margin: 0; font-size: 32px; font-weight: 700; text-shadow: 0 2px 4px rgba(0,0,0,0.1);">Vistara</h1>
+            <p style="color: rgba(255,255,255,0.95); margin: 8px 0 0 0; font-size: 16px;">Email Verification</p>
           </div>
           
-          <div style="background: #f9fafb; padding: 30px; border-radius: 0 0 12px 12px; border: 1px solid #e5e7eb; border-top: none;">
-            <p style="margin-top: 0;">Hi there! 👋</p>
-            <p>You're almost ready to start using Vistara. Enter this verification code to complete your sign-up:</p>
+          <div style="background: linear-gradient(180deg, #ffffff 0%, #fef9c3 100%); padding: 35px; border-radius: 0 0 16px 16px; border: 1px solid #fde047; border-top: none;">
+            <p style="margin-top: 0; font-size: 18px; color: #365314;">Hi there! 👋</p>
+            <p style="color: #4d7c0f; font-size: 15px;">You're almost ready to start using <strong>Vistara</strong>. Enter this verification code to complete your sign-up:</p>
             
-            <div style="background: white; border: 2px solid #8B5CF6; border-radius: 8px; padding: 20px; text-align: center; margin: 25px 0;">
-              <span style="font-size: 36px; font-weight: bold; letter-spacing: 8px; color: #8B5CF6;">${code}</span>
+            <div style="background: linear-gradient(135deg, #dcfce7 0%, #fef3c7 100%); border: 3px solid #22c55e; border-radius: 12px; padding: 24px; text-align: center; margin: 28px 0; box-shadow: 0 4px 12px rgba(34, 197, 94, 0.2);">
+              <span style="font-size: 42px; font-weight: bold; letter-spacing: 10px; background: linear-gradient(135deg, #16a34a 0%, #ea580c 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">${code}</span>
             </div>
             
-            <p style="color: #6b7280; font-size: 14px;">This code expires in <strong>10 minutes</strong>.</p>
-            <p style="color: #6b7280; font-size: 14px;">If you didn't request this code, you can safely ignore this email.</p>
+            <p style="color: #65a30d; font-size: 14px;">⏱️ This code expires in <strong>10 minutes</strong>.</p>
+            <p style="color: #84cc16; font-size: 14px;">If you didn't request this code, you can safely ignore this email.</p>
             
-            <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 25px 0;">
+            <hr style="border: none; border-top: 2px solid #fde047; margin: 28px 0;">
             
-            <p style="color: #9ca3af; font-size: 12px; margin-bottom: 0; text-align: center;">
-              © ${new Date().getFullYear()} Vistara - AI-Powered Revision Timetables
+            <p style="color: #a3a3a3; font-size: 12px; margin-bottom: 0; text-align: center;">
+              © ${new Date().getFullYear()} <span style="color: #22c55e; font-weight: 600;">Vistara</span> - AI-Powered Revision Timetables
             </p>
           </div>
         </body>
