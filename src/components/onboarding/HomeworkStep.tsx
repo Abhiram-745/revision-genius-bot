@@ -3,7 +3,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
 import { Plus, Trash2, Image as ImageIcon, X } from "lucide-react";
 import { Subject } from "../OnboardingWizard";
@@ -166,21 +165,18 @@ const HomeworkStep = ({ subjects, homeworks, setHomeworks }: HomeworkStepProps) 
       <div className="space-y-4">
         <div className="space-y-2">
           <Label htmlFor="subject">Subject</Label>
-          <Select
+          <Input
+            id="subject"
             value={currentHomework.subject}
-            onValueChange={(value) => setCurrentHomework({ ...currentHomework, subject: value })}
-          >
-            <SelectTrigger id="subject">
-              <SelectValue placeholder="Select subject" />
-            </SelectTrigger>
-            <SelectContent>
-              {subjects.map((subject) => (
-                <SelectItem key={subject.id || subject.name} value={subject.name}>
-                  {subject.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+            onChange={(e) => setCurrentHomework({ ...currentHomework, subject: e.target.value })}
+            placeholder="Type subject name or select from list"
+            list="subject-suggestions"
+          />
+          <datalist id="subject-suggestions">
+            {subjects.map((subject) => (
+              <option key={subject.id || subject.name} value={subject.name} />
+            ))}
+          </datalist>
         </div>
 
         <div className="space-y-2">

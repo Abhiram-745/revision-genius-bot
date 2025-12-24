@@ -27,10 +27,35 @@ export const AIInsightsCard = ({ userId }: AIInsightsCardProps) => {
   const [insights, setInsights] = useState<Insight | null>(null);
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
+  const [lastGenerated, setLastGenerated] = useState<string | null>(null);
 
   useEffect(() => {
     fetchTimetables();
   }, [userId]);
+
+  // Auto-generate insights when timetable is selected
+  useEffect(() => {
+    if (selectedTimetableId && !insights && !loading) {
+      // Check if we already have cached insights for this timetable
+      const cachedKey = `insights-${selectedTimetableId}`;
+      const cached = localStorage.getItem(cachedKey);
+      if (cached) {
+        try {
+          const { data, timestamp } = JSON.parse(cached);
+          // Use cached data if less than 1 hour old
+          if (Date.now() - timestamp < 3600000) {
+            setInsights(data);
+            setLastGenerated(new Date(timestamp).toLocaleTimeString());
+            return;
+          }
+        } catch (e) {
+          console.error("Failed to parse cached insights:", e);
+        }
+      }
+      // Auto-generate if no cache
+      generateInsights();
+    }
+  }, [selectedTimetableId]);
 
   const fetchTimetables = async () => {
     try {
@@ -52,10 +77,7 @@ export const AIInsightsCard = ({ userId }: AIInsightsCardProps) => {
   };
 
   const generateInsights = async () => {
-    if (!selectedTimetableId) {
-      toast.error("Please select a timetable first");
-      return;
-    }
+    if (!selectedTimetableId) return;
 
     setLoading(true);
     try {
@@ -65,34 +87,35 @@ export const AIInsightsCard = ({ userId }: AIInsightsCardProps) => {
 
       if (error) throw error;
 
-      if (data?.insights) {
-        setInsights({
-          summary: data.insights.summary || "Analysis complete!",
-          tips: data.insights.tips || data.insights.recommendations || [],
-        });
-        toast.success("Insights generated!");
-      } else {
-        // Mock insights if no real data
-        setInsights({
-          summary: "Based on your study patterns, you're making good progress!",
-          tips: [
-            "Try spacing out your study sessions for better retention",
-            "Your peak productivity seems to be in the morning",
-            "Consider adding more breaks between long sessions",
-          ],
-        });
-      }
+      const insightsData = {
+        summary: data?.insights?.summary || "Based on your study patterns, you're making good progress!",
+        tips: data?.insights?.tips || data?.insights?.recommendations || [
+          "Try spacing out your study sessions for better retention",
+          "Your peak productivity seems to be in the morning",
+          "Consider adding more breaks between long sessions",
+        ],
+      };
+      
+      setInsights(insightsData);
+      setLastGenerated(new Date().toLocaleTimeString());
+      
+      // Cache the insights
+      localStorage.setItem(`insights-${selectedTimetableId}`, JSON.stringify({
+        data: insightsData,
+        timestamp: Date.now()
+      }));
     } catch (error) {
       console.error("Error generating insights:", error);
-      // Show mock insights on error for demo purposes
-      setInsights({
+      // Show mock insights on error
+      const fallbackInsights = {
         summary: "Here are some general study tips based on best practices:",
         tips: [
           "Take regular breaks every 25-30 minutes",
           "Review material within 24 hours of learning",
           "Mix subjects to improve retention",
         ],
-      });
+      };
+      setInsights(fallbackInsights);
     } finally {
       setLoading(false);
     }
@@ -130,13 +153,20 @@ export const AIInsightsCard = ({ userId }: AIInsightsCardProps) => {
         </CardTitle>
       </CardHeader>
       <CardContent className="px-4 pb-4 space-y-3">
-        <p className="text-xs text-muted-foreground">
-          Get personalized recommendations based on your study habits
-        </p>
+        {/* Loading state */}
+        {loading && (
+          <div className="flex items-center justify-center py-4">
+            <Loader2 className="h-5 w-5 animate-spin text-primary mr-2" />
+            <span className="text-sm text-muted-foreground">Analyzing your study data...</span>
+          </div>
+        )}
 
         {/* Timetable selector (only if multiple) */}
-        {timetables.length > 1 && (
-          <Select value={selectedTimetableId} onValueChange={setSelectedTimetableId}>
+        {timetables.length > 1 && !loading && (
+          <Select value={selectedTimetableId} onValueChange={(value) => {
+            setSelectedTimetableId(value);
+            setInsights(null); // Clear to trigger auto-generation
+          }}>
             <SelectTrigger className="h-9 text-sm">
               <SelectValue placeholder="Select timetable" />
             </SelectTrigger>
@@ -149,26 +179,6 @@ export const AIInsightsCard = ({ userId }: AIInsightsCardProps) => {
             </SelectContent>
           </Select>
         )}
-
-        {/* Generate button */}
-        <Button 
-          onClick={generateInsights} 
-          disabled={loading}
-          className="w-full h-9"
-          size="sm"
-        >
-          {loading ? (
-            <>
-              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              Analyzing...
-            </>
-          ) : (
-            <>
-              <Sparkles className="h-4 w-4 mr-2" />
-              Generate Insights
-            </>
-          )}
-        </Button>
 
         {/* Insights display */}
         {insights && (

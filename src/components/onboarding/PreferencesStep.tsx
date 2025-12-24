@@ -136,14 +136,74 @@ const PreferencesStep = ({ preferences, setPreferences }: PreferencesStepProps) 
         </div>
       </div>
 
+      {/* School Hours Configuration */}
+      <div className="space-y-3">
+        <div className="flex items-center gap-2">
+          <GraduationCap className="h-4 w-4 text-primary" />
+          <Label className="text-base font-medium">School Schedule</Label>
+        </div>
+        <p className="text-xs text-muted-foreground">
+          Set your school hours so the AI can schedule around them.
+        </p>
+        
+        <Card className="p-4 space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label className="text-sm">School Start Time</Label>
+              <Input
+                type="time"
+                value={preferences.school_start_time || "08:30"}
+                onChange={(e) =>
+                  setPreferences({
+                    ...preferences,
+                    school_start_time: e.target.value,
+                  })
+                }
+                className="h-9"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-sm">School End Time</Label>
+              <Input
+                type="time"
+                value={preferences.school_end_time || "15:30"}
+                onChange={(e) =>
+                  setPreferences({
+                    ...preferences,
+                    school_end_time: e.target.value,
+                  })
+                }
+                className="h-9"
+              />
+            </div>
+          </div>
+          
+          <div className="flex items-center space-x-2 pt-2 border-t">
+            <Checkbox
+              id="timing-during-school"
+              checked={preferences.study_during_school_hours || false}
+              onCheckedChange={(checked) =>
+                setPreferences({
+                  ...preferences,
+                  study_during_school_hours: !!checked,
+                })
+              }
+            />
+            <label htmlFor="timing-during-school" className="text-sm cursor-pointer font-medium">
+              Allow study sessions during school hours (free periods)
+            </label>
+          </div>
+        </Card>
+      </div>
+
       {/* Additional Time Slots */}
       <div className="space-y-3">
         <div className="flex items-center gap-2">
           <Sun className="h-4 w-4 text-primary" />
-          <Label className="text-base font-medium">Additional Time Slots</Label>
+          <Label className="text-base font-medium">Additional Study Windows</Label>
         </div>
         <p className="text-xs text-muted-foreground">
-          Enable extra study windows for quick homework tasks (15-25 mins only).
+          Enable extra study windows outside your main study time.
         </p>
         
         <Card className="p-4 space-y-4">
@@ -260,10 +320,6 @@ const PreferencesStep = ({ preferences, setPreferences }: PreferencesStepProps) 
               Study during school free periods
             </label>
           </div>
-          
-          <p className="text-xs text-muted-foreground pt-2 border-t">
-            These additional slots are for quick homework tasks only (15-25 mins), not full revision sessions.
-          </p>
         </Card>
       </div>
 
