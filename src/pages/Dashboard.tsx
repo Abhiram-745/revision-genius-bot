@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import Header from "@/components/Header";
 import OnboardingWizard from "@/components/OnboardingWizard";
 import { AIInsightsCard } from "@/components/dashboard/AIInsightsCard";
+import { StudyArchetypeCard } from "@/components/dashboard/StudyArchetypeCard";
 import SimpleOnboarding from "@/components/onboarding/SimpleOnboarding";
 import PageTransition from "@/components/PageTransition";
 import { OwlMascot } from "@/components/mascot/OwlMascot";
@@ -18,12 +19,7 @@ import PremiumGrantNotification from "@/components/PremiumGrantNotification";
 import { AmbassadorApprovalNotification } from "@/components/dashboard/AmbassadorApprovalNotification";
 import { format } from "date-fns";
 
-// Import mascot/icon images
-import timerIcon from "@/assets/timer-icon.png";
-import checklistIcon from "@/assets/checklist-icon.png";
-import lightbulbIcon from "@/assets/lightbulb-icon.png";
-import magnifyingGlassIcon from "@/assets/magnifying-glass-icon.png";
-import notebookIcon from "@/assets/notebook-icon.png";
+// Import owl mascot images only
 import owlStudying from "@/assets/owl-studying.png";
 import owlThumbsup from "@/assets/owl-thumbsup.png";
 import owlChart from "@/assets/owl-chart.png";
@@ -273,125 +269,129 @@ const Dashboard = () => {
               variants={containerVariants}
               initial="hidden"
               animate="visible"
-              className="space-y-4"
+              className="space-y-5"
             >
-              {/* Row 1: Hero Card with Mascot + Quick Stats */}
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                {/* Hero Card - 2 columns */}
-                <motion.div variants={itemVariants} className="lg:col-span-2">
-                  <Card className="overflow-hidden border-0 shadow-xl bg-gradient-to-br from-primary/10 via-card to-accent/10 h-full">
-                    <CardContent className="p-4 sm:p-6">
-                      <div className="flex flex-col sm:flex-row items-center justify-center gap-6 text-center sm:text-left">
-                        <motion.div
-                          animate={floatAnimation}
-                          className="flex-shrink-0 relative"
-                        >
-                          <motion.div 
-                            className="absolute inset-0 bg-primary/20 rounded-full blur-2xl"
-                            animate={pulseAnimation}
-                          />
-                          <img 
-                            src={wavingOwl} 
-                            alt="Owl mascot" 
-                            className="w-28 h-28 sm:w-32 sm:h-32 object-contain relative z-10 drop-shadow-lg" 
-                          />
-                        </motion.div>
-                        
-                        <div className="flex flex-col items-center sm:items-start space-y-3">
-                          <div>
-                            <motion.h1 
-                              className="text-2xl sm:text-4xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text"
-                              initial={{ opacity: 0, x: -20 }}
-                              animate={{ opacity: 1, x: 0 }}
-                              transition={{ delay: 0.2 }}
-                            >
-                              {getGreeting()}, {getFirstName()}!
-                            </motion.h1>
-                            <motion.p 
-                              className="text-muted-foreground mt-2 text-lg"
-                              initial={{ opacity: 0 }}
-                              animate={{ opacity: 1 }}
-                              transition={{ delay: 0.3 }}
-                            >
-                              {sessionsToday.length > 0 
-                                ? `You have ${sessionsToday.length} session${sessionsToday.length > 1 ? 's' : ''} planned today`
-                                : "Ready to start studying?"}
-                            </motion.p>
-                          </div>
-                          
-                          <motion.div 
-                            whileHover={{ scale: 1.03 }} 
-                            whileTap={{ scale: 0.97 }}
+              {/* Row 1: Hero Card - Centered Content */}
+              <motion.div variants={itemVariants}>
+                <Card className="overflow-hidden border-0 shadow-xl bg-gradient-to-br from-primary/10 via-card to-accent/10">
+                  <CardContent className="p-6 sm:p-8">
+                    <div className="flex flex-col items-center justify-center gap-6 text-center">
+                      <motion.div
+                        animate={floatAnimation}
+                        className="relative"
+                      >
+                        <motion.div 
+                          className="absolute inset-0 bg-primary/20 rounded-full blur-2xl"
+                          animate={pulseAnimation}
+                        />
+                        <img 
+                          src={wavingOwl} 
+                          alt="Owl mascot" 
+                          className="w-32 h-32 sm:w-36 sm:h-36 object-contain relative z-10 drop-shadow-lg" 
+                        />
+                      </motion.div>
+                      
+                      <div className="flex flex-col items-center space-y-4">
+                        <div>
+                          <motion.h1 
+                            className="text-3xl sm:text-4xl lg:text-5xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text"
+                            initial={{ opacity: 0, y: -20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.2 }}
                           >
-                            <Button
-                              size="lg"
-                              onClick={() => navigate("/timetables")}
-                              className="gap-2 bg-gradient-to-r from-primary to-accent shadow-lg hover:shadow-xl transition-all text-lg px-8"
-                            >
-                              <Play className="h-5 w-5" />
-                              Start Today's Session
-                            </Button>
-                          </motion.div>
+                            {getGreeting()}, {getFirstName()}!
+                          </motion.h1>
+                          <motion.p 
+                            className="text-muted-foreground mt-2 text-lg"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ delay: 0.3 }}
+                          >
+                            {sessionsToday.length > 0 
+                              ? `You have ${sessionsToday.length} session${sessionsToday.length > 1 ? 's' : ''} planned today`
+                              : "Ready to start studying?"}
+                          </motion.p>
                         </div>
+                        
+                        <motion.div 
+                          whileHover={{ scale: 1.03 }} 
+                          whileTap={{ scale: 0.97 }}
+                        >
+                          <Button
+                            size="lg"
+                            onClick={() => navigate("/timetables")}
+                            className="gap-2 bg-gradient-to-r from-primary to-accent shadow-lg hover:shadow-xl transition-all text-lg px-10 py-6"
+                          >
+                            <Play className="h-5 w-5" />
+                            Start Today's Session
+                          </Button>
+                        </motion.div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+
+              {/* Row 2: Study Archetype Card */}
+              {user && (
+                <motion.div variants={itemVariants}>
+                  <StudyArchetypeCard userId={user.id} />
+                </motion.div>
+              )}
+
+              {/* Row 3: Quick Stats */}
+              <motion.div variants={itemVariants} className="grid grid-cols-3 gap-4">
+                {/* Streak Card */}
+                <motion.div whileHover={{ scale: 1.02 }}>
+                  <Card className="bg-gradient-to-br from-orange-500/10 to-amber-500/10 border-orange-500/20 overflow-hidden h-full">
+                    <CardContent className="p-4 flex items-center gap-4">
+                      <motion.div 
+                        className="p-3 rounded-2xl bg-gradient-to-br from-orange-500 to-amber-500"
+                        animate={{ rotate: [0, 5, -5, 0] }}
+                        transition={{ duration: 2, repeat: Infinity }}
+                      >
+                        <Flame className="h-7 w-7 text-white" />
+                      </motion.div>
+                      <div>
+                        <p className="text-3xl font-bold text-orange-600 dark:text-orange-400">{streak}</p>
+                        <p className="text-sm text-muted-foreground">Day Streak</p>
                       </div>
                     </CardContent>
                   </Card>
                 </motion.div>
 
-                {/* Quick Stats - 1 column */}
-                <motion.div variants={itemVariants} className="space-y-3">
-                  {/* Streak Card */}
-                  <motion.div whileHover={{ scale: 1.02 }} className="h-auto">
-                    <Card className="bg-gradient-to-br from-orange-500/10 to-amber-500/10 border-orange-500/20 overflow-hidden">
-                      <CardContent className="p-4 flex items-center gap-4">
-                        <motion.div 
-                          className="p-3 rounded-2xl bg-gradient-to-br from-orange-500 to-amber-500"
-                          animate={{ rotate: [0, 5, -5, 0] }}
-                          transition={{ duration: 2, repeat: Infinity }}
-                        >
-                          <Flame className="h-7 w-7 text-white" />
-                        </motion.div>
-                        <div>
-                          <p className="text-3xl font-bold text-orange-600 dark:text-orange-400">{streak}</p>
-                          <p className="text-sm text-muted-foreground">Day Streak</p>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </motion.div>
-
-                  {/* Weekly Hours */}
-                  <motion.div whileHover={{ scale: 1.02 }}>
-                    <Card className="bg-gradient-to-br from-blue-500/10 to-cyan-500/10 border-blue-500/20">
-                      <CardContent className="p-4 flex items-center gap-4">
-                        <div className="p-3 rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-500">
-                          <Clock className="h-7 w-7 text-white" />
-                        </div>
-                        <div>
-                          <p className="text-3xl font-bold text-blue-600 dark:text-blue-400">{weeklyHours}h</p>
-                          <p className="text-sm text-muted-foreground">This Week</p>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </motion.div>
-
-                  {/* Sessions Completed */}
-                  <motion.div whileHover={{ scale: 1.02 }}>
-                    <Card className="bg-gradient-to-br from-emerald-500/10 to-teal-500/10 border-emerald-500/20">
-                      <CardContent className="p-4 flex items-center gap-4">
-                        <div className="p-3 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-500">
-                          <Target className="h-7 w-7 text-white" />
-                        </div>
-                        <div>
-                          <p className="text-3xl font-bold text-emerald-600 dark:text-emerald-400">{totalSessions}</p>
-                          <p className="text-sm text-muted-foreground">Sessions Done</p>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </motion.div>
+                {/* Weekly Hours */}
+                <motion.div whileHover={{ scale: 1.02 }}>
+                  <Card className="bg-gradient-to-br from-blue-500/10 to-cyan-500/10 border-blue-500/20 h-full">
+                    <CardContent className="p-4 flex items-center gap-4">
+                      <div className="p-3 rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-500">
+                        <Clock className="h-7 w-7 text-white" />
+                      </div>
+                      <div>
+                        <p className="text-3xl font-bold text-blue-600 dark:text-blue-400">{weeklyHours}h</p>
+                        <p className="text-sm text-muted-foreground">This Week</p>
+                      </div>
+                    </CardContent>
+                  </Card>
                 </motion.div>
-              </div>
 
-              {/* Row 2: Today's Focus + Exam Readiness */}
+                {/* Sessions Completed */}
+                <motion.div whileHover={{ scale: 1.02 }}>
+                  <Card className="bg-gradient-to-br from-emerald-500/10 to-teal-500/10 border-emerald-500/20 h-full">
+                    <CardContent className="p-4 flex items-center gap-4">
+                      <div className="p-3 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-500">
+                        <Target className="h-7 w-7 text-white" />
+                      </div>
+                      <div>
+                        <p className="text-3xl font-bold text-emerald-600 dark:text-emerald-400">{totalSessions}</p>
+                        <p className="text-sm text-muted-foreground">Sessions Done</p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              </motion.div>
+
+              {/* Row 4: Today's Focus + Exam Readiness */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 {/* Today's Focus */}
                 <motion.div variants={itemVariants}>
@@ -399,8 +399,8 @@ const Dashboard = () => {
                     <CardContent className="p-6">
                       <div className="flex items-start gap-4 mb-6">
                         <motion.img 
-                          src={timerIcon} 
-                          alt="Timer" 
+                          src={owlStudying} 
+                          alt="Studying owl" 
                           className="w-16 h-16 object-contain"
                           animate={floatAnimation}
                         />
@@ -412,7 +412,6 @@ const Dashboard = () => {
                       
                       {sessionsToday.length > 0 ? (
                         <div className="space-y-3">
-                          {/* Highlight first session */}
                           <motion.div 
                             className="p-4 rounded-xl bg-primary/10 border border-primary/20"
                             whileHover={{ scale: 1.01 }}
@@ -461,9 +460,9 @@ const Dashboard = () => {
                       ) : (
                         <div className="py-8 text-center">
                           <motion.img 
-                            src={owlStudying} 
-                            alt="Owl" 
-                            className="w-20 h-20 mx-auto mb-4 opacity-50"
+                            src={owlChecklist} 
+                            alt="Owl with checklist" 
+                            className="w-20 h-20 mx-auto mb-4"
                             animate={{ y: [0, -5, 0] }}
                             transition={{ duration: 2, repeat: Infinity }}
                           />
@@ -484,8 +483,8 @@ const Dashboard = () => {
                     <CardContent className="p-6">
                       <div className="flex items-start gap-4 mb-6">
                         <motion.img 
-                          src={checklistIcon} 
-                          alt="Checklist" 
+                          src={owlThumbsup} 
+                          alt="Thumbs up owl" 
                           className="w-16 h-16 object-contain"
                           animate={floatAnimation}
                         />
@@ -496,7 +495,6 @@ const Dashboard = () => {
                       </div>
 
                       <div className="flex items-center gap-6 mb-6">
-                        {/* Progress Ring */}
                         <motion.div 
                           className="relative w-24 h-24 flex-shrink-0"
                           whileHover={{ scale: 1.1 }}
@@ -545,7 +543,6 @@ const Dashboard = () => {
                         </div>
                       </div>
 
-                      {/* Subject Progress */}
                       <div className="space-y-3">
                         {Object.entries(subjectProgress).slice(0, 4).map(([subject, progress], i) => (
                           <motion.div 
@@ -578,7 +575,7 @@ const Dashboard = () => {
                 </motion.div>
               </div>
 
-              {/* Row 3: Planning + Achievements + Quick Actions */}
+              {/* Row 5: Planning + Achievements + Quick Actions */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {/* Homework & Events */}
                 <motion.div variants={itemVariants}>
@@ -586,8 +583,8 @@ const Dashboard = () => {
                     <CardContent className="p-4">
                       <div className="flex items-center gap-3 mb-4">
                         <motion.img 
-                          src={notebookIcon} 
-                          alt="Notebook" 
+                          src={owlChecklist} 
+                          alt="Checklist owl" 
                           className="w-12 h-12 object-contain"
                           animate={floatAnimation}
                         />
@@ -708,8 +705,8 @@ const Dashboard = () => {
                       <div className="grid grid-cols-2 gap-2">
                         {[
                           { icon: Calendar, label: "Calendar", path: "/agenda", color: "from-primary to-primary/80" },
-                          { icon: Brain, label: "Practice", path: "/practice", color: "from-secondary to-secondary/80" },
-                          { icon: GraduationCap, label: "Groups", path: "/groups", color: "from-primary to-accent" },
+                          { icon: Brain, label: "Practice", path: "/practice", color: "from-primary/80 to-accent/80" },
+                          { icon: GraduationCap, label: "Groups", path: "/groups", color: "from-accent/80 to-primary/80" },
                           { icon: BarChart3, label: "Insights", path: "/insights", color: "from-accent to-accent/80" },
                         ].map((action, i) => (
                           <motion.div
@@ -735,16 +732,16 @@ const Dashboard = () => {
                 </motion.div>
               </div>
 
-              {/* Row 4: AI Insights - Full Width with tighter padding */}
+              {/* Row 6: AI Insights */}
               <motion.div variants={itemVariants}>
                 <Card className="bg-gradient-to-br from-primary/5 via-card to-accent/5 border-primary/10 overflow-hidden">
-                  <CardContent className="p-4 sm:p-6">
+                  <CardContent className="p-5 sm:p-6">
                     <AIInsightsCard userId={user?.id || ""} />
                   </CardContent>
                 </Card>
               </motion.div>
 
-              {/* Row 5: Upcoming Events */}
+              {/* Row 7: Upcoming Events */}
               {events.length > 0 && (
                 <motion.div variants={itemVariants}>
                   <Card className="bg-gradient-to-r from-rose-500/5 via-card to-pink-500/5 border-rose-500/10">
@@ -752,8 +749,8 @@ const Dashboard = () => {
                       <div className="flex items-center justify-between mb-4">
                         <div className="flex items-center gap-3">
                           <motion.img 
-                            src={magnifyingGlassIcon} 
-                            alt="Events" 
+                            src={owlChart} 
+                            alt="Owl with chart" 
                             className="w-12 h-12 object-contain"
                             animate={floatAnimation}
                           />
