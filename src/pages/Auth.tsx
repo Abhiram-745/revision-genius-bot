@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -17,6 +17,7 @@ import PasswordStrengthIndicator from "@/components/auth/PasswordStrengthIndicat
 
 const Auth = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { signup, login, sendVerificationCode, verifyEmailCode, user, emailVerified, banInfo, checkBanStatus, clearBanInfo } = useAuth();
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState("");
@@ -35,6 +36,15 @@ const Auth = () => {
     password: string;
     fullName: string;
   } | null>(null);
+
+  // Capture referral code from URL on mount
+  useEffect(() => {
+    const refCode = searchParams.get('ref');
+    if (refCode) {
+      localStorage.setItem('vistara_referral_code', refCode);
+      console.log('Referral code captured:', refCode);
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     // Show ban dialog if user was kicked out due to ban
@@ -467,19 +477,16 @@ const Auth = () => {
                       required
                       minLength={8}
                     />
-                    {confirmPassword && password !== confirmPassword && (
-                      <p className="text-xs text-destructive">Passwords do not match</p>
-                    )}
                   </div>
                   <Button
                     type="submit"
                     className="w-full bg-gradient-primary hover:opacity-90"
-                    disabled={loading || password !== confirmPassword || password.length < 8}
+                    disabled={loading}
                   >
                     {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Create Account
+                    Sign Up
                   </Button>
-                  
+
                   <div className="relative my-4">
                     <div className="absolute inset-0 flex items-center">
                       <span className="w-full border-t border-border" />
@@ -535,50 +542,47 @@ const Auth = () => {
             </Tabs>
           </CardContent>
         </Card>
-      </div>
 
-      {/* Ban Dialog */}
-      <Dialog open={showBanDialog} onOpenChange={setShowBanDialog}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <div className="flex justify-center mb-4">
-              <div className="h-16 w-16 rounded-full bg-destructive/10 flex items-center justify-center">
-                <Ban className="h-8 w-8 text-destructive" />
+        {/* Ban Dialog */}
+        <Dialog open={showBanDialog} onOpenChange={(open) => {
+          setShowBanDialog(open);
+          if (!open) clearBanInfo();
+        }}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2 text-destructive">
+                <Ban className="h-5 w-5" />
+                Account Suspended
+              </DialogTitle>
+              <DialogDescription>
+                Your account has been suspended and you cannot access Vistara.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="py-4">
+              <div className="p-4 bg-destructive/10 rounded-lg border border-destructive/20">
+                <p className="text-sm font-medium text-destructive">Reason:</p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  {banReason || "No reason provided. Please contact support for more information."}
+                </p>
               </div>
+              <p className="text-sm text-muted-foreground mt-4">
+                If you believe this is a mistake, please contact support at{" "}
+                <a href="mailto:support@vistara-ai.app" className="text-primary hover:underline">
+                  support@vistara-ai.app
+                </a>
+              </p>
             </div>
-            <DialogTitle className="text-center text-xl">Account Suspended</DialogTitle>
-            <DialogDescription className="text-center">
-              This account has been suspended from Vistara.
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="space-y-4">
-            {banReason && (
-              <div className="bg-muted rounded-lg p-4">
-                <p className="text-sm font-medium text-muted-foreground mb-1">Reason:</p>
-                <p className="text-sm">{banReason}</p>
-              </div>
-            )}
-            
-            <p className="text-sm text-muted-foreground text-center">
-              If you believe this is a mistake, please contact support.
-            </p>
-          </div>
-
-          <DialogFooter className="sm:justify-center">
-            <Button
-              variant="outline"
-              onClick={() => {
+            <DialogFooter>
+              <Button variant="outline" onClick={() => {
                 setShowBanDialog(false);
                 clearBanInfo();
-                setBanReason(null);
-              }}
-            >
-              I Understand
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+              }}>
+                Close
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </div>
     </PageTransition>
   );
 };
