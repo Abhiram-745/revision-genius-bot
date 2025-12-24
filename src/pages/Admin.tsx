@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import Header from "@/components/Header";
-import { Users, Crown, Ban, Search, Eye, Calendar, BookOpen, Clock, AlertTriangle, CheckCircle, XCircle, Loader2, ChevronRight, ArrowLeft, MessageSquare, ExternalLink } from "lucide-react";
+import { Users, Crown, Ban, Search, Eye, Calendar, BookOpen, Clock, AlertTriangle, CheckCircle, XCircle, Loader2, ChevronRight, ArrowLeft, MessageSquare, ExternalLink, Video } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -18,6 +18,7 @@ import PageTransition from "@/components/PageTransition";
 import { triggerConfetti, triggerEmoji } from "@/utils/celebrations";
 import { motion, AnimatePresence } from "framer-motion";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { AmbassadorTab } from "@/components/admin/AmbassadorTab";
 
 interface UserData {
   id: string;
@@ -503,7 +504,7 @@ const Admin = () => {
             </Card>
           </div>
 
-          {/* Tabs for Users and App Requests */}
+          {/* Tabs for Users, App Requests, and Ambassador */}
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
             <TabsList>
               <TabsTrigger value="users" className="gap-2">
@@ -519,7 +520,15 @@ const Admin = () => {
                   </Badge>
                 )}
               </TabsTrigger>
+              <TabsTrigger value="ambassador" className="gap-2">
+                <Video className="h-4 w-4" />
+                Ambassador
+              </TabsTrigger>
             </TabsList>
+
+            <TabsContent value="ambassador">
+              <AmbassadorTab />
+            </TabsContent>
 
             <TabsContent value="users">
           {/* Users List */}

@@ -166,6 +166,70 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return false;
   };
 
+  // Process referral code after successful signup
+  const processReferralCode = async (userId: string) => {
+    const referralCode = localStorage.getItem('vistara_referral_code');
+    if (!referralCode) return;
+
+    try {
+      // Look up the referral code
+      const { data: codeData, error: codeError } = await supabase
+        .from('referral_codes')
+        .select('id, user_id')
+        .eq('code', referralCode)
+        .maybeSingle();
+
+      if (codeError || !codeData) {
+        console.log('Referral code not found:', referralCode);
+        localStorage.removeItem('vistara_referral_code');
+        return;
+      }
+
+      // Don't allow self-referral
+      if (codeData.user_id === userId) {
+        console.log('Cannot self-refer');
+        localStorage.removeItem('vistara_referral_code');
+        return;
+      }
+
+      // Check if this user has already used a referral code
+      const { data: existingUse } = await supabase
+        .from('referral_uses')
+        .select('id')
+        .eq('referred_user_id', userId)
+        .maybeSingle();
+
+      if (existingUse) {
+        console.log('User already used a referral code');
+        localStorage.removeItem('vistara_referral_code');
+        return;
+      }
+
+      // Insert the referral use
+      const { error: insertError } = await supabase
+        .from('referral_uses')
+        .insert({
+          referral_code_id: codeData.id,
+          referred_user_id: userId,
+          is_valid: true
+        });
+
+      if (insertError) {
+        console.error('Error inserting referral use:', insertError);
+      } else {
+        console.log('Referral recorded successfully for code:', referralCode);
+        
+        // Check and grant referral premium to the referrer
+        await supabase.rpc('check_and_grant_referral_premium', { _user_id: codeData.user_id });
+      }
+
+      localStorage.removeItem('vistara_referral_code');
+    } catch (err) {
+      console.error('Error processing referral code:', err);
+      localStorage.removeItem('vistara_referral_code');
+    }
+  };
+
   useEffect(() => {
     refreshUser();
 
@@ -193,6 +257,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           // Grant premium for OAuth signups (event === 'SIGNED_IN' for first-time OAuth)
           if (event === 'SIGNED_IN' && session.user.app_metadata?.provider !== 'email') {
             await grantOAuthPremium(session.user.id);
+            // Also process referral for OAuth signups
+            await processReferralCode(session.user.id);
           }
           
           checkEmailVerified(session.user.email || '');
@@ -295,6 +361,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             }
           }
         }
+
+        // Process referral code for email signups
+        await processReferralCode(data.user.id);
 
         setUser(data.user);
         setSession(data.session);
