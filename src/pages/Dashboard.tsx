@@ -11,6 +11,7 @@ import Header from "@/components/Header";
 import OnboardingWizard from "@/components/OnboardingWizard";
 import { AIInsightsCard } from "@/components/dashboard/AIInsightsCard";
 import { StudyArchetypeCard } from "@/components/dashboard/StudyArchetypeCard";
+import { MotivationCard } from "@/components/dashboard/MotivationCard";
 import SimpleOnboarding from "@/components/onboarding/SimpleOnboarding";
 import PageTransition from "@/components/PageTransition";
 import { OwlMascot } from "@/components/mascot/OwlMascot";
@@ -339,21 +340,21 @@ const Dashboard = () => {
                 </motion.div>
               )}
 
-              {/* Row 3: Quick Stats */}
-              <motion.div variants={itemVariants} className="grid grid-cols-3 gap-4">
+              {/* Row 3: Quick Stats - Visible on mobile */}
+              <motion.div variants={itemVariants} className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
                 {/* Streak Card */}
                 <motion.div whileHover={{ scale: 1.02 }}>
-                  <Card className="bg-gradient-to-br from-orange-500/10 to-amber-500/10 border-orange-500/20 overflow-hidden h-full">
+                  <Card className="bg-gradient-to-br from-orange-500/10 to-amber-500/10 border-orange-500/20 overflow-hidden">
                     <CardContent className="p-4 flex items-center gap-4">
                       <motion.div 
-                        className="p-3 rounded-2xl bg-gradient-to-br from-orange-500 to-amber-500"
+                        className="p-3 rounded-2xl bg-gradient-to-br from-orange-500 to-amber-500 shrink-0"
                         animate={{ rotate: [0, 5, -5, 0] }}
                         transition={{ duration: 2, repeat: Infinity }}
                       >
-                        <Flame className="h-7 w-7 text-white" />
+                        <Flame className="h-6 w-6 sm:h-7 sm:w-7 text-white" />
                       </motion.div>
-                      <div>
-                        <p className="text-3xl font-bold text-orange-600 dark:text-orange-400">{streak}</p>
+                      <div className="min-w-0">
+                        <p className="text-2xl sm:text-3xl font-bold text-orange-600 dark:text-orange-400">{streak}</p>
                         <p className="text-sm text-muted-foreground">Day Streak</p>
                       </div>
                     </CardContent>
@@ -362,13 +363,13 @@ const Dashboard = () => {
 
                 {/* Weekly Hours */}
                 <motion.div whileHover={{ scale: 1.02 }}>
-                  <Card className="bg-gradient-to-br from-blue-500/10 to-cyan-500/10 border-blue-500/20 h-full">
+                  <Card className="bg-gradient-to-br from-blue-500/10 to-cyan-500/10 border-blue-500/20">
                     <CardContent className="p-4 flex items-center gap-4">
-                      <div className="p-3 rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-500">
-                        <Clock className="h-7 w-7 text-white" />
+                      <div className="p-3 rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-500 shrink-0">
+                        <Clock className="h-6 w-6 sm:h-7 sm:w-7 text-white" />
                       </div>
-                      <div>
-                        <p className="text-3xl font-bold text-blue-600 dark:text-blue-400">{weeklyHours}h</p>
+                      <div className="min-w-0">
+                        <p className="text-2xl sm:text-3xl font-bold text-blue-600 dark:text-blue-400">{weeklyHours}h</p>
                         <p className="text-sm text-muted-foreground">This Week</p>
                       </div>
                     </CardContent>
@@ -377,13 +378,13 @@ const Dashboard = () => {
 
                 {/* Sessions Completed */}
                 <motion.div whileHover={{ scale: 1.02 }}>
-                  <Card className="bg-gradient-to-br from-emerald-500/10 to-teal-500/10 border-emerald-500/20 h-full">
+                  <Card className="bg-gradient-to-br from-emerald-500/10 to-teal-500/10 border-emerald-500/20">
                     <CardContent className="p-4 flex items-center gap-4">
-                      <div className="p-3 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-500">
-                        <Target className="h-7 w-7 text-white" />
+                      <div className="p-3 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-500 shrink-0">
+                        <Target className="h-6 w-6 sm:h-7 sm:w-7 text-white" />
                       </div>
-                      <div>
-                        <p className="text-3xl font-bold text-emerald-600 dark:text-emerald-400">{totalSessions}</p>
+                      <div className="min-w-0">
+                        <p className="text-2xl sm:text-3xl font-bold text-emerald-600 dark:text-emerald-400">{totalSessions}</p>
                         <p className="text-sm text-muted-foreground">Sessions Done</p>
                       </div>
                     </CardContent>
@@ -685,50 +686,13 @@ const Dashboard = () => {
                   </Card>
                 </motion.div>
 
-                {/* Quick Actions */}
+                {/* Motivation Card - Replaced Quick Actions */}
                 <motion.div variants={itemVariants}>
-                  <Card className="h-full bg-gradient-to-br from-primary/5 via-card to-accent/5 border-primary/10">
-                    <CardContent className="p-4">
-                      <div className="flex items-center gap-3 mb-4">
-                        <motion.div 
-                          className="p-2 rounded-xl bg-gradient-to-br from-primary to-accent"
-                          animate={pulseAnimation}
-                        >
-                          <Zap className="h-8 w-8 text-white" />
-                        </motion.div>
-                        <div>
-                          <h3 className="font-bold">Quick Actions</h3>
-                          <p className="text-xs text-muted-foreground">Jump to features</p>
-                        </div>
-                      </div>
-                      
-                      <div className="grid grid-cols-2 gap-2">
-                        {[
-                          { icon: Calendar, label: "Calendar", path: "/agenda", color: "from-primary to-primary/80" },
-                          { icon: Brain, label: "Practice", path: "/practice", color: "from-primary/80 to-accent/80" },
-                          { icon: GraduationCap, label: "Groups", path: "/groups", color: "from-accent/80 to-primary/80" },
-                          { icon: BarChart3, label: "Insights", path: "/insights", color: "from-accent to-accent/80" },
-                        ].map((action, i) => (
-                          <motion.div
-                            key={action.label}
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                          >
-                            <Button
-                              variant="outline"
-                              className="w-full h-auto py-4 flex flex-col gap-2 hover:bg-primary/5 border-primary/20"
-                              onClick={() => navigate(action.path)}
-                            >
-                              <div className={`p-2 rounded-lg bg-gradient-to-br ${action.color}`}>
-                                <action.icon className="h-5 w-5 text-white" />
-                              </div>
-                              <span className="text-xs font-medium">{action.label}</span>
-                            </Button>
-                          </motion.div>
-                        ))}
-                      </div>
-                    </CardContent>
-                  </Card>
+                  <MotivationCard 
+                    streak={streak}
+                    weeklyHours={weeklyHours}
+                    sessionsCompleted={totalSessions}
+                  />
                 </motion.div>
               </div>
 

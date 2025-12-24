@@ -85,7 +85,9 @@ const SessionBlock = memo(({
   isDragging, 
   isResizable,
   onMouseDownTop, 
-  onMouseDownBottom 
+  onMouseDownBottom,
+  onTouchStartTop,
+  onTouchStartBottom 
 }: {
   session: TimetableSession;
   index: number;
@@ -95,6 +97,8 @@ const SessionBlock = memo(({
   isResizable: boolean;
   onMouseDownTop: (e: React.MouseEvent) => void;
   onMouseDownBottom: (e: React.MouseEvent) => void;
+  onTouchStartTop: (e: React.TouchEvent) => void;
+  onTouchStartBottom: (e: React.TouchEvent) => void;
 }) => (
   <motion.div
     initial={{ opacity: 0, x: -10 }}
@@ -114,10 +118,11 @@ const SessionBlock = memo(({
     {/* Top resize handle - only for editable sessions */}
     {isResizable && (
       <div
-        className="absolute -top-1.5 left-0 right-0 h-4 cursor-ns-resize flex items-center justify-center group z-10"
+        className="absolute -top-2 left-0 right-0 h-6 cursor-ns-resize flex items-center justify-center group z-10 touch-none"
         onMouseDown={onMouseDownTop}
+        onTouchStart={onTouchStartTop}
       >
-        <div className="w-10 h-1 rounded-full bg-foreground/10 group-hover:bg-primary group-hover:scale-110 transition-all" />
+        <div className="w-12 h-1.5 rounded-full bg-foreground/20 group-hover:bg-primary group-hover:scale-110 group-active:bg-primary transition-all" />
       </div>
     )}
 
@@ -167,10 +172,11 @@ const SessionBlock = memo(({
     {/* Bottom resize handle - only for editable sessions */}
     {isResizable && (
       <div
-        className="absolute -bottom-1.5 left-0 right-0 h-4 cursor-ns-resize flex items-center justify-center group z-10"
+        className="absolute -bottom-2 left-0 right-0 h-6 cursor-ns-resize flex items-center justify-center group z-10 touch-none"
         onMouseDown={onMouseDownBottom}
+        onTouchStart={onTouchStartBottom}
       >
-        <div className="w-10 h-1 rounded-full bg-foreground/10 group-hover:bg-primary group-hover:scale-110 transition-all" />
+        <div className="w-12 h-1.5 rounded-full bg-foreground/20 group-hover:bg-primary group-hover:scale-110 group-active:bg-primary transition-all" />
       </div>
     )}
   </motion.div>
@@ -311,6 +317,21 @@ const ManualTimetableEditor = ({ sessions, date, onSave, onCancel }: ManualTimet
     });
   }, [editableSessions]);
 
+  // Touch handlers for mobile support
+  const handleTouchStart = useCallback((e: React.TouchEvent, index: number, edge: "top" | "bottom") => {
+    e.preventDefault();
+    e.stopPropagation();
+    const touch = e.touches[0];
+    const session = editableSessions[index];
+    setDragState({
+      index,
+      edge,
+      startY: touch.clientY,
+      originalDuration: session.duration,
+      originalTime: session.time,
+    });
+  }, [editableSessions]);
+
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
     if (!dragState || !containerRef.current) return;
 
@@ -346,7 +367,45 @@ const ManualTimetableEditor = ({ sessions, date, onSave, onCancel }: ManualTimet
     });
   }, [dragState, dayStart, overlapsBlocked]);
 
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    if (!dragState || !containerRef.current) return;
+    
+    const touch = e.touches[0];
+    const deltaY = touch.clientY - dragState.startY;
+    const deltaMinutes = Math.round((deltaY / HOUR_HEIGHT) * 60 / 5) * 5;
+    
+    setEditableSessions(prev => {
+      const updated = prev.map(s => ({ ...s }));
+      const session = updated[dragState.index];
+      const originalStart = timeToMinutes(dragState.originalTime);
+      
+      if (dragState.edge === "bottom") {
+        const newDuration = Math.max(MIN_DURATION, dragState.originalDuration + deltaMinutes);
+        const newEnd = originalStart + newDuration;
+        
+        if (!overlapsBlocked(originalStart, newEnd)) {
+          session.duration = Math.min(newDuration, 180);
+        }
+      } else {
+        const newStart = Math.max(dayStart, originalStart + deltaMinutes);
+        const newDuration = Math.max(MIN_DURATION, dragState.originalDuration - deltaMinutes);
+        const newEnd = newStart + newDuration;
+        
+        if (!overlapsBlocked(newStart, newEnd)) {
+          session.time = minutesToTime(newStart);
+          session.duration = newDuration;
+        }
+      }
+      
+      return updated;
+    });
+  }, [dragState, dayStart, overlapsBlocked]);
+
   const handleMouseUp = useCallback(() => {
+    setDragState(null);
+  }, []);
+
+  const handleTouchEnd = useCallback(() => {
     setDragState(null);
   }, []);
 
@@ -465,11 +524,13 @@ const ManualTimetableEditor = ({ sessions, date, onSave, onCancel }: ManualTimet
         <ScrollArea className="h-[450px] rounded-lg border bg-card/50">
           <div 
             ref={containerRef}
-            className="relative select-none p-2"
+            className="relative select-none p-2 touch-none"
             style={{ height: `${(endHour - startHour) * HOUR_HEIGHT + 40}px` }}
             onMouseMove={handleMouseMove}
             onMouseUp={handleMouseUp}
             onMouseLeave={handleMouseUp}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
           >
             {hourMarkers}
 
@@ -496,6 +557,8 @@ const ManualTimetableEditor = ({ sessions, date, onSave, onCancel }: ManualTimet
                   isResizable={isEditable}
                   onMouseDownTop={(e) => isEditable && handleMouseDown(e, editableIndex, "top")}
                   onMouseDownBottom={(e) => isEditable && handleMouseDown(e, editableIndex, "bottom")}
+                  onTouchStartTop={(e) => isEditable && handleTouchStart(e, editableIndex, "top")}
+                  onTouchStartBottom={(e) => isEditable && handleTouchStart(e, editableIndex, "bottom")}
                 />
               );
             })}
