@@ -56,6 +56,39 @@ export type Database = {
         }
         Relationships: []
       }
+      ambassador_submissions: {
+        Row: {
+          admin_notes: string | null
+          created_at: string
+          id: string
+          platform: string
+          status: string
+          updated_at: string
+          user_id: string
+          video_url: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          created_at?: string
+          id?: string
+          platform: string
+          status?: string
+          updated_at?: string
+          user_id: string
+          video_url: string
+        }
+        Update: {
+          admin_notes?: string | null
+          created_at?: string
+          id?: string
+          platform?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+          video_url?: string
+        }
+        Relationships: []
+      }
       app_requests: {
         Row: {
           admin_notes: string | null
