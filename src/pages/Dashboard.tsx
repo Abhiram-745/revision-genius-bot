@@ -273,15 +273,15 @@ const Dashboard = () => {
               variants={containerVariants}
               initial="hidden"
               animate="visible"
-              className="space-y-6"
+              className="space-y-4"
             >
               {/* Row 1: Hero Card with Mascot + Quick Stats */}
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
                 {/* Hero Card - 2 columns */}
                 <motion.div variants={itemVariants} className="lg:col-span-2">
                   <Card className="overflow-hidden border-0 shadow-xl bg-gradient-to-br from-primary/10 via-card to-accent/10 h-full">
-                    <CardContent className="p-6 sm:p-8">
-                      <div className="flex flex-col sm:flex-row items-center gap-6">
+                    <CardContent className="p-4 sm:p-6">
+                      <div className="flex flex-col sm:flex-row items-center gap-4">
                         <motion.div
                           animate={floatAnimation}
                           className="flex-shrink-0 relative"
@@ -293,11 +293,11 @@ const Dashboard = () => {
                           <img 
                             src={wavingOwl} 
                             alt="Owl mascot" 
-                            className="w-28 h-28 sm:w-36 sm:h-36 object-contain relative z-10 drop-shadow-lg" 
+                            className="w-24 h-24 sm:w-28 sm:h-28 object-contain relative z-10 drop-shadow-lg" 
                           />
                         </motion.div>
                         
-                        <div className="flex-1 text-center sm:text-left space-y-4">
+                        <div className="flex-1 text-center sm:text-left space-y-3">
                           <div>
                             <motion.h1 
                               className="text-2xl sm:text-4xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text"
@@ -339,7 +339,7 @@ const Dashboard = () => {
                 </motion.div>
 
                 {/* Quick Stats - 1 column */}
-                <motion.div variants={itemVariants} className="space-y-4">
+                <motion.div variants={itemVariants} className="space-y-3">
                   {/* Streak Card */}
                   <motion.div whileHover={{ scale: 1.02 }} className="h-auto">
                     <Card className="bg-gradient-to-br from-orange-500/10 to-amber-500/10 border-orange-500/20 overflow-hidden">
@@ -392,7 +392,7 @@ const Dashboard = () => {
               </div>
 
               {/* Row 2: Today's Focus + Exam Readiness */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 {/* Today's Focus */}
                 <motion.div variants={itemVariants}>
                   <Card className="h-full bg-gradient-to-br from-primary/5 via-card to-accent/5 border-primary/10 overflow-hidden">
@@ -579,11 +579,11 @@ const Dashboard = () => {
               </div>
 
               {/* Row 3: Planning + Achievements + Quick Actions */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {/* Homework & Events */}
                 <motion.div variants={itemVariants}>
                   <Card className="h-full bg-gradient-to-br from-violet-500/5 via-card to-purple-500/5 border-violet-500/10">
-                    <CardContent className="p-6">
+                    <CardContent className="p-4">
                       <div className="flex items-center gap-3 mb-4">
                         <motion.img 
                           src={notebookIcon} 
@@ -635,7 +635,7 @@ const Dashboard = () => {
                 {/* Achievements */}
                 <motion.div variants={itemVariants}>
                   <Card className="h-full bg-gradient-to-br from-amber-500/5 via-card to-yellow-500/5 border-amber-500/10">
-                    <CardContent className="p-6">
+                    <CardContent className="p-4">
                       <div className="flex items-center gap-3 mb-4">
                         <motion.div 
                           className="p-2 rounded-xl bg-gradient-to-br from-amber-500 to-yellow-500"
@@ -691,7 +691,7 @@ const Dashboard = () => {
                 {/* Quick Actions */}
                 <motion.div variants={itemVariants}>
                   <Card className="h-full bg-gradient-to-br from-cyan-500/5 via-card to-blue-500/5 border-cyan-500/10">
-                    <CardContent className="p-6">
+                    <CardContent className="p-4">
                       <div className="flex items-center gap-3 mb-4">
                         <motion.div 
                           className="p-2 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-500"
@@ -735,21 +735,11 @@ const Dashboard = () => {
                 </motion.div>
               </div>
 
-              {/* Row 4: AI Insights - Full Width */}
+              {/* Row 4: AI Insights - Full Width with tighter padding */}
               <motion.div variants={itemVariants}>
-                <Card className="bg-gradient-to-br from-amber-500/5 via-card to-yellow-500/5 border-amber-500/10 overflow-hidden">
-                  <CardContent className="p-6 sm:p-8">
-                    <div className="flex flex-col lg:flex-row items-start gap-6">
-                      <motion.img 
-                        src={lightbulbIcon} 
-                        alt="Insights" 
-                        className="w-20 h-20 lg:w-28 lg:h-28 object-contain flex-shrink-0"
-                        animate={floatAnimation}
-                      />
-                      <div className="flex-1 w-full">
-                        <AIInsightsCard userId={user?.id || ""} />
-                      </div>
-                    </div>
+                <Card className="bg-gradient-to-br from-primary/5 via-card to-accent/5 border-primary/10 overflow-hidden">
+                  <CardContent className="p-4 sm:p-6">
+                    <AIInsightsCard userId={user?.id || ""} />
                   </CardContent>
                 </Card>
               </motion.div>
