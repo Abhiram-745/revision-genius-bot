@@ -223,8 +223,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           full_name: fullName || null
         });
 
-        // Check if within free premium offer period (before Jan 1, 2025)
-        const offerEndDate = new Date('2025-01-01T00:00:00Z');
+        // Check if within free premium offer period (before Jan 27, 2025)
+        const offerEndDate = new Date('2025-01-27T23:59:59Z');
         const now = new Date();
         
         if (now < offerEndDate) {

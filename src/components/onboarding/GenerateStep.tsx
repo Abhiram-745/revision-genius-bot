@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2, Sparkles } from "lucide-react";
+import { Loader2, Sparkles, Bell, BellOff } from "lucide-react";
 import { toast } from "sonner";
 import { Subject, Topic, TestDate, StudyPreferences } from "../OnboardingWizard";
 import { Homework } from "./HomeworkStep";
@@ -15,6 +15,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import GenerationProgress from "./GenerationProgress";
 import { triggerConfetti } from "@/utils/celebrations";
 import { SubjectPriority } from "./SubjectPriorityStep";
+import { usePushNotifications } from "@/hooks/usePushNotifications";
 
 interface GenerateStepProps {
   subjects: Subject[];
@@ -46,8 +47,10 @@ const GenerateStep = ({
   subjectPriorities = [],
 }: GenerateStepProps) => {
   const queryClient = useQueryClient();
+  const { isSupported, isSubscribed, subscribe } = usePushNotifications();
   const [loading, setLoading] = useState(false);
   const [generationStage, setGenerationStage] = useState<string>("");
+  const [showNotificationPrompt, setShowNotificationPrompt] = useState(false);
   
   // Default dates: start tomorrow, end in 1 week
   const tomorrow = new Date();
@@ -494,11 +497,37 @@ const GenerateStep = ({
         </div>
       )}
 
+      {/* Notification Prompt */}
+      {!loading && isSupported && !isSubscribed && (
+        <div className="p-4 bg-gradient-to-r from-primary/10 to-secondary/10 rounded-lg border border-primary/20">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <Bell className="w-5 h-5 text-primary" />
+              <div>
+                <p className="text-sm font-medium">Enable notifications</p>
+                <p className="text-xs text-muted-foreground">Get notified when your timetable is ready</p>
+              </div>
+            </div>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={async () => {
+                await subscribe();
+                toast.success("Notifications enabled!");
+              }}
+              className="shrink-0"
+            >
+              Enable
+            </Button>
+          </div>
+        </div>
+      )}
+
       {!loading && (
         <Button
           onClick={handleGenerate}
           disabled={loading || !startDate || !endDate}
-          className="w-full bg-gradient-primary hover:opacity-90 gap-2"
+          className="w-full bg-gradient-to-r from-primary to-secondary hover:opacity-90 gap-2"
           size="lg"
         >
           <Sparkles className="h-5 w-5" />

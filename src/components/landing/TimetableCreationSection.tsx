@@ -3,6 +3,8 @@ import { Upload, Calendar, Brain, Sparkles, FileText, Clock, Target, Zap } from 
 import MorphingBlob from "./MorphingBlob";
 import happyOwl from "@/assets/happy-owl.png";
 import confusedOwl from "@/assets/confused-owl.png";
+import owlChecklist from "@/assets/owl-checklist.png";
+import owlChart from "@/assets/owl-chart.png";
 
 const steps = [
   {
@@ -16,7 +18,8 @@ const steps = [
       "Detects exam boards (AQA, Edexcel, OCR, WJEC, CIE)",
       "Identifies which areas need more focus",
     ],
-    color: "from-blue-500 to-cyan-500",
+    color: "from-primary to-primary/70",
+    owlImage: null,
   },
   {
     number: "02",
@@ -29,7 +32,8 @@ const steps = [
       "Block out family dinners and social events",
       "Mark exam dates for smart countdown scheduling",
     ],
-    color: "from-purple-500 to-pink-500",
+    color: "from-secondary to-accent",
+    owlImage: owlChecklist,
   },
   {
     number: "03",
@@ -42,7 +46,8 @@ const steps = [
       "Balances difficult and easier subjects",
       "Accounts for your energy levels throughout the day",
     ],
-    color: "from-orange-500 to-amber-500",
+    color: "from-primary via-secondary to-accent",
+    owlImage: owlChart,
   },
   {
     number: "04",
@@ -55,32 +60,33 @@ const steps = [
       "Harder topics during peak focus hours",
       "Built-in flexibility for unexpected events",
     ],
-    color: "from-green-500 to-emerald-500",
+    color: "from-primary to-secondary",
+    owlImage: happyOwl,
   },
 ];
 
 const TimetableCreationSection = () => {
   return (
-    <section className="py-24 px-6 relative overflow-hidden">
-      <MorphingBlob className="-top-40 -right-40 opacity-50" size={600} />
-      <MorphingBlob className="-bottom-40 -left-40 opacity-50" size={500} />
+    <section className="py-24 px-6 relative overflow-hidden bg-gradient-to-b from-background via-primary/5 to-background">
+      <MorphingBlob className="-top-40 -right-40 opacity-30" size={600} />
+      <MorphingBlob className="-bottom-40 -left-40 opacity-30" size={500} />
       
-      {/* Confused owl on left side */}
+      {/* Confused owl on left side - repositioned to avoid overlap */}
       <motion.img
         src={confusedOwl}
         alt="Confused owl mascot"
-        className="absolute top-32 left-4 md:left-8 lg:left-16 w-24 h-24 md:w-32 md:h-32 lg:w-40 lg:h-40 object-contain drop-shadow-xl z-10 hidden md:block"
+        className="absolute top-16 left-4 md:left-8 lg:left-16 w-20 h-20 md:w-28 md:h-28 lg:w-36 lg:h-36 object-contain drop-shadow-xl z-10 hidden md:block"
         initial={{ opacity: 0, x: -30, rotate: -10 }}
         whileInView={{ opacity: 1, x: 0, rotate: 0 }}
         viewport={{ once: true }}
         transition={{ duration: 0.6, delay: 0.2 }}
       />
       
-      {/* Happy owl on right side at bottom */}
+      {/* Happy owl on right side at bottom - repositioned */}
       <motion.img
         src={happyOwl}
         alt="Happy owl mascot"
-        className="absolute bottom-20 right-4 md:right-8 lg:right-16 w-24 h-24 md:w-32 md:h-32 lg:w-40 lg:h-40 object-contain drop-shadow-xl z-10 hidden md:block"
+        className="absolute bottom-8 right-4 md:right-8 lg:right-16 w-24 h-24 md:w-36 md:h-36 lg:w-44 lg:h-44 object-contain drop-shadow-xl z-10 hidden md:block"
         initial={{ opacity: 0, x: 30, rotate: 10 }}
         whileInView={{ opacity: 1, x: 0, rotate: 0 }}
         viewport={{ once: true }}
@@ -97,7 +103,7 @@ const TimetableCreationSection = () => {
           <motion.span
             initial={{ opacity: 0, scale: 0.9 }}
             whileInView={{ opacity: 1, scale: 1 }}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium mb-6"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-primary/10 to-secondary/10 text-primary text-sm font-medium mb-6"
           >
             <Zap className="w-4 h-4" />
             AI-Powered Generation
@@ -161,24 +167,36 @@ const TimetableCreationSection = () => {
               </div>
 
               <motion.div
-                className="flex-1 w-full max-w-md"
+                className="flex-1 w-full max-w-md relative"
                 whileHover={{ scale: 1.02 }}
                 transition={{ type: "spring", stiffness: 300 }}
               >
+                {/* Small owl for each step */}
+                {step.owlImage && (
+                  <motion.img
+                    src={step.owlImage}
+                    alt=""
+                    className="absolute -top-6 -right-6 w-16 h-16 md:w-20 md:h-20 object-contain drop-shadow-lg z-20"
+                    initial={{ opacity: 0, scale: 0 }}
+                    whileInView={{ opacity: 1, scale: 1 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: 0.3, type: "spring" }}
+                  />
+                )}
                 <div className="relative">
                   <div className={`absolute inset-0 bg-gradient-to-br ${step.color} opacity-20 blur-2xl rounded-3xl`} />
                   <div className="relative bg-card/80 backdrop-blur-sm border border-border rounded-2xl p-6 shadow-xl">
                     {index === 0 && (
                       <div className="space-y-4">
-                        <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
+                        <div className="flex items-center gap-3 p-3 bg-primary/10 rounded-lg">
                           <FileText className="w-5 h-5 text-primary" />
                           <span className="text-sm">biology_syllabus.pdf</span>
-                          <span className="ml-auto text-xs text-green-500">✓ Parsed</span>
+                          <span className="ml-auto text-xs text-primary">✓ Parsed</span>
                         </div>
-                        <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
+                        <div className="flex items-center gap-3 p-3 bg-primary/10 rounded-lg">
                           <FileText className="w-5 h-5 text-primary" />
                           <span className="text-sm">chemistry_notes.docx</span>
-                          <span className="ml-auto text-xs text-green-500">✓ Parsed</span>
+                          <span className="ml-auto text-xs text-primary">✓ Parsed</span>
                         </div>
                         <div className="text-sm text-muted-foreground mt-4">
                           <strong>Detected:</strong> AQA A-Level Biology, 24 topics
@@ -191,12 +209,12 @@ const TimetableCreationSection = () => {
                           <div key={day} className="flex items-center gap-3">
                             <span className="w-10 text-sm font-medium">{day}</span>
                             <div className="flex-1 h-8 bg-muted/50 rounded flex items-center px-2 gap-2">
-                              <div className="w-16 h-5 bg-blue-500/30 rounded text-xs flex items-center justify-center">School</div>
+                              <div className="w-16 h-5 bg-primary/30 rounded text-xs flex items-center justify-center">School</div>
                               {day === "Tue" && (
-                                <div className="w-14 h-5 bg-orange-500/30 rounded text-xs flex items-center justify-center">Football</div>
+                                <div className="w-14 h-5 bg-secondary/30 rounded text-xs flex items-center justify-center">Football</div>
                               )}
                               {day === "Thu" && (
-                                <div className="w-12 h-5 bg-purple-500/30 rounded text-xs flex items-center justify-center">Piano</div>
+                                <div className="w-12 h-5 bg-accent/30 rounded text-xs flex items-center justify-center">Piano</div>
                               )}
                             </div>
                           </div>
@@ -246,7 +264,7 @@ const TimetableCreationSection = () => {
                             viewport={{ once: true }}
                             transition={{ delay: 0.5 + i * 0.15 }}
                             className={`flex items-center gap-3 p-3 rounded-lg ${
-                              session.isBreak ? "bg-green-500/10" : "bg-primary/10"
+                              session.isBreak ? "bg-secondary/10" : "bg-primary/10"
                             }`}
                           >
                             <span className="text-xs font-mono text-muted-foreground">{session.time}</span>

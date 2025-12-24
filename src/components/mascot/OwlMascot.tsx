@@ -46,13 +46,13 @@ const owlImages: Record<OwlType, string> = {
 };
 
 const sizeClasses: Record<string, string> = {
-  xs: "w-8 h-8",
-  sm: "w-12 h-12",
-  md: "w-20 h-20",
-  lg: "w-32 h-32",
-  xl: "w-40 h-40",
-  "2xl": "w-48 h-48",
-  "3xl": "w-56 h-56",
+  xs: "w-12 h-12",
+  sm: "w-16 h-16",
+  md: "w-28 h-28",
+  lg: "w-40 h-40",
+  xl: "w-52 h-52",
+  "2xl": "w-64 h-64",
+  "3xl": "w-72 h-72",
 };
 
 export const OwlMascot = ({ type, size = "md", animate = true, className = "", glow = false }: OwlMascotProps) => {
