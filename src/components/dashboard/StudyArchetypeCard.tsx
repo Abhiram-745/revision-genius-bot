@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, Moon, Sun, ClipboardList, Star } from "lucide-react";
+import { Loader2 } from "lucide-react";
 
 // Import archetype images
 import archetypeNightOwl from "@/assets/archetype-night-owl.png";
@@ -18,49 +18,34 @@ type ArchetypeType = "night-owl" | "early-bird" | "planner" | "perfectionist";
 interface ArchetypeData {
   type: ArchetypeType;
   title: string;
-  description: string;
   image: string;
-  icon: typeof Moon;
-  gradient: string;
-  borderColor: string;
+  glowColor: string;
 }
 
 const archetypes: Record<ArchetypeType, ArchetypeData> = {
   "night-owl": {
     type: "night-owl",
     title: "The Night Owl",
-    description: "You thrive in the quiet hours when the world sleeps. Your best focus comes after sunset.",
     image: archetypeNightOwl,
-    icon: Moon,
-    gradient: "from-indigo-600 via-purple-600 to-violet-700",
-    borderColor: "border-indigo-500/30",
+    glowColor: "rgba(99, 102, 241, 0.6)",
   },
   "early-bird": {
     type: "early-bird",
     title: "The Early Bird",
-    description: "You seize the day at dawn. Morning hours fuel your sharpest thinking and productivity.",
     image: archetypeEarlyBird,
-    icon: Sun,
-    gradient: "from-amber-500 via-orange-500 to-rose-500",
-    borderColor: "border-amber-500/30",
+    glowColor: "rgba(251, 191, 36, 0.6)",
   },
   "planner": {
     type: "planner",
     title: "The Planner",
-    description: "Structure is your superpower. You excel with schedules and hit every milestone.",
     image: archetypePlanner,
-    icon: ClipboardList,
-    gradient: "from-emerald-500 via-teal-500 to-cyan-500",
-    borderColor: "border-emerald-500/30",
+    glowColor: "rgba(34, 197, 94, 0.6)",
   },
   "perfectionist": {
     type: "perfectionist",
     title: "The Perfectionist",
-    description: "Quality over quantity defines you. Your deep focus leads to mastery.",
     image: archetypePerfectionist,
-    icon: Star,
-    gradient: "from-rose-500 via-pink-500 to-fuchsia-500",
-    borderColor: "border-rose-500/30",
+    glowColor: "rgba(244, 63, 94, 0.6)",
   },
 };
 
@@ -73,21 +58,36 @@ export const StudyArchetypeCard = ({ userId }: StudyArchetypeCardProps) => {
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
 
-  // Smooth spring animation
-  const springConfig = { stiffness: 150, damping: 20 };
-  const rotateX = useSpring(useTransform(mouseY, [-0.5, 0.5], [15, -15]), springConfig);
-  const rotateY = useSpring(useTransform(mouseX, [-0.5, 0.5], [-15, 15]), springConfig);
+  // Smoother spring animation for premium feel
+  const springConfig = { stiffness: 100, damping: 15, mass: 0.5 };
+  const rotateX = useSpring(useTransform(mouseY, [-0.5, 0.5], [25, -25]), springConfig);
+  const rotateY = useSpring(useTransform(mouseX, [-0.5, 0.5], [-25, 25]), springConfig);
 
-  // Shine position
-  const shineX = useSpring(useTransform(mouseX, [-0.5, 0.5], [0, 100]), springConfig);
-  const shineY = useSpring(useTransform(mouseY, [-0.5, 0.5], [0, 100]), springConfig);
+  // Shine position with faster response
+  const shineSpringConfig = { stiffness: 200, damping: 25 };
+  const shineX = useSpring(useTransform(mouseX, [-0.5, 0.5], [0, 100]), shineSpringConfig);
+  const shineY = useSpring(useTransform(mouseY, [-0.5, 0.5], [0, 100]), shineSpringConfig);
 
-  // Create the shine gradient transform at top level (not inside JSX)
+  // Create multiple shine effects for holographic look
   const shineBackground = useTransform(
     [shineX, shineY],
     ([x, y]) =>
-      `radial-gradient(circle at ${x}% ${y}%, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0.1) 25%, transparent 50%)`
+      `radial-gradient(circle at ${x}% ${y}%, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0.3) 20%, transparent 60%)`
   );
+
+  const holoBackground = useTransform(
+    [shineX, shineY],
+    ([x, y]) =>
+      `linear-gradient(${Number(x) * 3.6}deg, 
+        rgba(255,0,150,0.15) 0%, 
+        rgba(0,255,255,0.15) 25%, 
+        rgba(255,255,0,0.15) 50%, 
+        rgba(0,255,150,0.15) 75%, 
+        rgba(255,0,150,0.15) 100%)`
+  );
+
+  // Glow intensity based on hover
+  const glowIntensity = useSpring(0, { stiffness: 300, damping: 30 });
 
   useEffect(() => {
     determineArchetype();
@@ -164,119 +164,123 @@ export const StudyArchetypeCard = ({ userId }: StudyArchetypeCardProps) => {
     const y = (e.clientY - rect.top) / rect.height - 0.5;
     mouseX.set(x);
     mouseY.set(y);
+    glowIntensity.set(1);
   };
 
   const handleMouseLeave = () => {
     mouseX.set(0);
     mouseY.set(0);
+    glowIntensity.set(0);
   };
 
   if (loading) {
     return (
-      <div className="h-64 flex items-center justify-center bg-gradient-to-br from-primary/5 to-accent/5 rounded-3xl border border-primary/10">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        <span className="ml-3 text-muted-foreground">Analyzing your study patterns...</span>
+      <div className="flex justify-center">
+        <div className="w-[220px] h-[320px] flex items-center justify-center bg-gradient-to-br from-primary/5 to-accent/5 rounded-[20px] border border-primary/10">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
       </div>
     );
   }
 
   if (!archetype) return null;
 
-  const Icon = archetype.icon;
-
   return (
-    <div className="perspective-1000" style={{ perspective: "1000px" }}>
-      <motion.div
-        ref={cardRef}
-        onMouseMove={handleMouseMove}
-        onMouseLeave={handleMouseLeave}
-        style={{
-          rotateX,
-          rotateY,
-          transformStyle: "preserve-3d",
-        }}
-        className={`relative overflow-hidden rounded-3xl ${archetype.borderColor} border-2 bg-gradient-to-br ${archetype.gradient} p-1 cursor-pointer group`}
-        whileHover={{ scale: 1.02 }}
-        transition={{ type: "spring", stiffness: 300, damping: 20 }}
-      >
-        {/* Shine overlay */}
+    <div className="flex justify-center py-4">
+      <div className="perspective-1000" style={{ perspective: "1200px" }}>
         <motion.div
-          className="absolute inset-0 opacity-0 group-hover:opacity-100 pointer-events-none z-20"
+          ref={cardRef}
+          onMouseMove={handleMouseMove}
+          onMouseLeave={handleMouseLeave}
           style={{
-            background: shineBackground,
+            rotateX,
+            rotateY,
+            transformStyle: "preserve-3d",
           }}
-        />
+          className="relative cursor-pointer group"
+          whileHover={{ scale: 1.05, z: 50 }}
+          transition={{ type: "spring", stiffness: 200, damping: 20 }}
+        >
+          {/* Outer glow effect */}
+          <motion.div
+            className="absolute -inset-4 rounded-[28px] blur-xl transition-opacity duration-300"
+            style={{
+              background: archetype.glowColor,
+              opacity: useTransform(glowIntensity, [0, 1], [0.3, 0.7]),
+            }}
+          />
 
-        {/* Inner card */}
-        <div className="relative bg-card/95 backdrop-blur-sm rounded-[22px] p-6 sm:p-8 overflow-hidden">
-          {/* Background pattern */}
-          <div className="absolute inset-0 opacity-5">
-            <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
-              {[...Array(10)].map((_, i) => (
-                <circle
-                  key={i}
-                  cx={Math.random() * 100}
-                  cy={Math.random() * 100}
-                  r={Math.random() * 20 + 5}
-                  fill="currentColor"
+          {/* Card container */}
+          <div
+            className="relative w-[220px] h-[320px] rounded-[20px] overflow-hidden"
+            style={{
+              boxShadow: `
+                0 25px 50px -12px rgba(0, 0, 0, 0.4),
+                0 0 30px ${archetype.glowColor}
+              `,
+            }}
+          >
+            {/* Card border gradient */}
+            <div className="absolute inset-0 rounded-[20px] bg-gradient-to-br from-white/40 via-white/10 to-white/30 p-[3px]">
+              <div className="absolute inset-[3px] rounded-[17px] bg-card overflow-hidden">
+                {/* The archetype image as the card background */}
+                <img
+                  src={archetype.image}
+                  alt={archetype.title}
+                  className="absolute inset-0 w-full h-full object-cover"
+                  style={{ transform: "translateZ(0)" }}
                 />
-              ))}
-            </svg>
-          </div>
-
-          {/* Content */}
-          <div className="relative z-10 flex flex-col sm:flex-row items-center gap-6">
-            {/* Archetype Image */}
-            <motion.div
-              className="relative flex-shrink-0"
-              style={{ transform: "translateZ(50px)" }}
-              whileHover={{ scale: 1.05 }}
-            >
-              <div className={`absolute inset-0 bg-gradient-to-br ${archetype.gradient} rounded-full blur-xl opacity-30`} />
-              <img
-                src={archetype.image}
-                alt={archetype.title}
-                className="w-40 h-40 sm:w-48 sm:h-48 object-contain relative z-10 drop-shadow-2xl"
-              />
-            </motion.div>
-
-            {/* Text Content */}
-            <div className="text-center sm:text-left flex-1" style={{ transform: "translateZ(30px)" }}>
-              <div className="flex items-center justify-center sm:justify-start gap-2 mb-2">
-                <div className={`p-2 rounded-lg bg-gradient-to-br ${archetype.gradient}`}>
-                  <Icon className="h-5 w-5 text-white" />
-                </div>
-                <span className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-                  Your Study Archetype
-                </span>
-              </div>
-              
-              <h2 className={`text-3xl sm:text-4xl font-bold bg-gradient-to-r ${archetype.gradient} bg-clip-text text-transparent mb-3`}>
-                {archetype.title}
-              </h2>
-              
-              <p className="text-muted-foreground text-lg max-w-md">
-                {archetype.description}
-              </p>
-
-              {/* Trait badges */}
-              <div className="flex flex-wrap justify-center sm:justify-start gap-2 mt-4">
-                {["Focused", "Dedicated", "Growing"].map((trait, i) => (
-                  <motion.span
-                    key={trait}
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: 0.1 * i }}
-                    className={`px-3 py-1 rounded-full text-xs font-medium bg-gradient-to-r ${archetype.gradient} text-white`}
-                  >
-                    {trait}
-                  </motion.span>
-                ))}
               </div>
             </div>
+
+            {/* Holographic rainbow overlay */}
+            <motion.div
+              className="absolute inset-0 rounded-[20px] opacity-0 group-hover:opacity-100 pointer-events-none mix-blend-overlay transition-opacity duration-200"
+              style={{
+                background: holoBackground,
+              }}
+            />
+
+            {/* Primary shine effect - more prominent */}
+            <motion.div
+              className="absolute inset-0 rounded-[20px] opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-200"
+              style={{
+                background: shineBackground,
+              }}
+            />
+
+            {/* Secondary sparkle effect */}
+            <motion.div
+              className="absolute inset-0 rounded-[20px] opacity-0 group-hover:opacity-60 pointer-events-none transition-opacity duration-200 mix-blend-soft-light"
+              style={{
+                background: useTransform(
+                  [shineX, shineY],
+                  ([x, y]) =>
+                    `conic-gradient(from ${Number(x) * 3.6}deg at ${x}% ${y}%, 
+                      rgba(255,255,255,0.8) 0deg, 
+                      transparent 60deg, 
+                      rgba(255,255,255,0.4) 120deg, 
+                      transparent 180deg,
+                      rgba(255,255,255,0.6) 240deg,
+                      transparent 300deg,
+                      rgba(255,255,255,0.8) 360deg)`
+                ),
+              }}
+            />
+
+            {/* Edge highlight for 3D effect */}
+            <div className="absolute inset-0 rounded-[20px] pointer-events-none border border-white/20" />
+
+            {/* Inner shadow for depth */}
+            <div
+              className="absolute inset-0 rounded-[20px] pointer-events-none"
+              style={{
+                boxShadow: "inset 0 2px 4px rgba(255,255,255,0.3), inset 0 -2px 4px rgba(0,0,0,0.2)",
+              }}
+            />
           </div>
-        </div>
-      </motion.div>
+        </motion.div>
+      </div>
     </div>
   );
 };
