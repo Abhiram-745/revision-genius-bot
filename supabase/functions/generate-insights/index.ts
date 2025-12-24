@@ -67,11 +67,30 @@ serve(async (req) => {
     }
 
     if (!reflections || reflections.length === 0) {
-      return new Response(JSON.stringify({ 
-        error: 'No reflections found',
-        message: 'Complete some study sessions and add reflections first!' 
-      }), {
-        status: 400,
+      // Return default insights when no reflections exist yet
+      const defaultInsights = {
+        summary: "Start completing study sessions to get personalized AI insights!",
+        tips: [
+          "Complete study sessions and add reflections to unlock personalized recommendations",
+          "The more sessions you complete, the better your insights will become",
+          "Try to add notes about what went well and what was challenging"
+        ],
+        personalizedTips: [
+          "Complete study sessions and add reflections to unlock personalized recommendations",
+          "The more sessions you complete, the better your insights will become",
+          "Try to add notes about what went well and what was challenging"
+        ],
+        strugglingTopics: [],
+        strongAreas: [],
+        learningPatterns: ["Not enough data yet - keep studying!"],
+        recommendedFocus: ["Complete a few study sessions first"],
+        subjectBreakdown: {},
+        peakStudyHours: null,
+        overallSummary: "Complete some study sessions with reflections to get personalized AI insights about your learning patterns."
+      };
+      
+      return new Response(JSON.stringify({ insights: defaultInsights }), {
+        status: 200,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }

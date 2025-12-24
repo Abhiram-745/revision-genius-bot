@@ -87,9 +87,11 @@ export const AIInsightsCard = ({ userId }: AIInsightsCardProps) => {
 
       if (error) throw error;
 
+      // Handle the response - extract summary and tips from various possible fields
+      const rawInsights = data?.insights;
       const insightsData = {
-        summary: data?.insights?.summary || "Based on your study patterns, you're making good progress!",
-        tips: data?.insights?.tips || data?.insights?.recommendations || [
+        summary: rawInsights?.overallSummary || rawInsights?.summary || "Based on your study patterns, you're making progress!",
+        tips: rawInsights?.personalizedTips || rawInsights?.tips || rawInsights?.recommendedFocus || [
           "Try spacing out your study sessions for better retention",
           "Your peak productivity seems to be in the morning",
           "Consider adding more breaks between long sessions",
@@ -104,15 +106,15 @@ export const AIInsightsCard = ({ userId }: AIInsightsCardProps) => {
         data: insightsData,
         timestamp: Date.now()
       }));
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error generating insights:", error);
-      // Show mock insights on error
+      // Show helpful fallback insights on error
       const fallbackInsights = {
-        summary: "Here are some general study tips based on best practices:",
+        summary: "Complete study sessions to unlock personalized insights!",
         tips: [
-          "Take regular breaks every 25-30 minutes",
-          "Review material within 24 hours of learning",
-          "Mix subjects to improve retention",
+          "Add reflections after your study sessions",
+          "The AI learns from your focus levels and notes",
+          "More data means better recommendations",
         ],
       };
       setInsights(fallbackInsights);
