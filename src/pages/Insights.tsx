@@ -150,8 +150,10 @@ const Insights = () => {
   const avgFocusLevel = reflections.length > 0
     ? Math.round(reflections.reduce((acc, r) => acc + (r.reflection_data.focusLevel || 0), 0) / reflections.length)
     : 0;
-  const avgScore = activities.filter(a => a.score_percentage !== null).length > 0
-    ? Math.round(activities.filter(a => a.score_percentage !== null).reduce((acc, a) => acc + (a.score_percentage || 0), 0) / activities.filter(a => a.score_percentage !== null).length)
+  // Filter out general practice sessions (null scores) and 0 scores from the average calculation
+  const scoredActivities = activities.filter(a => a.score_percentage !== null && a.score_percentage > 0);
+  const avgScore = scoredActivities.length > 0
+    ? Math.round(scoredActivities.reduce((acc, a) => acc + (a.score_percentage || 0), 0) / scoredActivities.length)
     : 0;
   const totalPracticeTime = activities.reduce((acc, a) => acc + a.duration_seconds, 0);
 
