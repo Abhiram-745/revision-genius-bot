@@ -60,7 +60,7 @@ export const AIInsightsCard = ({ userId }: AIInsightsCardProps) => {
     setLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke("generate-insights", {
-        body: { timetable_id: selectedTimetableId },
+        body: { timetableId: selectedTimetableId },
       });
 
       if (error) throw error;
