@@ -217,8 +217,8 @@ const Auth = () => {
           
           <Card className="w-full max-w-md shadow-lg">
             <CardHeader className="space-y-1 text-center">
-              <div className="flex justify-center mb-4">
-                <VistaraLogo size="lg" />
+              <div className="flex justify-center mb-6">
+                <VistaraLogo size="xl" animate />
               </div>
               <div className="flex justify-center mb-4">
                 <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
@@ -294,12 +294,12 @@ const Auth = () => {
         
         <Card className="w-full max-w-md shadow-lg max-h-[90vh] overflow-y-auto">
           <CardHeader className="space-y-1 text-center">
-            <div className="flex justify-center mb-4">
-              <VistaraLogo size="xl" />
+            <div className="flex justify-center mb-6">
+              <VistaraLogo size="xl" animate />
             </div>
             <CardTitle className="text-3xl font-bold gradient-text">Vistara</CardTitle>
-            <CardDescription>
-              AI-powered revision timetables for GCSE students
+            <CardDescription className="text-base">
+              AI-powered revision timetables for students
             </CardDescription>
           </CardHeader>
           <CardContent>

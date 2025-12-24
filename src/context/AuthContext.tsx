@@ -223,6 +223,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           full_name: fullName || null
         });
 
+        // Check if within free premium offer period (before Jan 1, 2025)
+        const offerEndDate = new Date('2025-01-01T00:00:00Z');
+        const now = new Date();
+        
+        if (now < offerEndDate) {
+          // Grant 1 year of free premium for early signups
+          const premiumExpiry = new Date();
+          premiumExpiry.setFullYear(premiumExpiry.getFullYear() + 1);
+          
+          await supabase.from('premium_grants').insert({
+            user_id: data.user.id,
+            grant_type: 'early_signup_offer',
+            starts_at: new Date().toISOString(),
+            expires_at: premiumExpiry.toISOString()
+          });
+        }
+
         setUser(data.user);
         setSession(data.session);
         // Note: verification code is sent explicitly from Auth.tsx after signup
