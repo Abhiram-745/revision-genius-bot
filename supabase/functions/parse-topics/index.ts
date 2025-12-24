@@ -226,25 +226,25 @@ Do NOT include any explanation or commentary - ONLY the JSON.`;
       console.log(`Successfully added ${docsAdded} documents to message content`);
     }
 
-    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+    const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
     
-    if (!LOVABLE_API_KEY) {
-      console.error("LOVABLE_API_KEY not configured");
+    if (!openAIApiKey) {
+      console.error("OPENAI_API_KEY not configured");
       throw new Error("AI service not configured. Please contact support.");
     }
 
-    console.log(`Calling Lovable AI with ${messageContent.length} content parts (${images?.length || 0} images, mode: ${extractionMode})`);
+    console.log(`Calling OpenAI with ${messageContent.length} content parts (${images?.length || 0} images, mode: ${extractionMode})`);
 
     const response = await fetchWithRetry(
-      'https://ai.gateway.lovable.dev/v1/chat/completions',
+      'https://api.openai.com/v1/chat/completions',
       {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${LOVABLE_API_KEY}`
+          "Authorization": `Bearer ${openAIApiKey}`
         },
         body: JSON.stringify({
-          model: "google/gemini-2.5-flash",
+          model: "gpt-4o-mini",
           messages: [
             { role: "user", content: messageContent }
           ],

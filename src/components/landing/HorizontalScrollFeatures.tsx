@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { Brain, Calendar, Clock, BarChart3, MessageSquare, Sparkles, TrendingUp, Zap, Star, Rocket, Target, Heart } from "lucide-react";
 import { Cube3D, Sphere3D, Diamond3D, Hexagon3D, GlowingParticle } from "./3DObjects";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const features = [
   {
@@ -266,12 +267,13 @@ const HorizontalScrollFeatures = () => {
   const lastScrollTime = useRef(0);
   const touchStartY = useRef(0);
   const lastTouchY = useRef(0);
+  const isMobile = useIsMobile();
 
   const lockScroll = useCallback(() => {
-    if (isLocked || hasExited.current) return;
+    if (isLocked || hasExited.current || isMobile) return;
     document.body.style.overflow = 'hidden';
     setIsLocked(true);
-  }, [isLocked]);
+  }, [isLocked, isMobile]);
 
   const unlockScroll = useCallback((direction: 'up' | 'down') => {
     document.body.style.overflow = '';
@@ -290,8 +292,10 @@ const HorizontalScrollFeatures = () => {
     }, 1000);
   }, []);
 
-  // Handle wheel events - smooth continuous
+  // Handle wheel events - smooth continuous (disabled on mobile)
   const handleWheel = useCallback((e: WheelEvent) => {
+    if (isMobile) return; // Skip on mobile
+    
     const section = sectionRef.current;
     if (!section) return;
 
@@ -332,15 +336,18 @@ const HorizontalScrollFeatures = () => {
         unlockScroll('up');
       }
     }
-  }, [isLocked, activeIndex, lockScroll, unlockScroll]);
+  }, [isLocked, activeIndex, lockScroll, unlockScroll, isMobile]);
 
-  // Handle touch events
+  // Handle touch events (disabled on mobile for natural scrolling)
   const handleTouchStart = useCallback((e: TouchEvent) => {
+    if (isMobile) return;
     touchStartY.current = e.touches[0].clientY;
     lastTouchY.current = e.touches[0].clientY;
-  }, []);
+  }, [isMobile]);
 
   const handleTouchEnd = useCallback((e: TouchEvent) => {
+    if (isMobile) return;
+    
     const section = sectionRef.current;
     if (!section) return;
 
@@ -382,10 +389,12 @@ const HorizontalScrollFeatures = () => {
         unlockScroll('up');
       }
     }
-  }, [isLocked, activeIndex, lockScroll, unlockScroll]);
+  }, [isLocked, activeIndex, lockScroll, unlockScroll, isMobile]);
 
-  // Add/remove listeners
+  // Add/remove listeners (only on desktop)
   useEffect(() => {
+    if (isMobile) return; // Skip event listeners on mobile
+    
     window.addEventListener('wheel', handleWheel, { passive: false });
     window.addEventListener('touchstart', handleTouchStart, { passive: true });
     window.addEventListener('touchend', handleTouchEnd, { passive: true });
@@ -395,11 +404,11 @@ const HorizontalScrollFeatures = () => {
       window.removeEventListener('touchstart', handleTouchStart);
       window.removeEventListener('touchend', handleTouchEnd);
     };
-  }, [handleWheel, handleTouchStart, handleTouchEnd]);
+  }, [handleWheel, handleTouchStart, handleTouchEnd, isMobile]);
 
-  // Keyboard support
+  // Keyboard support (only on desktop)
   useEffect(() => {
-    if (!isLocked) return;
+    if (!isLocked || isMobile) return;
     
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'ArrowDown' || e.key === 'ArrowRight') {
@@ -421,7 +430,7 @@ const HorizontalScrollFeatures = () => {
     
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isLocked, activeIndex, unlockScroll]);
+  }, [isLocked, activeIndex, unlockScroll, isMobile]);
 
   // Cleanup
   useEffect(() => {
@@ -433,6 +442,62 @@ const HorizontalScrollFeatures = () => {
   const currentFeature = features[activeIndex];
   const Icon = currentFeature.icon;
 
+  // MOBILE VERSION - Stacked cards, no scroll jacking
+  if (isMobile) {
+    return (
+      <section className="py-16 bg-gradient-to-b from-background via-muted/10 to-background">
+        <div className="container px-4">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-10"
+          >
+            <h2 className="text-2xl font-display font-bold mb-3">
+              Everything You Need to{" "}
+              <span className="bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
+                Succeed
+              </span>
+            </h2>
+            <p className="text-muted-foreground text-sm">
+              A complete study ecosystem designed around how your brain actually works
+            </p>
+          </motion.div>
+
+          <div className="space-y-6">
+            {features.map((feature, index) => {
+              const FeatureIcon = feature.icon;
+              return (
+                <motion.div
+                  key={feature.id}
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: index * 0.1 }}
+                >
+                  <Card className="overflow-hidden border-0 shadow-lg bg-card/80">
+                    <CardContent className="p-5">
+                      <div className="flex items-start gap-4">
+                        <div className="p-3 rounded-xl bg-gradient-to-br from-primary/20 to-secondary/20">
+                          <FeatureIcon className="w-6 h-6 text-primary" />
+                        </div>
+                        <div className="flex-1">
+                          <h3 className="font-bold text-lg mb-1">{feature.title}</h3>
+                          <p className="text-sm text-muted-foreground">{feature.description}</p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  // DESKTOP VERSION - Original scroll-jacking behavior
   return (
     <section
       ref={sectionRef}

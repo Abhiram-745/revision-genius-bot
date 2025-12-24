@@ -100,21 +100,21 @@ Return ONLY valid JSON in this format:
   ]
 }`;
 
-    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
-    if (!LOVABLE_API_KEY) {
-      throw new Error("LOVABLE_API_KEY not configured");
+    const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
+    if (!openAIApiKey) {
+      throw new Error("OPENAI_API_KEY not configured");
     }
 
     const response = await fetchWithRetry(
-      'https://ai.gateway.lovable.dev/v1/chat/completions',
+      'https://api.openai.com/v1/chat/completions',
       {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${LOVABLE_API_KEY}`,
+          "Authorization": `Bearer ${openAIApiKey}`,
         },
         body: JSON.stringify({
-          model: "openai/gpt-5-nano",
+          model: "gpt-4o-mini",
           messages: [
             { role: "user", content: `${systemPrompt}\n\nAnalyze these GCSE topics that the user finds difficult and assign priority scores:\n\n${topicsList}` }
           ],

@@ -100,10 +100,10 @@ serve(async (req) => {
       .map(t => `Practice ${t.topic.split(':')[1]} more (only ${t.sessions} sessions)`);
 
     // Generate insights using AI
-    const lovableApiKey = Deno.env.get("LOVABLE_API_KEY");
+    const openAIApiKey = Deno.env.get("OPENAI_API_KEY");
     let aiGeneratedInsights = null;
 
-    if (lovableApiKey) {
+    if (openAIApiKey) {
       try {
         const prompt = `Analyze this student's BlurtAI practice data and provide personalized insights:
 
@@ -120,14 +120,14 @@ Provide a brief, encouraging analysis with:
 
 Keep it concise and student-friendly.`;
 
-        const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+        const aiResponse = await fetch("https://api.openai.com/v1/chat/completions", {
           method: "POST",
           headers: {
-            Authorization: `Bearer ${lovableApiKey}`,
+            Authorization: `Bearer ${openAIApiKey}`,
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            model: "google/gemini-2.5-flash",
+            model: "gpt-4o-mini",
             messages: [
               { role: "system", content: "You are a helpful study coach analyzing a student's practice data. Be encouraging but honest." },
               { role: "user", content: prompt },
