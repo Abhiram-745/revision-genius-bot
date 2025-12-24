@@ -1755,6 +1755,7 @@ export type Database = {
         Returns: undefined
       }
       is_admin: { Args: { _user_id: string }; Returns: boolean }
+      is_admin_user: { Args: { _user_id: string }; Returns: boolean }
       reset_daily_limits: { Args: never; Returns: undefined }
     }
     Enums: {

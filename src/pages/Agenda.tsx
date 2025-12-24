@@ -10,6 +10,10 @@ import { SchoolSchedule } from "@/components/SchoolSchedule";
 import CalendarGrid from "@/components/CalendarGrid";
 import { supabase } from "@/integrations/supabase/client";
 import PageTransition from "@/components/PageTransition";
+import { motion } from "framer-motion";
+import owlChecklist from "@/assets/owl-checklist.png";
+import notebookIcon from "@/assets/notebook-icon.png";
+import penIcon from "@/assets/pen-icon.png";
 
 const Agenda = () => {
   const navigate = useNavigate();
@@ -38,6 +42,29 @@ const Agenda = () => {
           <div className="floating-blob top-20 -left-32 w-64 md:w-96 h-64 md:h-96 bg-primary/10 animate-float"></div>
           <div className="floating-blob top-40 right-10 w-72 md:w-[500px] h-72 md:h-[500px] bg-secondary/15 animate-float-delayed"></div>
           <div className="floating-blob bottom-20 left-1/3 w-48 md:w-80 h-48 md:h-80 bg-accent/10 animate-float-slow"></div>
+          
+          {/* Floating mascots */}
+          <motion.img 
+            src={owlChecklist}
+            alt=""
+            className="absolute top-28 right-12 w-24 h-24 opacity-30"
+            animate={{ y: [0, -10, 0] }}
+            transition={{ duration: 4, repeat: Infinity }}
+          />
+          <motion.img 
+            src={notebookIcon}
+            alt=""
+            className="absolute bottom-24 left-16 w-16 h-16 opacity-25"
+            animate={{ y: [0, 8, 0], rotate: [0, -5, 0] }}
+            transition={{ duration: 5, repeat: Infinity }}
+          />
+          <motion.img 
+            src={penIcon}
+            alt=""
+            className="absolute top-1/3 right-24 w-12 h-12 opacity-20"
+            animate={{ rotate: [0, 10, 0] }}
+            transition={{ duration: 3, repeat: Infinity }}
+          />
         </div>
 
         <Header />

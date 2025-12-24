@@ -14,6 +14,10 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { format } from "date-fns";
+import { motion } from "framer-motion";
+import owlChart from "@/assets/owl-chart.png";
+import lightbulbIcon from "@/assets/lightbulb-icon.png";
+import magnifyingGlassIcon from "@/assets/magnifying-glass-icon.png";
 import {
   Select,
   SelectContent,
@@ -181,6 +185,29 @@ const Insights = () => {
         <div className="fixed inset-0 overflow-hidden pointer-events-none hidden md:block">
           <div className="floating-blob top-20 -left-32 w-96 h-96 bg-primary/10 animate-float"></div>
           <div className="floating-blob top-40 right-10 w-[500px] h-[500px] bg-secondary/15 animate-float-delayed"></div>
+          
+          {/* Floating mascots */}
+          <motion.img 
+            src={owlChart}
+            alt=""
+            className="absolute top-32 right-16 w-24 h-24 opacity-30"
+            animate={{ y: [0, -10, 0] }}
+            transition={{ duration: 4, repeat: Infinity }}
+          />
+          <motion.img 
+            src={lightbulbIcon}
+            alt=""
+            className="absolute bottom-32 left-12 w-16 h-16 opacity-25"
+            animate={{ y: [0, 8, 0], scale: [1, 1.1, 1] }}
+            transition={{ duration: 3, repeat: Infinity }}
+          />
+          <motion.img 
+            src={magnifyingGlassIcon}
+            alt=""
+            className="absolute top-1/2 right-8 w-14 h-14 opacity-20"
+            animate={{ rotate: [0, 10, 0] }}
+            transition={{ duration: 4, repeat: Infinity }}
+          />
         </div>
 
         <Header />

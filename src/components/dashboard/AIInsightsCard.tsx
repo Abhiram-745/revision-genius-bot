@@ -161,22 +161,37 @@ export const AIInsightsCard = ({ userId }: AIInsightsCardProps) => {
         ];
         setStudyData(patterns);
       } else {
-        // Default data for new users
+        // Default data for new users - varied values
         setStudyData([
-          { subject: "Focus", value: 20, fullMark: 100 },
-          { subject: "Consistency", value: 15, fullMark: 100 },
-          { subject: "Depth", value: 25, fullMark: 100 },
-          { subject: "Variety", value: 10, fullMark: 100 },
-          { subject: "Completion", value: 30, fullMark: 100 },
+          { subject: "Focus", value: 25, fullMark: 100 },
+          { subject: "Consistency", value: 20, fullMark: 100 },
+          { subject: "Depth", value: 15, fullMark: 100 },
+          { subject: "Variety", value: 30, fullMark: 100 },
+          { subject: "Completion", value: 10, fullMark: 100 },
         ]);
         setWeeklyTrend([
-          { day: "Mon", minutes: 0 },
-          { day: "Tue", minutes: 0 },
-          { day: "Wed", minutes: 0 },
-          { day: "Thu", minutes: 0 },
-          { day: "Fri", minutes: 0 },
-          { day: "Sat", minutes: 0 },
-          { day: "Sun", minutes: 0 },
+          { day: "Mon", minutes: 5, hours: 0.1 },
+          { day: "Tue", minutes: 10, hours: 0.2 },
+          { day: "Wed", minutes: 0, hours: 0 },
+          { day: "Thu", minutes: 15, hours: 0.3 },
+          { day: "Fri", minutes: 8, hours: 0.1 },
+          { day: "Sat", minutes: 0, hours: 0 },
+          { day: "Sun", minutes: 0, hours: 0 },
+        ]);
+        // Default hourly data
+        setHourlyData([
+          { hour: "8:00", minutes: 5 },
+          { hour: "9:00", minutes: 10 },
+          { hour: "10:00", minutes: 15 },
+          { hour: "14:00", minutes: 8 },
+          { hour: "16:00", minutes: 12 },
+          { hour: "18:00", minutes: 6 },
+        ]);
+        // Default subject data
+        setSubjectData([
+          { name: "Maths", value: 30, fullName: "Mathematics" },
+          { name: "Science", value: 25, fullName: "Science" },
+          { name: "English", value: 20, fullName: "English" },
         ]);
       }
     } catch (error) {
