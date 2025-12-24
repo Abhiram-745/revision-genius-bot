@@ -41,7 +41,7 @@ interface ManualTimetableEditorProps {
   onCancel: () => void;
 }
 
-const HOUR_HEIGHT = 70;
+const HOUR_HEIGHT = 60;
 const MIN_DURATION = 15;
 
 const timeToMinutes = (time: string): number => {
@@ -66,12 +66,12 @@ const getSessionColor = (subject: string, type: string): string => {
   if (type === "event") return subjectColors.event;
   if (type === "homework") return subjectColors.homework;
   const colors = [
-    "bg-gradient-to-br from-primary/15 to-primary/5 border-primary/40 hover:border-primary/60",
-    "bg-gradient-to-br from-emerald-500/15 to-emerald-500/5 border-emerald-500/40 hover:border-emerald-500/60",
-    "bg-gradient-to-br from-violet-500/15 to-violet-500/5 border-violet-500/40 hover:border-violet-500/60",
-    "bg-gradient-to-br from-amber-500/15 to-amber-500/5 border-amber-500/40 hover:border-amber-500/60",
-    "bg-gradient-to-br from-rose-500/15 to-rose-500/5 border-rose-500/40 hover:border-rose-500/60",
-    "bg-gradient-to-br from-cyan-500/15 to-cyan-500/5 border-cyan-500/40 hover:border-cyan-500/60",
+    "bg-gradient-to-br from-primary/15 to-primary/5 border-primary/40",
+    "bg-gradient-to-br from-emerald-500/15 to-emerald-500/5 border-emerald-500/40",
+    "bg-gradient-to-br from-violet-500/15 to-violet-500/5 border-violet-500/40",
+    "bg-gradient-to-br from-amber-500/15 to-amber-500/5 border-amber-500/40",
+    "bg-gradient-to-br from-rose-500/15 to-rose-500/5 border-rose-500/40",
+    "bg-gradient-to-br from-cyan-500/15 to-cyan-500/5 border-cyan-500/40",
   ];
   const index = subject.charCodeAt(0) % colors.length;
   return colors[index];
@@ -105,7 +105,7 @@ const SessionBlock = memo(({
     animate={{ opacity: 1, x: 0 }}
     transition={{ delay: index * 0.03 }}
     className={cn(
-      "absolute left-14 right-3 rounded-xl border-2 transition-all duration-200 shadow-sm",
+      "absolute left-12 right-2 sm:left-14 sm:right-3 rounded-lg sm:rounded-xl border-2 transition-all duration-200 shadow-sm",
       getSessionColor(session.subject, session.type),
       isDragging && "shadow-xl ring-2 ring-primary/50 z-50",
       !isResizable && "opacity-75"
@@ -113,28 +113,30 @@ const SessionBlock = memo(({
     style={{
       top: `${top}px`,
       height: `${Math.max(height, 35)}px`,
+      zIndex: isDragging ? 100 : 10,
     }}
   >
-    {/* Top resize handle - only for editable sessions */}
+    {/* Top resize handle - larger touch target for mobile */}
     {isResizable && (
       <div
-        className="absolute -top-2 left-0 right-0 h-6 cursor-ns-resize flex items-center justify-center group z-10 touch-none"
+        className="absolute -top-3 left-0 right-0 h-8 cursor-ns-resize flex items-center justify-center group z-20"
         onMouseDown={onMouseDownTop}
         onTouchStart={onTouchStartTop}
+        style={{ touchAction: 'none' }}
       >
-        <div className="w-12 h-1.5 rounded-full bg-foreground/20 group-hover:bg-primary group-hover:scale-110 group-active:bg-primary transition-all" />
+        <div className="w-16 h-2 rounded-full bg-foreground/30 group-hover:bg-primary group-active:bg-primary transition-all shadow-sm" />
       </div>
     )}
 
     {/* Session content */}
-    <div className="p-3 h-full flex flex-col justify-center overflow-hidden">
-      <div className="flex items-center gap-2">
+    <div className="p-2 sm:p-3 h-full flex flex-col justify-center overflow-hidden">
+      <div className="flex items-center gap-1.5 sm:gap-2">
         {isResizable ? (
-          <div className="p-1 rounded bg-background/50">
+          <div className="p-0.5 sm:p-1 rounded bg-background/50 shrink-0">
             <GripVertical className="w-3 h-3 text-muted-foreground" />
           </div>
         ) : (
-          <div className="p-1 rounded bg-background/50">
+          <div className="p-0.5 sm:p-1 rounded bg-background/50 shrink-0">
             {session.type === "event" ? (
               <Calendar className="w-3 h-3 text-blue-500" />
             ) : session.type === "homework" ? (
@@ -145,38 +147,39 @@ const SessionBlock = memo(({
           </div>
         )}
         <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2">
-            <p className="font-semibold text-sm truncate">{session.subject}</p>
+          <div className="flex items-center gap-1 sm:gap-2 flex-wrap">
+            <p className="font-semibold text-xs sm:text-sm truncate">{session.subject}</p>
             {session.type === "event" && (
-              <Badge variant="outline" className="text-[10px] bg-blue-500/10 text-blue-600 border-blue-500/30">
+              <Badge variant="outline" className="text-[8px] sm:text-[10px] bg-blue-500/10 text-blue-600 border-blue-500/30 px-1 py-0">
                 Event
               </Badge>
             )}
             {session.type === "homework" && (
-              <Badge variant="outline" className="text-[10px] bg-amber-500/10 text-amber-600 border-amber-500/30">
-                Homework
+              <Badge variant="outline" className="text-[8px] sm:text-[10px] bg-amber-500/10 text-amber-600 border-amber-500/30 px-1 py-0">
+                HW
               </Badge>
             )}
           </div>
-          {session.topic && height > 50 && (
-            <p className="text-xs text-muted-foreground truncate mt-0.5">{session.topic}</p>
+          {session.topic && height > 45 && (
+            <p className="text-[10px] sm:text-xs text-muted-foreground truncate mt-0.5">{session.topic}</p>
           )}
         </div>
-        <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-background/60 text-xs font-medium shrink-0">
-          <Clock className="w-3 h-3" />
+        <div className="flex items-center gap-1 px-1.5 py-0.5 sm:px-2 sm:py-1 rounded-full bg-background/60 text-[10px] sm:text-xs font-medium shrink-0">
+          <Clock className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
           <span>{session.duration}m</span>
         </div>
       </div>
     </div>
 
-    {/* Bottom resize handle - only for editable sessions */}
+    {/* Bottom resize handle - larger touch target for mobile */}
     {isResizable && (
       <div
-        className="absolute -bottom-2 left-0 right-0 h-6 cursor-ns-resize flex items-center justify-center group z-10 touch-none"
+        className="absolute -bottom-3 left-0 right-0 h-8 cursor-ns-resize flex items-center justify-center group z-20"
         onMouseDown={onMouseDownBottom}
         onTouchStart={onTouchStartBottom}
+        style={{ touchAction: 'none' }}
       >
-        <div className="w-12 h-1.5 rounded-full bg-foreground/20 group-hover:bg-primary group-hover:scale-110 group-active:bg-primary transition-all" />
+        <div className="w-16 h-2 rounded-full bg-foreground/30 group-hover:bg-primary group-active:bg-primary transition-all shadow-sm" />
       </div>
     )}
   </motion.div>
@@ -210,7 +213,6 @@ const ManualTimetableEditor = ({ sessions, date, onSave, onCancel }: ManualTimet
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Fetch events for this date
       const { data: eventsData } = await supabase
         .from("events")
         .select("*")
@@ -218,11 +220,8 @@ const ManualTimetableEditor = ({ sessions, date, onSave, onCancel }: ManualTimet
         .gte("start_time", `${date}T00:00:00`)
         .lte("start_time", `${date}T23:59:59`);
 
-      if (eventsData) {
-        setEvents(eventsData);
-      }
+      if (eventsData) setEvents(eventsData);
 
-      // Fetch homework due on this date
       const { data: homeworkData } = await supabase
         .from("homeworks")
         .select("*")
@@ -230,9 +229,7 @@ const ManualTimetableEditor = ({ sessions, date, onSave, onCancel }: ManualTimet
         .eq("due_date", date)
         .eq("completed", false);
 
-      if (homeworkData) {
-        setHomework(homeworkData);
-      }
+      if (homeworkData) setHomework(homeworkData);
     };
 
     fetchData();
@@ -255,17 +252,6 @@ const ManualTimetableEditor = ({ sessions, date, onSave, onCancel }: ManualTimet
       };
     });
   }, [events]);
-
-  // Convert homework to session format for display (shown at start of day as reminder)
-  const homeworkSessions: TimetableSession[] = useMemo(() => {
-    return homework.map(hw => ({
-      time: "09:00", // Default time for homework reminder
-      duration: hw.duration || 30,
-      subject: `HW: ${hw.title}`,
-      topic: hw.subject,
-      type: "homework",
-    }));
-  }, [homework]);
 
   // Combine all sessions for display
   const allDisplaySessions = useMemo(() => {
@@ -319,7 +305,6 @@ const ManualTimetableEditor = ({ sessions, date, onSave, onCancel }: ManualTimet
 
   // Touch handlers for mobile support
   const handleTouchStart = useCallback((e: React.TouchEvent, index: number, edge: "top" | "bottom") => {
-    e.preventDefault();
     e.stopPropagation();
     const touch = e.touches[0];
     const session = editableSessions[index];
@@ -332,10 +317,9 @@ const ManualTimetableEditor = ({ sessions, date, onSave, onCancel }: ManualTimet
     });
   }, [editableSessions]);
 
-  const handleMouseMove = useCallback((e: React.MouseEvent) => {
-    if (!dragState || !containerRef.current) return;
-
-    const deltaY = e.clientY - dragState.startY;
+  const updateSession = useCallback((deltaY: number) => {
+    if (!dragState) return;
+    
     const deltaMinutes = Math.round((deltaY / HOUR_HEIGHT) * 60 / 5) * 5;
     
     setEditableSessions(prev => {
@@ -347,7 +331,6 @@ const ManualTimetableEditor = ({ sessions, date, onSave, onCancel }: ManualTimet
         const newDuration = Math.max(MIN_DURATION, dragState.originalDuration + deltaMinutes);
         const newEnd = originalStart + newDuration;
         
-        // Check if new end overlaps with blocked ranges
         if (!overlapsBlocked(originalStart, newEnd)) {
           session.duration = Math.min(newDuration, 180);
         }
@@ -356,7 +339,6 @@ const ManualTimetableEditor = ({ sessions, date, onSave, onCancel }: ManualTimet
         const newDuration = Math.max(MIN_DURATION, dragState.originalDuration - deltaMinutes);
         const newEnd = newStart + newDuration;
         
-        // Check if new range overlaps with blocked ranges
         if (!overlapsBlocked(newStart, newEnd)) {
           session.time = minutesToTime(newStart);
           session.duration = newDuration;
@@ -366,46 +348,21 @@ const ManualTimetableEditor = ({ sessions, date, onSave, onCancel }: ManualTimet
       return updated;
     });
   }, [dragState, dayStart, overlapsBlocked]);
+
+  const handleMouseMove = useCallback((e: React.MouseEvent) => {
+    if (!dragState) return;
+    const deltaY = e.clientY - dragState.startY;
+    updateSession(deltaY);
+  }, [dragState, updateSession]);
 
   const handleTouchMove = useCallback((e: React.TouchEvent) => {
-    if (!dragState || !containerRef.current) return;
-    
+    if (!dragState) return;
     const touch = e.touches[0];
     const deltaY = touch.clientY - dragState.startY;
-    const deltaMinutes = Math.round((deltaY / HOUR_HEIGHT) * 60 / 5) * 5;
-    
-    setEditableSessions(prev => {
-      const updated = prev.map(s => ({ ...s }));
-      const session = updated[dragState.index];
-      const originalStart = timeToMinutes(dragState.originalTime);
-      
-      if (dragState.edge === "bottom") {
-        const newDuration = Math.max(MIN_DURATION, dragState.originalDuration + deltaMinutes);
-        const newEnd = originalStart + newDuration;
-        
-        if (!overlapsBlocked(originalStart, newEnd)) {
-          session.duration = Math.min(newDuration, 180);
-        }
-      } else {
-        const newStart = Math.max(dayStart, originalStart + deltaMinutes);
-        const newDuration = Math.max(MIN_DURATION, dragState.originalDuration - deltaMinutes);
-        const newEnd = newStart + newDuration;
-        
-        if (!overlapsBlocked(newStart, newEnd)) {
-          session.time = minutesToTime(newStart);
-          session.duration = newDuration;
-        }
-      }
-      
-      return updated;
-    });
-  }, [dragState, dayStart, overlapsBlocked]);
+    updateSession(deltaY);
+  }, [dragState, updateSession]);
 
-  const handleMouseUp = useCallback(() => {
-    setDragState(null);
-  }, []);
-
-  const handleTouchEnd = useCallback(() => {
+  const handleEnd = useCallback(() => {
     setDragState(null);
   }, []);
 
@@ -447,90 +404,93 @@ const ManualTimetableEditor = ({ sessions, date, onSave, onCancel }: ManualTimet
         className="absolute left-0 right-0 flex items-start"
         style={{ top: `${i * HOUR_HEIGHT}px` }}
       >
-        <div className="absolute left-0 right-0 border-t border-dashed border-border/50" />
-        <span className="text-xs font-medium text-muted-foreground bg-card px-1.5 py-0.5 rounded -mt-2.5 ml-1">
+        <div className="absolute left-0 right-0 border-t border-dashed border-border/40" />
+        <span className="text-[10px] sm:text-xs font-medium text-muted-foreground bg-card px-1 py-0.5 rounded -mt-2.5 ml-0.5 sm:ml-1">
           {`${(startHour + i).toString().padStart(2, "0")}:00`}
         </span>
       </div>
     )), [startHour, endHour]);
 
   return (
-    <Card className="max-w-2xl mx-auto border-2 shadow-xl overflow-hidden">
-      <CardHeader className="bg-gradient-to-r from-primary/10 via-background to-accent/10 border-b">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <OwlMascot type="lightbulb" size="xs" animate={false} />
+    <Card className="w-full max-w-full sm:max-w-2xl mx-auto border-2 shadow-xl overflow-hidden">
+      <CardHeader className="bg-gradient-to-r from-primary/10 via-background to-accent/10 border-b p-3 sm:p-6">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <OwlMascot type="lightbulb" size="sm" animate={false} />
             <div>
-              <CardTitle className="text-lg">Edit Schedule</CardTitle>
-              <p className="text-sm text-muted-foreground">{date}</p>
+              <CardTitle className="text-base sm:text-lg">Edit Schedule</CardTitle>
+              <p className="text-xs sm:text-sm text-muted-foreground">{date}</p>
             </div>
           </div>
-          <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={onCancel} className="gap-1.5">
-              <X className="w-4 h-4" />
+          <div className="flex gap-2 w-full sm:w-auto">
+            <Button variant="outline" size="sm" onClick={onCancel} className="flex-1 sm:flex-none gap-1.5 text-xs sm:text-sm">
+              <X className="w-3 h-3 sm:w-4 sm:h-4" />
               Cancel
             </Button>
-            <Button size="sm" onClick={handleSave} className="gap-1.5 bg-gradient-to-r from-primary to-accent">
-              <Check className="w-4 h-4" />
+            <Button size="sm" onClick={handleSave} className="flex-1 sm:flex-none gap-1.5 bg-gradient-to-r from-primary to-accent text-xs sm:text-sm">
+              <Check className="w-3 h-3 sm:w-4 sm:h-4" />
               Save
             </Button>
           </div>
         </div>
       </CardHeader>
 
-      <CardContent className="p-4">
-        <div className="flex items-center gap-2 p-3 mb-4 rounded-lg bg-muted/50 border border-border/50">
-          <Pencil className="w-4 h-4 text-muted-foreground" />
-          <p className="text-sm text-muted-foreground">
-            Drag the top or bottom edge of sessions to resize them. Events and homework are shown but not editable.
+      <CardContent className="p-3 sm:p-4">
+        <div className="flex items-start gap-2 p-2 sm:p-3 mb-3 sm:mb-4 rounded-lg bg-muted/50 border border-border/50">
+          <Pencil className="w-3 h-3 sm:w-4 sm:h-4 text-muted-foreground mt-0.5 shrink-0" />
+          <p className="text-xs sm:text-sm text-muted-foreground">
+            Drag the handles above/below sessions to resize them.
           </p>
         </div>
 
         {/* Legend */}
-        <div className="flex flex-wrap gap-3 mb-4 text-xs">
-          <div className="flex items-center gap-1.5">
-            <div className="w-3 h-3 rounded bg-primary/30 border border-primary/50" />
-            <span className="text-muted-foreground">Study Session</span>
+        <div className="flex flex-wrap gap-2 sm:gap-3 mb-3 sm:mb-4 text-[10px] sm:text-xs">
+          <div className="flex items-center gap-1">
+            <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded bg-primary/30 border border-primary/50" />
+            <span className="text-muted-foreground">Study</span>
           </div>
-          <div className="flex items-center gap-1.5">
-            <div className="w-3 h-3 rounded bg-blue-500/30 border border-blue-500/50" />
-            <span className="text-muted-foreground">Event (blocked)</span>
+          <div className="flex items-center gap-1">
+            <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded bg-blue-500/30 border border-blue-500/50" />
+            <span className="text-muted-foreground">Event</span>
           </div>
-          <div className="flex items-center gap-1.5">
-            <div className="w-3 h-3 rounded bg-amber-500/30 border border-amber-500/50" />
-            <span className="text-muted-foreground">Homework Due</span>
+          <div className="flex items-center gap-1">
+            <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded bg-amber-500/30 border border-amber-500/50" />
+            <span className="text-muted-foreground">Homework</span>
           </div>
         </div>
 
         {/* Homework reminders */}
         {homework.length > 0 && (
-          <div className="mb-4 p-3 rounded-lg bg-amber-500/10 border border-amber-500/30">
-            <p className="text-sm font-medium text-amber-700 dark:text-amber-300 mb-2 flex items-center gap-2">
-              <BookOpen className="w-4 h-4" />
+          <div className="mb-3 sm:mb-4 p-2 sm:p-3 rounded-lg bg-amber-500/10 border border-amber-500/30">
+            <p className="text-xs sm:text-sm font-medium text-amber-700 dark:text-amber-300 mb-1.5 sm:mb-2 flex items-center gap-1.5 sm:gap-2">
+              <BookOpen className="w-3 h-3 sm:w-4 sm:h-4" />
               Homework Due Today
             </p>
             <ul className="space-y-1">
               {homework.map(hw => (
-                <li key={hw.id} className="text-xs text-muted-foreground flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-                  <span className="font-medium">{hw.title}</span>
-                  <span className="text-muted-foreground/70">({hw.subject})</span>
+                <li key={hw.id} className="text-[10px] sm:text-xs text-muted-foreground flex items-center gap-1.5 sm:gap-2">
+                  <span className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-amber-500" />
+                  <span className="font-medium truncate">{hw.title}</span>
+                  <span className="text-muted-foreground/70 truncate">({hw.subject})</span>
                 </li>
               ))}
             </ul>
           </div>
         )}
 
-        <ScrollArea className="h-[450px] rounded-lg border bg-card/50">
+        <ScrollArea className="h-[350px] sm:h-[450px] rounded-lg border bg-card/50">
           <div 
             ref={containerRef}
-            className="relative select-none p-2 touch-none"
-            style={{ height: `${(endHour - startHour) * HOUR_HEIGHT + 40}px` }}
+            className="relative select-none p-2"
+            style={{ 
+              height: `${(endHour - startHour) * HOUR_HEIGHT + 40}px`,
+              touchAction: dragState ? 'none' : 'auto'
+            }}
             onMouseMove={handleMouseMove}
-            onMouseUp={handleMouseUp}
-            onMouseLeave={handleMouseUp}
+            onMouseUp={handleEnd}
+            onMouseLeave={handleEnd}
             onTouchMove={handleTouchMove}
-            onTouchEnd={handleTouchEnd}
+            onTouchEnd={handleEnd}
           >
             {hourMarkers}
 

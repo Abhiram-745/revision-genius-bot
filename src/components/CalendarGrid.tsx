@@ -24,7 +24,7 @@ interface CalendarItem {
   data: any;
 }
 
-const HOUR_HEIGHT = 60;
+const HOUR_HEIGHT = 50;
 
 const getTimePosition = (time: string, startHour: number) => {
   const [hours, minutes] = time.split(':').map(Number);
@@ -37,26 +37,26 @@ const getSessionHeight = (startTime: string, endTime: string) => {
   const [endHours, endMinutes] = endTime.split(':').map(Number);
   const durationMinutes = (endHours * 60 + endMinutes) - (startHours * 60 + startMinutes);
   const calculatedHeight = (durationMinutes / 60) * HOUR_HEIGHT;
-  return Math.max(calculatedHeight - 2, 24);
+  return Math.max(calculatedHeight - 2, 20);
 };
 
 const getItemStyles = (item: CalendarItem) => {
   if (item.type === "event") {
-    return { bg: "bg-destructive/90", text: "text-destructive-foreground", icon: <AlertCircle className="h-3 w-3" /> };
+    return { bg: "bg-destructive", text: "text-destructive-foreground", icon: <AlertCircle className="h-2.5 w-2.5" /> };
   }
   if (item.type === "homework") {
-    return { bg: "bg-purple-500/90", text: "text-white", icon: <FileText className="h-3 w-3" /> };
+    return { bg: "bg-purple-500", text: "text-white", icon: <FileText className="h-2.5 w-2.5" /> };
   }
   
   const sessionType = item.data?.type;
   if (sessionType === "break") {
-    return { bg: "bg-muted", text: "text-muted-foreground", icon: <Coffee className="h-3 w-3" /> };
+    return { bg: "bg-muted", text: "text-muted-foreground", icon: <Coffee className="h-2.5 w-2.5" /> };
   }
   if (sessionType === "homework") {
-    return { bg: "bg-purple-500/90", text: "text-white", icon: <FileText className="h-3 w-3" /> };
+    return { bg: "bg-purple-500", text: "text-white", icon: <FileText className="h-2.5 w-2.5" /> };
   }
   
-  return { bg: "bg-primary/90", text: "text-primary-foreground", icon: <BookOpen className="h-3 w-3" /> };
+  return { bg: "bg-primary", text: "text-primary-foreground", icon: <BookOpen className="h-2.5 w-2.5" /> };
 };
 
 const DraggableSession = ({ item, startHour }: { item: CalendarItem; startHour: number }) => {
@@ -74,7 +74,7 @@ const DraggableSession = ({ item, startHour }: { item: CalendarItem; startHour: 
 
   const styles = getItemStyles(item);
   const height = getSessionHeight(item.startTime, item.endTime);
-  const isCompact = height < 40;
+  const isCompact = height < 30;
 
   return (
     <HoverCard openDelay={300}>
@@ -84,31 +84,28 @@ const DraggableSession = ({ item, startHour }: { item: CalendarItem; startHour: 
           style={style}
           {...listeners}
           {...attributes}
-          className={`absolute left-1 right-1 rounded-lg cursor-grab active:cursor-grabbing transition-all duration-200 hover:shadow-lg hover:z-20 hover:scale-[1.02] ${styles.bg} ${styles.text} px-2 py-1.5 overflow-hidden shadow-sm border border-white/10`}
+          className={`absolute left-0.5 right-0.5 rounded cursor-grab active:cursor-grabbing transition-shadow hover:shadow-md hover:z-20 ${styles.bg} ${styles.text} px-1.5 py-1 overflow-hidden text-[10px]`}
         >
           {isCompact ? (
-            <div className="flex items-center gap-1.5 h-full">
+            <div className="flex items-center gap-1 h-full">
               {styles.icon}
-              <p className="text-[10px] font-medium truncate flex-1">{item.title}</p>
+              <p className="font-medium truncate flex-1">{item.title}</p>
             </div>
           ) : (
             <div className="flex flex-col h-full gap-0.5">
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-1">
                 {styles.icon}
-                <p className="text-xs font-semibold truncate">{item.title}</p>
+                <p className="font-semibold truncate">{item.title}</p>
               </div>
-              <p className="text-[10px] opacity-80">{item.startTime} - {item.endTime}</p>
-              {item.data?.subject && height >= 55 && (
-                <p className="text-[10px] opacity-70 truncate">{item.data.subject}</p>
-              )}
+              <p className="opacity-80 text-[9px]">{item.startTime}</p>
             </div>
           )}
         </div>
       </HoverCardTrigger>
-      <HoverCardContent className="w-64 p-3 bg-card/95 backdrop-blur-sm z-50" side="right" align="start">
+      <HoverCardContent className="w-56 p-3 bg-card/95 backdrop-blur-sm z-50" side="right" align="start">
         <div className="space-y-2">
           <div className="flex items-center gap-2">
-            <div className={`p-2 rounded-lg ${styles.bg}`}>
+            <div className={`p-1.5 rounded ${styles.bg}`}>
               {styles.icon}
             </div>
             <div>
@@ -116,14 +113,14 @@ const DraggableSession = ({ item, startHour }: { item: CalendarItem; startHour: 
               <p className="text-xs text-muted-foreground capitalize">{item.data?.type || item.type}</p>
             </div>
           </div>
-          <div className="space-y-1.5 pt-2 border-t">
-            <div className="flex items-center gap-2 text-sm">
-              <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+          <div className="space-y-1 pt-2 border-t text-xs">
+            <div className="flex items-center gap-2">
+              <Clock className="h-3 w-3 text-muted-foreground" />
               <span>{item.startTime} - {item.endTime}</span>
             </div>
             {item.data?.subject && (
-              <div className="flex items-center gap-2 text-sm">
-                <BookOpen className="h-3.5 w-3.5 text-muted-foreground" />
+              <div className="flex items-center gap-2">
+                <BookOpen className="h-3 w-3 text-muted-foreground" />
                 <span>{item.data.subject}</span>
               </div>
             )}
@@ -142,35 +139,35 @@ const StaticItem = ({ item, startHour }: { item: CalendarItem; startHour: number
 
   const styles = getItemStyles(item);
   const height = getSessionHeight(item.startTime, item.endTime);
-  const isCompact = height < 40;
+  const isCompact = height < 30;
 
   return (
     <HoverCard openDelay={300}>
       <HoverCardTrigger asChild>
         <div
           style={style}
-          className={`absolute left-1 right-1 rounded-lg transition-all duration-200 hover:shadow-lg hover:z-20 hover:scale-[1.02] ${styles.bg} ${styles.text} px-2 py-1.5 overflow-hidden shadow-sm border border-white/10`}
+          className={`absolute left-0.5 right-0.5 rounded transition-shadow hover:shadow-md hover:z-20 ${styles.bg} ${styles.text} px-1.5 py-1 overflow-hidden text-[10px]`}
         >
           {isCompact ? (
-            <div className="flex items-center gap-1.5 h-full">
+            <div className="flex items-center gap-1 h-full">
               {styles.icon}
-              <p className="text-[10px] font-medium truncate flex-1">{item.title}</p>
+              <p className="font-medium truncate flex-1">{item.title}</p>
             </div>
           ) : (
             <div className="flex flex-col h-full gap-0.5">
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-1">
                 {styles.icon}
-                <p className="text-xs font-semibold truncate">{item.title}</p>
+                <p className="font-semibold truncate">{item.title}</p>
               </div>
-              <p className="text-[10px] opacity-80">{item.startTime} - {item.endTime}</p>
+              <p className="opacity-80 text-[9px]">{item.startTime}</p>
             </div>
           )}
         </div>
       </HoverCardTrigger>
-      <HoverCardContent className="w-64 p-3 bg-card/95 backdrop-blur-sm z-50" side="right" align="start">
+      <HoverCardContent className="w-56 p-3 bg-card/95 backdrop-blur-sm z-50" side="right" align="start">
         <div className="space-y-2">
           <div className="flex items-center gap-2">
-            <div className={`p-2 rounded-lg ${styles.bg}`}>
+            <div className={`p-1.5 rounded ${styles.bg}`}>
               {styles.icon}
             </div>
             <div>
@@ -178,14 +175,14 @@ const StaticItem = ({ item, startHour }: { item: CalendarItem; startHour: number
               <p className="text-xs text-muted-foreground capitalize">{item.type}</p>
             </div>
           </div>
-          <div className="space-y-1.5 pt-2 border-t">
-            <div className="flex items-center gap-2 text-sm">
-              <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+          <div className="space-y-1 pt-2 border-t text-xs">
+            <div className="flex items-center gap-2">
+              <Clock className="h-3 w-3 text-muted-foreground" />
               <span>{item.startTime} - {item.endTime}</span>
             </div>
             {item.data?.completed !== undefined && (
-              <div className="flex items-center gap-2 text-sm">
-                <CheckCircle2 className={`h-3.5 w-3.5 ${item.data.completed ? 'text-green-500' : 'text-muted-foreground'}`} />
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className={`h-3 w-3 ${item.data.completed ? 'text-green-500' : 'text-muted-foreground'}`} />
                 <span>{item.data.completed ? 'Completed' : 'Not completed'}</span>
               </div>
             )}
@@ -218,15 +215,15 @@ const DroppableDay = ({
   return (
     <div
       ref={setNodeRef}
-      className={`relative flex-1 min-w-[90px] transition-colors ${
-        isOver ? "bg-primary/5" : isToday ? "bg-primary/[0.02]" : "bg-background"
+      className={`relative flex-1 min-w-[60px] sm:min-w-[80px] lg:min-w-[100px] transition-colors border-r border-border/20 last:border-r-0 ${
+        isOver ? "bg-primary/5" : isToday ? "bg-primary/[0.03]" : "bg-background"
       }`}
       style={{ height: `${timeSlots.length * HOUR_HEIGHT}px` }}
     >
       {timeSlots.map((_, i) => (
         <div
           key={i}
-          className="absolute left-0 right-0 border-t border-border/20"
+          className="absolute left-0 right-0 border-t border-border/10"
           style={{ top: `${i * HOUR_HEIGHT}px` }}
         />
       ))}
@@ -244,7 +241,7 @@ const DroppableDay = ({
           className="absolute left-0 right-0 h-0.5 bg-destructive z-30 pointer-events-none"
           style={{ top: `${getTimePosition(format(new Date(), 'HH:mm'), startHour)}px` }}
         >
-          <div className="absolute -left-1 -top-1 w-2.5 h-2.5 rounded-full bg-destructive" />
+          <div className="absolute -left-0.5 -top-1 w-2 h-2 rounded-full bg-destructive" />
         </div>
       )}
     </div>
@@ -490,12 +487,12 @@ export const CalendarGrid = ({ userId }: CalendarGridProps) => {
   if (loading && timetables.length === 0) {
     return (
       <Card className="overflow-hidden">
-        <div className="p-4 space-y-4">
+        <div className="p-3 sm:p-4 space-y-3 sm:space-y-4">
           <div className="flex items-center justify-between">
-            <Skeleton className="h-8 w-40" />
-            <Skeleton className="h-8 w-32" />
+            <Skeleton className="h-8 w-32 sm:w-40" />
+            <Skeleton className="h-8 w-24 sm:w-32" />
           </div>
-          <Skeleton className="h-[400px] w-full" />
+          <Skeleton className="h-[300px] sm:h-[400px] w-full" />
         </div>
       </Card>
     );
@@ -504,10 +501,10 @@ export const CalendarGrid = ({ userId }: CalendarGridProps) => {
   if (timetables.length === 0) {
     return (
       <Card className="overflow-hidden">
-        <CardContent className="flex flex-col items-center justify-center py-16 text-center">
-          <Clock className="h-12 w-12 text-muted-foreground/40 mb-4" />
-          <p className="text-muted-foreground mb-2">No timetables found</p>
-          <p className="text-sm text-muted-foreground/70">Create a timetable to view your calendar</p>
+        <CardContent className="flex flex-col items-center justify-center py-12 sm:py-16 text-center">
+          <Clock className="h-10 w-10 sm:h-12 sm:w-12 text-muted-foreground/40 mb-3 sm:mb-4" />
+          <p className="text-muted-foreground mb-2 text-sm sm:text-base">No timetables found</p>
+          <p className="text-xs sm:text-sm text-muted-foreground/70">Create a timetable to view your calendar</p>
         </CardContent>
       </Card>
     );
@@ -515,86 +512,86 @@ export const CalendarGrid = ({ userId }: CalendarGridProps) => {
 
   return (
     <Card className="overflow-hidden border-border/50 shadow-sm">
-      {/* Header Controls */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-3 border-b bg-muted/30">
-        <div className="flex items-center gap-2">
+      {/* Header Controls - Compact */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-3 p-2 sm:p-3 border-b bg-muted/20">
+        <div className="flex items-center gap-1 sm:gap-2">
           <Button
-            variant="outline"
+            variant="ghost"
             size="icon"
-            className="h-8 w-8"
+            className="h-7 w-7 sm:h-8 sm:w-8"
             onClick={() => setCurrentWeek(subWeeks(currentWeek, 1))}
           >
             <ChevronLeft className="h-4 w-4" />
           </Button>
           <Button
-            variant="outline"
+            variant="ghost"
             size="sm"
             onClick={() => setCurrentWeek(startOfWeek(new Date(), { weekStartsOn: 1 }))}
-            className="min-w-[140px] text-sm font-medium"
+            className="h-7 sm:h-8 text-xs sm:text-sm font-medium px-2 sm:px-3"
           >
-            {format(currentWeek, "MMM d")} - {format(addDays(currentWeek, 6), "MMM d")}
+            {format(currentWeek, "MMM d")} - {format(addDays(currentWeek, 6), "d")}
           </Button>
           <Button
-            variant="outline"
+            variant="ghost"
             size="icon"
-            className="h-8 w-8"
+            className="h-7 w-7 sm:h-8 sm:w-8"
             onClick={() => setCurrentWeek(addWeeks(currentWeek, 1))}
           >
             <ChevronRight className="h-4 w-4" />
           </Button>
         </div>
 
-        <div className="flex items-center gap-2">
-          {timetables.length > 0 && (
-            <Select value={selectedTimetableId} onValueChange={setSelectedTimetableId}>
-              <SelectTrigger className="w-[160px] h-8 text-sm">
-                <SelectValue placeholder="Select timetable" />
-              </SelectTrigger>
-              <SelectContent>
-                {timetables.map((tt) => (
-                  <SelectItem key={tt.id} value={tt.id}>{tt.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          )}
+        {timetables.length > 0 && (
+          <Select value={selectedTimetableId} onValueChange={setSelectedTimetableId}>
+            <SelectTrigger className="w-full sm:w-[140px] h-7 sm:h-8 text-xs sm:text-sm">
+              <SelectValue placeholder="Timetable" />
+            </SelectTrigger>
+            <SelectContent>
+              {timetables.map((tt) => (
+                <SelectItem key={tt.id} value={tt.id} className="text-xs sm:text-sm">{tt.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
+      </div>
+
+      {/* Compact Legend */}
+      <div className="flex items-center gap-2 sm:gap-3 px-2 sm:px-3 py-1.5 border-b bg-muted/10 text-[10px] sm:text-xs overflow-x-auto">
+        <div className="flex items-center gap-1">
+          <div className="w-2 h-2 rounded-sm bg-primary" />
+          <span className="text-muted-foreground whitespace-nowrap">Study</span>
+        </div>
+        <div className="flex items-center gap-1">
+          <div className="w-2 h-2 rounded-sm bg-purple-500" />
+          <span className="text-muted-foreground whitespace-nowrap">HW</span>
+        </div>
+        <div className="flex items-center gap-1">
+          <div className="w-2 h-2 rounded-sm bg-destructive" />
+          <span className="text-muted-foreground whitespace-nowrap">Event</span>
+        </div>
+        <div className="flex items-center gap-1">
+          <div className="w-2 h-2 rounded-sm bg-muted" />
+          <span className="text-muted-foreground whitespace-nowrap">Break</span>
         </div>
       </div>
 
-      {/* Legend */}
-      <div className="flex flex-wrap items-center gap-3 px-3 py-2 border-b bg-muted/10 text-xs">
-        <Badge className="bg-primary/90 hover:bg-primary gap-1 px-2 py-0.5">
-          <BookOpen className="h-2.5 w-2.5" /> Study
-        </Badge>
-        <Badge className="bg-purple-500/90 hover:bg-purple-500 gap-1 px-2 py-0.5">
-          <FileText className="h-2.5 w-2.5" /> Homework
-        </Badge>
-        <Badge className="bg-destructive/90 hover:bg-destructive gap-1 px-2 py-0.5">
-          <AlertCircle className="h-2.5 w-2.5" /> Events
-        </Badge>
-        <Badge variant="secondary" className="gap-1 px-2 py-0.5">
-          <Coffee className="h-2.5 w-2.5" /> Break
-        </Badge>
-      </div>
-
-      {/* Day Headers */}
-      <div className="flex border-b bg-muted/20 sticky top-0 z-20">
-        <div className="w-12 flex-shrink-0 border-r border-border/30 p-2 flex items-center justify-center">
-          <Clock className="h-4 w-4 text-muted-foreground" />
-        </div>
+      {/* Day Headers - Compact */}
+      <div className="flex border-b bg-muted/10 sticky top-0 z-20">
+        <div className="w-8 sm:w-10 flex-shrink-0 border-r border-border/20" />
         <div className="flex flex-1">
           {weekDays.map((day) => {
             const isToday = isSameDay(day, new Date());
             return (
               <div
                 key={format(day, "yyyy-MM-dd")}
-                className={`flex-1 min-w-[90px] text-center py-2 px-1 ${isToday ? "bg-primary/5" : ""}`}
+                className={`flex-1 min-w-[60px] sm:min-w-[80px] lg:min-w-[100px] text-center py-1.5 sm:py-2 ${isToday ? "bg-primary/5" : ""}`}
               >
-                <p className={`text-[10px] font-semibold uppercase tracking-wider ${isToday ? "text-primary" : "text-muted-foreground"}`}>
+                <p className={`text-[9px] sm:text-[10px] font-semibold uppercase ${isToday ? "text-primary" : "text-muted-foreground"}`}>
                   {format(day, "EEE")}
                 </p>
-                <p className={`text-sm font-bold mt-0.5 ${
+                <p className={`text-xs sm:text-sm font-bold mt-0.5 ${
                   isToday 
-                    ? "bg-primary text-primary-foreground rounded-full w-6 h-6 mx-auto flex items-center justify-center text-xs" 
+                    ? "bg-primary text-primary-foreground rounded-full w-5 h-5 sm:w-6 sm:h-6 mx-auto flex items-center justify-center text-[10px] sm:text-xs" 
                     : ""
                 }`}>
                   {format(day, "d")}
@@ -606,24 +603,24 @@ export const CalendarGrid = ({ userId }: CalendarGridProps) => {
       </div>
 
       {/* Time Grid */}
-      <ScrollArea className="h-[450px]">
+      <ScrollArea className="h-[350px] sm:h-[400px] lg:h-[450px]">
         <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
           <div className="flex">
-            <div className="w-12 flex-shrink-0 border-r border-border/30 bg-muted/5">
+            <div className="w-8 sm:w-10 flex-shrink-0 border-r border-border/20 bg-muted/5">
               {timeSlots.map((time) => (
                 <div
                   key={time}
-                  className="text-[10px] font-medium text-muted-foreground text-right pr-2 relative"
+                  className="text-[9px] sm:text-[10px] font-medium text-muted-foreground text-right pr-1 relative"
                   style={{ height: `${HOUR_HEIGHT}px` }}
                 >
-                  <span className="absolute -top-2 right-2">
+                  <span className="absolute -top-1.5 right-1">
                     {format(parseISO(`2024-01-01T${time}`), "ha")}
                   </span>
                 </div>
               ))}
             </div>
 
-            <div className="flex flex-1">
+            <div className="flex flex-1 overflow-x-auto">
               {weekDays.map((day) => (
                 <DroppableDay
                   key={format(day, "yyyy-MM-dd")}
