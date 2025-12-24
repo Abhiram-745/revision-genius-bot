@@ -4,19 +4,16 @@ import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Plus, Play, ChevronRight, Sparkles, Trophy, Target } from "lucide-react";
+import { Plus, Play, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import Header from "@/components/Header";
 import OnboardingWizard from "@/components/OnboardingWizard";
-import { TodayOverviewCard } from "@/components/dashboard/TodayOverviewCard";
-import { CompactStreakCard } from "@/components/dashboard/CompactStreakCard";
-import { CompactDeadlinesCard } from "@/components/dashboard/CompactDeadlinesCard";
-import { WeeklyGoalCard } from "@/components/dashboard/WeeklyGoalCard";
 import { AIInsightsCard } from "@/components/dashboard/AIInsightsCard";
+import { UnifiedProgressSection } from "@/components/dashboard/UnifiedProgressSection";
+import { RecentActivitySection } from "@/components/dashboard/RecentActivitySection";
 import SimpleOnboarding from "@/components/onboarding/SimpleOnboarding";
 import PageTransition from "@/components/PageTransition";
 import { OwlMascot } from "@/components/mascot/OwlMascot";
-import { MascotMessage } from "@/components/mascot/MascotMessage";
 import { DashboardFloatingElements, MotivationalBadge } from "@/components/dashboard/FloatingElements";
 import { motion } from "framer-motion";
 
@@ -222,69 +219,33 @@ const Dashboard = () => {
                 </div>
               </motion.div>
 
-              {/* Quick Actions - Enhanced with icons and animations */}
-              <motion.div 
+              {/* Unified Progress Section - Flowing layout */}
+              <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 }}
-                className="grid grid-cols-3 gap-3"
               >
-                {[
-                  { icon: Sparkles, label: "Practice", path: "/practice", color: "secondary" },
-                  { icon: Trophy, label: "Achievements", path: "/insights", color: "amber-500" },
-                  { icon: Target, label: "Goals", path: "/timetables", color: "emerald-500" },
-                ].map((action, i) => (
-                  <motion.div
-                    key={action.label}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.1 + i * 0.05 }}
-                    whileHover={{ y: -4, scale: 1.02 }}
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    <Button
-                      variant="outline"
-                      className={`w-full flex flex-col h-auto py-5 gap-2 hover:bg-${action.color}/10 hover:border-${action.color}/30 transition-all rounded-xl border-border/60 shadow-sm hover:shadow-md`}
-                      onClick={() => navigate(action.path)}
-                    >
-                      <action.icon className={`h-6 w-6 text-${action.color}`} />
-                      <span className="text-xs font-medium">{action.label}</span>
-                    </Button>
-                  </motion.div>
-                ))}
+                <UnifiedProgressSection userId={user?.id || ""} />
               </motion.div>
 
-              {/* Today Overview - Full width with enhanced styling */}
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.15 }}
-              >
-                <TodayOverviewCard userId={user?.id || ""} />
-              </motion.div>
+              {/* Two Column Layout - Activity & AI Insights */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2 }}
+                >
+                  <RecentActivitySection userId={user?.id || ""} />
+                </motion.div>
 
-              {/* Key Metrics Row - 3 columns with staggered animation */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {[WeeklyGoalCard, CompactStreakCard, CompactDeadlinesCard].map((Component, i) => (
-                  <motion.div
-                    key={i}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.2 + i * 0.1 }}
-                  >
-                    <Component userId={user?.id || ""} />
-                  </motion.div>
-                ))}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.25 }}
+                >
+                  <AIInsightsCard userId={user?.id || ""} />
+                </motion.div>
               </div>
-
-              {/* AI Insights - Full width at bottom */}
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.4 }}
-              >
-                <AIInsightsCard userId={user?.id || ""} />
-              </motion.div>
 
               {/* View All Link with Owl */}
               <motion.div
