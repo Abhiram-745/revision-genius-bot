@@ -82,6 +82,13 @@ export const StudyArchetypeCard = ({ userId }: StudyArchetypeCardProps) => {
   const shineX = useSpring(useTransform(mouseX, [-0.5, 0.5], [0, 100]), springConfig);
   const shineY = useSpring(useTransform(mouseY, [-0.5, 0.5], [0, 100]), springConfig);
 
+  // Create the shine gradient transform at top level (not inside JSX)
+  const shineBackground = useTransform(
+    [shineX, shineY],
+    ([x, y]) =>
+      `radial-gradient(circle at ${x}% ${y}%, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0.1) 25%, transparent 50%)`
+  );
+
   useEffect(() => {
     determineArchetype();
   }, [userId]);
@@ -196,11 +203,7 @@ export const StudyArchetypeCard = ({ userId }: StudyArchetypeCardProps) => {
         <motion.div
           className="absolute inset-0 opacity-0 group-hover:opacity-100 pointer-events-none z-20"
           style={{
-            background: useTransform(
-              [shineX, shineY],
-              ([x, y]) =>
-                `radial-gradient(circle at ${x}% ${y}%, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0.1) 25%, transparent 50%)`
-            ),
+            background: shineBackground,
           }}
         />
 
