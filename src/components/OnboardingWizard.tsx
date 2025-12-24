@@ -22,6 +22,7 @@ export interface Subject {
   id?: string;
   name: string;
   exam_board: string;
+  exam_level?: "gcse" | "a-level" | "igcse" | "as" | "ib" | "o-level" | "ap";
   mode: "short-term-exam" | "long-term-exam" | "no-exam";
 }
 

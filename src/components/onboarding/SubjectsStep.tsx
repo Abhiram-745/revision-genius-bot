@@ -59,6 +59,16 @@ const LANGUAGE_SUBJECTS = [
   "Arabic",
 ];
 
+const EXAM_LEVELS = [
+  { value: "gcse", label: "GCSE" },
+  { value: "a-level", label: "A-Level" },
+  { value: "igcse", label: "IGCSE" },
+  { value: "as", label: "AS Level" },
+  { value: "ib", label: "IB / DP" },
+  { value: "o-level", label: "O-Level" },
+  { value: "ap", label: "AP" },
+];
+
 const EXAM_BOARDS = [
   "AQA",
   "Edexcel",
@@ -66,11 +76,15 @@ const EXAM_BOARDS = [
   "WJEC",
   "CCEA",
   "Eduqas",
+  "Cambridge (CIE)",
+  "IB",
+  "College Board",
 ];
 
 const SubjectsStep = ({ subjects, setSubjects }: SubjectsStepProps) => {
   const [subjectName, setSubjectName] = useState("");
   const [examBoard, setExamBoard] = useState("");
+  const [examLevel, setExamLevel] = useState<string>("");
   const [mode, setMode] = useState<"short-term-exam" | "long-term-exam" | "no-exam">("long-term-exam");
   const [isLanguage, setIsLanguage] = useState(false);
   const [languageFocus, setLanguageFocus] = useState({
@@ -91,11 +105,12 @@ const SubjectsStep = ({ subjects, setSubjects }: SubjectsStepProps) => {
   }, [subjectName]);
 
   const addSubject = () => {
-    if (subjectName.trim() && examBoard.trim()) {
+    if (subjectName.trim() && examBoard.trim() && examLevel.trim()) {
       const newSubject: Subject = {
         id: crypto.randomUUID(),
         name: subjectName,
         exam_board: examBoard,
+        exam_level: examLevel as Subject["exam_level"],
         mode: mode,
       };
 
@@ -108,6 +123,7 @@ const SubjectsStep = ({ subjects, setSubjects }: SubjectsStepProps) => {
       setSubjects([...subjects, newSubject]);
       setSubjectName("");
       setExamBoard("");
+      setExamLevel("");
       setMode("long-term-exam");
       setIsLanguage(false);
       setLanguageFocus({
@@ -152,7 +168,7 @@ const SubjectsStep = ({ subjects, setSubjects }: SubjectsStepProps) => {
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <div className="space-y-1">
           <Label htmlFor="subject-name" className="text-sm">Subject</Label>
           <Select value={subjectName} onValueChange={setSubjectName}>
@@ -169,10 +185,25 @@ const SubjectsStep = ({ subjects, setSubjects }: SubjectsStepProps) => {
           </Select>
         </div>
         <div className="space-y-1">
+          <Label htmlFor="exam-level" className="text-sm">Exam Level</Label>
+          <Select value={examLevel} onValueChange={setExamLevel}>
+            <SelectTrigger className="bg-background">
+              <SelectValue placeholder="Select level" />
+            </SelectTrigger>
+            <SelectContent className="bg-popover z-[200]">
+              {EXAM_LEVELS.map((level) => (
+                <SelectItem key={level.value} value={level.value}>
+                  {level.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-1">
           <Label htmlFor="exam-board" className="text-sm">Exam Board</Label>
           <Select value={examBoard} onValueChange={setExamBoard}>
             <SelectTrigger className="bg-background">
-              <SelectValue placeholder="Select exam board" />
+              <SelectValue placeholder="Select board" />
             </SelectTrigger>
             <SelectContent className="bg-popover z-[200]">
               {EXAM_BOARDS.map((board) => (
@@ -269,7 +300,7 @@ const SubjectsStep = ({ subjects, setSubjects }: SubjectsStepProps) => {
       <Button
         type="button"
         onClick={addSubject}
-        disabled={!subjectName.trim() || !examBoard.trim()}
+        disabled={!subjectName.trim() || !examBoard.trim() || !examLevel.trim()}
         className="w-full bg-gradient-secondary hover:opacity-90"
         size="sm"
       >
@@ -285,6 +316,7 @@ const SubjectsStep = ({ subjects, setSubjects }: SubjectsStepProps) => {
               {subjects.map((subject, index) => {
                 const info = getModeInfo(subject.mode);
                 const Icon = info.icon;
+                const levelLabel = EXAM_LEVELS.find(l => l.value === subject.exam_level)?.label || subject.exam_level;
                 return (
                   <div
                     key={index}
@@ -293,6 +325,11 @@ const SubjectsStep = ({ subjects, setSubjects }: SubjectsStepProps) => {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
                         <p className="font-medium text-sm truncate">{subject.name}</p>
+                        {levelLabel && (
+                          <Badge variant="secondary" className="text-[10px] px-1 py-0">
+                            {levelLabel}
+                          </Badge>
+                        )}
                         <Badge variant="outline" className="text-[10px] px-1 py-0">
                           <Icon className="h-3 w-3 mr-1" />
                           {info.label}

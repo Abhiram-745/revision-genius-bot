@@ -179,56 +179,64 @@ const Dashboard = () => {
           ) : (
             /* Main dashboard with enhanced visuals */
             <div className="space-y-6 animate-fade-in">
-              {/* Hero Section with Large Mascot */}
+              {/* Hero Section with Much Larger Mascot */}
               <motion.div 
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary/10 via-background to-accent/10 border border-border/50 shadow-xl"
               >
                 {/* Decorative gradient orbs */}
-                <div className="absolute -top-20 -right-20 w-40 h-40 bg-primary/20 rounded-full blur-3xl" />
-                <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-accent/20 rounded-full blur-3xl" />
+                <div className="absolute -top-32 -right-32 w-64 h-64 bg-primary/30 rounded-full blur-3xl animate-pulse" />
+                <div className="absolute -bottom-20 -left-20 w-48 h-48 bg-accent/30 rounded-full blur-3xl animate-pulse" />
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-secondary/10 rounded-full blur-3xl" />
                 
-                <div className="relative p-6 sm:p-8">
+                <div className="relative p-8 sm:p-10">
                   {/* Motivational Badge */}
-                  <div className="flex justify-center mb-4">
+                  <div className="flex justify-center mb-6">
                     <MotivationalBadge streak={streak} />
                   </div>
                   
-                  <div className="flex flex-col lg:flex-row items-center gap-6 lg:gap-8">
-                    {/* Large Owl Mascot */}
+                  <div className="flex flex-col lg:flex-row items-center gap-8 lg:gap-12">
+                    {/* Much Larger Owl Mascot with enhanced animation */}
                     <motion.div
-                      initial={{ scale: 0.8, opacity: 0 }}
-                      animate={{ scale: 1, opacity: 1 }}
-                      transition={{ delay: 0.2, type: "spring", bounce: 0.4 }}
+                      initial={{ scale: 0.5, opacity: 0, rotate: -10 }}
+                      animate={{ scale: 1, opacity: 1, rotate: 0 }}
+                      transition={{ delay: 0.2, type: "spring", bounce: 0.5, duration: 0.8 }}
                       className="flex-shrink-0"
                     >
-                      <OwlMascot type="happy" size="xl" glow />
+                      <OwlMascot type="happy" size="3xl" glow />
                     </motion.div>
                     
                     {/* Greeting & CTA */}
-                    <div className="flex-1 text-center lg:text-left space-y-4">
-                      <div>
-                        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-display font-bold bg-gradient-to-r from-foreground via-foreground to-foreground/70 bg-clip-text">
+                    <div className="flex-1 text-center lg:text-left space-y-6">
+                      <motion.div
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.3 }}
+                      >
+                        <h1 className="text-3xl sm:text-4xl lg:text-5xl font-display font-bold bg-gradient-to-r from-foreground via-foreground to-foreground/70 bg-clip-text">
                           {getGreeting()}, {getFirstName()}! 👋
                         </h1>
-                        <p className="text-muted-foreground text-lg mt-2">
-                          Ready to make today count? Let's crush some goals!
+                        <p className="text-muted-foreground text-lg sm:text-xl mt-3 max-w-lg">
+                          Ready to make today count? Let's crush some goals together!
                         </p>
-                      </div>
+                      </motion.div>
                       
                       {/* Primary CTA */}
                       <motion.div
                         whileHover={{ scale: 1.03 }}
                         whileTap={{ scale: 0.97 }}
                         className="inline-block"
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.4 }}
                       >
                         <Button
                           size="lg"
                           onClick={() => navigate("/timetables")}
-                          className="gap-3 px-8 py-6 text-lg bg-gradient-to-r from-primary to-accent shadow-xl shadow-primary/30 hover:shadow-2xl hover:shadow-primary/40 transition-all rounded-2xl"
+                          className="gap-3 px-10 py-7 text-lg bg-gradient-to-r from-primary to-accent shadow-xl shadow-primary/30 hover:shadow-2xl hover:shadow-primary/40 transition-all rounded-2xl"
                         >
-                          <Play className="h-6 w-6" />
+                          <Play className="h-7 w-7" />
                           Start Study Session
                         </Button>
                       </motion.div>
@@ -237,11 +245,67 @@ const Dashboard = () => {
                 </div>
               </motion.div>
 
+              {/* Quick Actions Row */}
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.15 }}
+                className="grid grid-cols-2 sm:grid-cols-4 gap-3"
+              >
+                <Card 
+                  className="p-4 cursor-pointer hover:shadow-lg transition-all bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20 hover:border-primary/40 group"
+                  onClick={() => navigate("/practice")}
+                >
+                  <div className="flex flex-col items-center text-center gap-2">
+                    <motion.div whileHover={{ scale: 1.1, rotate: 5 }}>
+                      <OwlMascot type="lightbulb" size="md" animate={false} />
+                    </motion.div>
+                    <span className="font-medium text-sm group-hover:text-primary transition-colors">Practice</span>
+                  </div>
+                </Card>
+                
+                <Card 
+                  className="p-4 cursor-pointer hover:shadow-lg transition-all bg-gradient-to-br from-secondary/10 to-secondary/5 border-secondary/20 hover:border-secondary/40 group"
+                  onClick={() => navigate("/insights")}
+                >
+                  <div className="flex flex-col items-center text-center gap-2">
+                    <motion.div whileHover={{ scale: 1.1, rotate: -5 }}>
+                      <OwlMascot type="chart" size="md" animate={false} />
+                    </motion.div>
+                    <span className="font-medium text-sm group-hover:text-secondary transition-colors">Insights</span>
+                  </div>
+                </Card>
+                
+                <Card 
+                  className="p-4 cursor-pointer hover:shadow-lg transition-all bg-gradient-to-br from-accent/10 to-accent/5 border-accent/20 hover:border-accent/40 group"
+                  onClick={() => navigate("/calendar")}
+                >
+                  <div className="flex flex-col items-center text-center gap-2">
+                    <motion.div whileHover={{ scale: 1.1, rotate: 5 }}>
+                      <OwlMascot type="checklist" size="md" animate={false} />
+                    </motion.div>
+                    <span className="font-medium text-sm group-hover:text-accent transition-colors">Calendar</span>
+                  </div>
+                </Card>
+                
+                <Card 
+                  className="p-4 cursor-pointer hover:shadow-lg transition-all bg-gradient-to-br from-muted to-muted/50 border-border hover:border-primary/30 group"
+                  onClick={() => navigate("/social")}
+                >
+                  <div className="flex flex-col items-center text-center gap-2">
+                    <motion.div whileHover={{ scale: 1.1, rotate: -5 }}>
+                      <OwlMascot type="waving" size="md" animate={false} />
+                    </motion.div>
+                    <span className="font-medium text-sm group-hover:text-primary transition-colors">Social</span>
+                  </div>
+                </Card>
+              </motion.div>
+
               {/* Unified Progress Section - Flowing layout */}
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 }}
+                transition={{ delay: 0.2 }}
               >
                 <UnifiedProgressSection userId={user?.id || ""} />
               </motion.div>
@@ -251,7 +315,7 @@ const Dashboard = () => {
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.2 }}
+                  transition={{ delay: 0.25 }}
                 >
                   <RecentActivitySection userId={user?.id || ""} />
                 </motion.div>
@@ -259,31 +323,43 @@ const Dashboard = () => {
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.25 }}
+                  transition={{ delay: 0.3 }}
                 >
                   <AIInsightsCard userId={user?.id || ""} />
                 </motion.div>
               </div>
 
-              {/* View All Link with Owl */}
+              {/* Bottom CTA with Large Mascot */}
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                transition={{ delay: 0.5 }}
+                transition={{ delay: 0.4 }}
               >
-                <Card className="border-dashed border-border/50 bg-gradient-to-r from-muted/30 to-muted/10 hover:from-muted/40 hover:to-muted/20 transition-all">
-                  <CardContent className="p-4">
-                    <Button
-                      variant="ghost"
-                      className="w-full justify-between text-muted-foreground hover:text-foreground group"
-                      onClick={() => navigate("/insights")}
-                    >
-                      <span className="flex items-center gap-3">
-                        <OwlMascot type="chart" size="sm" animate={false} />
-                        <span>View all insights & analytics</span>
-                      </span>
-                      <ChevronRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
-                    </Button>
+                <Card className="overflow-hidden bg-gradient-to-r from-primary/5 via-secondary/5 to-accent/5 border-border/50 shadow-lg">
+                  <CardContent className="p-6 sm:p-8">
+                    <div className="flex flex-col sm:flex-row items-center gap-6">
+                      <motion.div
+                        initial={{ scale: 0.8 }}
+                        animate={{ scale: 1 }}
+                        transition={{ delay: 0.5, type: "spring" }}
+                      >
+                        <OwlMascot type="thumbsup" size="xl" glow />
+                      </motion.div>
+                      <div className="flex-1 text-center sm:text-left">
+                        <h3 className="text-xl font-bold mb-2">Keep up the great work!</h3>
+                        <p className="text-muted-foreground mb-4">
+                          View all your insights and track your progress over time.
+                        </p>
+                        <Button
+                          variant="outline"
+                          className="gap-2"
+                          onClick={() => navigate("/insights")}
+                        >
+                          <ChevronRight className="h-4 w-4" />
+                          View All Insights
+                        </Button>
+                      </div>
+                    </div>
                   </CardContent>
                 </Card>
               </motion.div>
