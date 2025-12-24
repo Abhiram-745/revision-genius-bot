@@ -1,12 +1,14 @@
-import { useState, useRef, useCallback, useMemo, memo } from "react";
+import { useState, useRef, useCallback, useMemo, memo, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { GripVertical, Clock, Check, X, Pencil } from "lucide-react";
+import { GripVertical, Clock, Check, X, Pencil, Calendar, BookOpen, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { OwlMascot } from "@/components/mascot/OwlMascot";
+import { Badge } from "@/components/ui/badge";
+import { supabase } from "@/integrations/supabase/client";
 
 interface TimetableSession {
   time: string;
@@ -15,6 +17,21 @@ interface TimetableSession {
   topic: string;
   type: string;
   completed?: boolean;
+}
+
+interface Event {
+  id: string;
+  title: string;
+  start_time: string;
+  end_time: string;
+}
+
+interface Homework {
+  id: string;
+  title: string;
+  subject: string;
+  due_date: string;
+  duration?: number;
 }
 
 interface ManualTimetableEditorProps {
@@ -40,10 +57,14 @@ const minutesToTime = (minutes: number): string => {
 
 const subjectColors: Record<string, string> = {
   break: "bg-muted/50 border-muted text-muted-foreground",
+  event: "bg-blue-500/15 border-blue-500/40 text-blue-700 dark:text-blue-300",
+  homework: "bg-amber-500/15 border-amber-500/40 text-amber-700 dark:text-amber-300",
 };
 
 const getSessionColor = (subject: string, type: string): string => {
   if (type === "break") return subjectColors.break;
+  if (type === "event") return subjectColors.event;
+  if (type === "homework") return subjectColors.homework;
   const colors = [
     "bg-gradient-to-br from-primary/15 to-primary/5 border-primary/40 hover:border-primary/60",
     "bg-gradient-to-br from-emerald-500/15 to-emerald-500/5 border-emerald-500/40 hover:border-emerald-500/60",
@@ -62,6 +83,7 @@ const SessionBlock = memo(({
   top, 
   height, 
   isDragging, 
+  isResizable,
   onMouseDownTop, 
   onMouseDownBottom 
 }: {
@@ -70,6 +92,7 @@ const SessionBlock = memo(({
   top: number;
   height: number;
   isDragging: boolean;
+  isResizable: boolean;
   onMouseDownTop: (e: React.MouseEvent) => void;
   onMouseDownBottom: (e: React.MouseEvent) => void;
 }) => (
@@ -80,29 +103,56 @@ const SessionBlock = memo(({
     className={cn(
       "absolute left-14 right-3 rounded-xl border-2 transition-all duration-200 shadow-sm",
       getSessionColor(session.subject, session.type),
-      isDragging && "shadow-xl ring-2 ring-primary/50 z-50"
+      isDragging && "shadow-xl ring-2 ring-primary/50 z-50",
+      !isResizable && "opacity-75"
     )}
     style={{
       top: `${top}px`,
       height: `${Math.max(height, 35)}px`,
     }}
   >
-    {/* Top resize handle */}
-    <div
-      className="absolute -top-1.5 left-0 right-0 h-4 cursor-ns-resize flex items-center justify-center group z-10"
-      onMouseDown={onMouseDownTop}
-    >
-      <div className="w-10 h-1 rounded-full bg-foreground/10 group-hover:bg-primary group-hover:scale-110 transition-all" />
-    </div>
+    {/* Top resize handle - only for editable sessions */}
+    {isResizable && (
+      <div
+        className="absolute -top-1.5 left-0 right-0 h-4 cursor-ns-resize flex items-center justify-center group z-10"
+        onMouseDown={onMouseDownTop}
+      >
+        <div className="w-10 h-1 rounded-full bg-foreground/10 group-hover:bg-primary group-hover:scale-110 transition-all" />
+      </div>
+    )}
 
     {/* Session content */}
     <div className="p-3 h-full flex flex-col justify-center overflow-hidden">
       <div className="flex items-center gap-2">
-        <div className="p-1 rounded bg-background/50">
-          <GripVertical className="w-3 h-3 text-muted-foreground" />
-        </div>
+        {isResizable ? (
+          <div className="p-1 rounded bg-background/50">
+            <GripVertical className="w-3 h-3 text-muted-foreground" />
+          </div>
+        ) : (
+          <div className="p-1 rounded bg-background/50">
+            {session.type === "event" ? (
+              <Calendar className="w-3 h-3 text-blue-500" />
+            ) : session.type === "homework" ? (
+              <BookOpen className="w-3 h-3 text-amber-500" />
+            ) : (
+              <AlertCircle className="w-3 h-3 text-muted-foreground" />
+            )}
+          </div>
+        )}
         <div className="min-w-0 flex-1">
-          <p className="font-semibold text-sm truncate">{session.subject}</p>
+          <div className="flex items-center gap-2">
+            <p className="font-semibold text-sm truncate">{session.subject}</p>
+            {session.type === "event" && (
+              <Badge variant="outline" className="text-[10px] bg-blue-500/10 text-blue-600 border-blue-500/30">
+                Event
+              </Badge>
+            )}
+            {session.type === "homework" && (
+              <Badge variant="outline" className="text-[10px] bg-amber-500/10 text-amber-600 border-amber-500/30">
+                Homework
+              </Badge>
+            )}
+          </div>
           {session.topic && height > 50 && (
             <p className="text-xs text-muted-foreground truncate mt-0.5">{session.topic}</p>
           )}
@@ -114,22 +164,30 @@ const SessionBlock = memo(({
       </div>
     </div>
 
-    {/* Bottom resize handle */}
-    <div
-      className="absolute -bottom-1.5 left-0 right-0 h-4 cursor-ns-resize flex items-center justify-center group z-10"
-      onMouseDown={onMouseDownBottom}
-    >
-      <div className="w-10 h-1 rounded-full bg-foreground/10 group-hover:bg-primary group-hover:scale-110 transition-all" />
-    </div>
+    {/* Bottom resize handle - only for editable sessions */}
+    {isResizable && (
+      <div
+        className="absolute -bottom-1.5 left-0 right-0 h-4 cursor-ns-resize flex items-center justify-center group z-10"
+        onMouseDown={onMouseDownBottom}
+      >
+        <div className="w-10 h-1 rounded-full bg-foreground/10 group-hover:bg-primary group-hover:scale-110 transition-all" />
+      </div>
+    )}
   </motion.div>
 ));
 
 SessionBlock.displayName = "SessionBlock";
 
 const ManualTimetableEditor = ({ sessions, date, onSave, onCancel }: ManualTimetableEditorProps) => {
+  // State for editable sessions (study sessions only, no breaks)
   const [editableSessions, setEditableSessions] = useState<TimetableSession[]>(() => 
-    sessions.filter(s => s.type !== "break").map(s => ({ ...s }))
+    sessions.filter(s => s.type !== "break" && s.type !== "event" && s.type !== "homework").map(s => ({ ...s }))
   );
+  
+  // State for events and homework (non-editable, displayed for reference)
+  const [events, setEvents] = useState<Event[]>([]);
+  const [homework, setHomework] = useState<Homework[]>([]);
+  
   const [dragState, setDragState] = useState<{
     index: number;
     edge: "top" | "bottom";
@@ -140,19 +198,105 @@ const ManualTimetableEditor = ({ sessions, date, onSave, onCancel }: ManualTimet
   
   const containerRef = useRef<HTMLDivElement>(null);
 
+  // Fetch events and homework for this date
+  useEffect(() => {
+    const fetchData = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      // Fetch events for this date
+      const { data: eventsData } = await supabase
+        .from("events")
+        .select("*")
+        .eq("user_id", user.id)
+        .gte("start_time", `${date}T00:00:00`)
+        .lte("start_time", `${date}T23:59:59`);
+
+      if (eventsData) {
+        setEvents(eventsData);
+      }
+
+      // Fetch homework due on this date
+      const { data: homeworkData } = await supabase
+        .from("homeworks")
+        .select("*")
+        .eq("user_id", user.id)
+        .eq("due_date", date)
+        .eq("completed", false);
+
+      if (homeworkData) {
+        setHomework(homeworkData);
+      }
+    };
+
+    fetchData();
+  }, [date]);
+
+  // Convert events to session format for display
+  const eventSessions: TimetableSession[] = useMemo(() => {
+    return events.map(event => {
+      const startTime = new Date(event.start_time);
+      const endTime = new Date(event.end_time);
+      const durationMinutes = Math.round((endTime.getTime() - startTime.getTime()) / (1000 * 60));
+      const time = `${startTime.getHours().toString().padStart(2, '0')}:${startTime.getMinutes().toString().padStart(2, '0')}`;
+      
+      return {
+        time,
+        duration: durationMinutes,
+        subject: event.title,
+        topic: "Event",
+        type: "event",
+      };
+    });
+  }, [events]);
+
+  // Convert homework to session format for display (shown at start of day as reminder)
+  const homeworkSessions: TimetableSession[] = useMemo(() => {
+    return homework.map(hw => ({
+      time: "09:00", // Default time for homework reminder
+      duration: hw.duration || 30,
+      subject: `HW: ${hw.title}`,
+      topic: hw.subject,
+      type: "homework",
+    }));
+  }, [homework]);
+
+  // Combine all sessions for display
+  const allDisplaySessions = useMemo(() => {
+    return [...editableSessions, ...eventSessions].sort((a, b) => 
+      timeToMinutes(a.time) - timeToMinutes(b.time)
+    );
+  }, [editableSessions, eventSessions]);
+
   const { dayStart, dayEnd, startHour, endHour } = useMemo(() => {
-    if (editableSessions.length === 0) {
+    const allSessions = [...editableSessions, ...eventSessions];
+    if (allSessions.length === 0) {
       return { dayStart: 540, dayEnd: 1080, startHour: 9, endHour: 18 };
     }
-    const dStart = Math.min(...editableSessions.map(s => timeToMinutes(s.time)));
-    const dEnd = Math.max(...editableSessions.map(s => timeToMinutes(s.time) + s.duration));
+    const dStart = Math.min(...allSessions.map(s => timeToMinutes(s.time)));
+    const dEnd = Math.max(...allSessions.map(s => timeToMinutes(s.time) + s.duration));
     return {
       dayStart: Math.floor(dStart / 60) * 60,
       dayEnd: Math.ceil(dEnd / 60) * 60,
       startHour: Math.floor(dStart / 60),
       endHour: Math.ceil(dEnd / 60)
     };
-  }, [editableSessions]);
+  }, [editableSessions, eventSessions]);
+
+  // Get blocked time ranges (from events)
+  const blockedRanges = useMemo(() => {
+    return eventSessions.map(e => ({
+      start: timeToMinutes(e.time),
+      end: timeToMinutes(e.time) + e.duration
+    }));
+  }, [eventSessions]);
+
+  // Check if a time range overlaps with blocked ranges
+  const overlapsBlocked = useCallback((start: number, end: number) => {
+    return blockedRanges.some(range => 
+      start < range.end && end > range.start
+    );
+  }, [blockedRanges]);
 
   const handleMouseDown = useCallback((e: React.MouseEvent, index: number, edge: "top" | "bottom") => {
     e.preventDefault();
@@ -176,21 +320,31 @@ const ManualTimetableEditor = ({ sessions, date, onSave, onCancel }: ManualTimet
     setEditableSessions(prev => {
       const updated = prev.map(s => ({ ...s }));
       const session = updated[dragState.index];
+      const originalStart = timeToMinutes(dragState.originalTime);
       
       if (dragState.edge === "bottom") {
         const newDuration = Math.max(MIN_DURATION, dragState.originalDuration + deltaMinutes);
-        session.duration = Math.min(newDuration, 180);
+        const newEnd = originalStart + newDuration;
+        
+        // Check if new end overlaps with blocked ranges
+        if (!overlapsBlocked(originalStart, newEnd)) {
+          session.duration = Math.min(newDuration, 180);
+        }
       } else {
-        const originalStart = timeToMinutes(dragState.originalTime);
         const newStart = Math.max(dayStart, originalStart + deltaMinutes);
         const newDuration = Math.max(MIN_DURATION, dragState.originalDuration - deltaMinutes);
-        session.time = minutesToTime(newStart);
-        session.duration = newDuration;
+        const newEnd = newStart + newDuration;
+        
+        // Check if new range overlaps with blocked ranges
+        if (!overlapsBlocked(newStart, newEnd)) {
+          session.time = minutesToTime(newStart);
+          session.duration = newDuration;
+        }
       }
       
       return updated;
     });
-  }, [dragState, dayStart]);
+  }, [dragState, dayStart, overlapsBlocked]);
 
   const handleMouseUp = useCallback(() => {
     setDragState(null);
@@ -269,9 +423,44 @@ const ManualTimetableEditor = ({ sessions, date, onSave, onCancel }: ManualTimet
         <div className="flex items-center gap-2 p-3 mb-4 rounded-lg bg-muted/50 border border-border/50">
           <Pencil className="w-4 h-4 text-muted-foreground" />
           <p className="text-sm text-muted-foreground">
-            Drag the top or bottom edge of sessions to resize them
+            Drag the top or bottom edge of sessions to resize them. Events and homework are shown but not editable.
           </p>
         </div>
+
+        {/* Legend */}
+        <div className="flex flex-wrap gap-3 mb-4 text-xs">
+          <div className="flex items-center gap-1.5">
+            <div className="w-3 h-3 rounded bg-primary/30 border border-primary/50" />
+            <span className="text-muted-foreground">Study Session</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <div className="w-3 h-3 rounded bg-blue-500/30 border border-blue-500/50" />
+            <span className="text-muted-foreground">Event (blocked)</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <div className="w-3 h-3 rounded bg-amber-500/30 border border-amber-500/50" />
+            <span className="text-muted-foreground">Homework Due</span>
+          </div>
+        </div>
+
+        {/* Homework reminders */}
+        {homework.length > 0 && (
+          <div className="mb-4 p-3 rounded-lg bg-amber-500/10 border border-amber-500/30">
+            <p className="text-sm font-medium text-amber-700 dark:text-amber-300 mb-2 flex items-center gap-2">
+              <BookOpen className="w-4 h-4" />
+              Homework Due Today
+            </p>
+            <ul className="space-y-1">
+              {homework.map(hw => (
+                <li key={hw.id} className="text-xs text-muted-foreground flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                  <span className="font-medium">{hw.title}</span>
+                  <span className="text-muted-foreground/70">({hw.subject})</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
 
         <ScrollArea className="h-[450px] rounded-lg border bg-card/50">
           <div 
@@ -284,21 +473,29 @@ const ManualTimetableEditor = ({ sessions, date, onSave, onCancel }: ManualTimet
           >
             {hourMarkers}
 
-            {editableSessions.map((session, index) => {
+            {/* Render all sessions (editable + events) */}
+            {allDisplaySessions.map((session, displayIndex) => {
               const startMinutes = timeToMinutes(session.time) - dayStart;
               const top = (startMinutes / 60) * HOUR_HEIGHT;
               const height = (session.duration / 60) * HOUR_HEIGHT;
+              
+              // Find if this is an editable session
+              const editableIndex = editableSessions.findIndex(
+                s => s.time === session.time && s.subject === session.subject
+              );
+              const isEditable = editableIndex !== -1 && session.type !== "event" && session.type !== "homework";
 
               return (
                 <SessionBlock
-                  key={`${index}-${session.time}`}
+                  key={`${displayIndex}-${session.time}-${session.subject}`}
                   session={session}
-                  index={index}
+                  index={displayIndex}
                   top={top}
                   height={height}
-                  isDragging={dragState?.index === index}
-                  onMouseDownTop={(e) => handleMouseDown(e, index, "top")}
-                  onMouseDownBottom={(e) => handleMouseDown(e, index, "bottom")}
+                  isDragging={isEditable && dragState?.index === editableIndex}
+                  isResizable={isEditable}
+                  onMouseDownTop={(e) => isEditable && handleMouseDown(e, editableIndex, "top")}
+                  onMouseDownBottom={(e) => isEditable && handleMouseDown(e, editableIndex, "bottom")}
                 />
               );
             })}
