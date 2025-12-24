@@ -19,7 +19,7 @@ interface PracticeApp {
   description: string;
   icon: React.ReactNode;
   gradient: string;
-  buildUrl: (subject: string, topic: string) => string;
+  buildUrl: (subject: string, topic: string, examLevel?: string) => string;
   badge?: string;
   badgeColor?: string;
   appColor: string;
@@ -31,9 +31,31 @@ interface PracticeHubDialogProps {
   onOpenChange: (open: boolean) => void;
   subject: string;
   topic: string;
+  examLevel?: string;
   onSelectApp: (app: PracticeApp) => void;
   onSelectBlurtAI: () => void;
 }
+
+// Helper to get SaveMyExams URL based on exam level
+const getSaveMyExamsUrl = (subject: string, topic: string, examLevel?: string): string => {
+  const levelMap: Record<string, string> = {
+    "gcse": "gcse",
+    "a-level": "a-level",
+    "igcse": "igcse",
+    "as": "as",
+    "ib": "dp",
+    "o-level": "o-level",
+    "ap": "ap",
+  };
+  
+  const level = examLevel ? levelMap[examLevel] || "gcse" : "gcse";
+  return `https://www.savemyexams.com/${level}/`;
+};
+
+// Helper to get PMT URL
+const getPMTUrl = (): string => {
+  return "https://www.physicsandmathstutor.com/";
+};
 
 const practiceApps: PracticeApp[] = [
   {
@@ -54,7 +76,7 @@ const practiceApps: PracticeApp[] = [
     description: "Notes, past papers & mark schemes",
     icon: <SaveMyExamsLogo className="w-6 h-6" />,
     gradient: "from-emerald-500/20 via-emerald-500/10 to-accent/10",
-    buildUrl: (subject, topic) => `https://www.savemyexams.com/search/?query=${encodeURIComponent(`${subject} ${topic}`)}`,
+    buildUrl: (subject, topic, examLevel) => getSaveMyExamsUrl(subject, topic, examLevel),
     badge: "Papers",
     badgeColor: "bg-emerald-500/20 text-emerald-600 border-emerald-500/30",
     appColor: "bg-emerald-500/20",
@@ -65,7 +87,7 @@ const practiceApps: PracticeApp[] = [
     description: "GCSE & A-Level revision resources",
     icon: <GraduationCap className="w-6 h-6 text-blue-500" />,
     gradient: "from-blue-500/20 via-blue-500/10 to-accent/10",
-    buildUrl: (subject, topic) => `https://www.physicsandmathstutor.com/search/?q=${encodeURIComponent(`${subject} ${topic}`)}`,
+    buildUrl: () => getPMTUrl(),
     badge: "STEM",
     badgeColor: "bg-blue-500/20 text-blue-600 border-blue-500/30",
     appColor: "bg-blue-500/20",
@@ -76,7 +98,7 @@ const practiceApps: PracticeApp[] = [
     description: "Flashcards & study sets",
     icon: <Layers className="w-6 h-6 text-indigo-500" />,
     gradient: "from-indigo-500/20 via-indigo-500/10 to-accent/10",
-    buildUrl: (subject, topic) => `https://quizlet.com/search?query=${encodeURIComponent(`${subject} ${topic}`)}&type=sets`,
+    buildUrl: () => "https://quizlet.com/",
     badge: "Flashcards",
     badgeColor: "bg-indigo-500/20 text-indigo-600 border-indigo-500/30",
     appColor: "bg-indigo-500/20",
@@ -87,7 +109,7 @@ const practiceApps: PracticeApp[] = [
     description: "AI-powered study materials",
     icon: <Sparkles className="w-6 h-6 text-pink-500" />,
     gradient: "from-pink-500/20 via-pink-500/10 to-accent/10",
-    buildUrl: () => "https://www.studyfetch.com",
+    buildUrl: () => "https://www.studyfetch.com/",
     badge: "AI",
     badgeColor: "bg-pink-500/20 text-pink-600 border-pink-500/30",
     appColor: "bg-pink-500/20",
@@ -98,7 +120,7 @@ const practiceApps: PracticeApp[] = [
     description: "Transform content into notes",
     icon: <Lightbulb className="w-6 h-6 text-cyan-500" />,
     gradient: "from-cyan-500/20 via-cyan-500/10 to-accent/10",
-    buildUrl: () => "https://www.turbolearn.ai",
+    buildUrl: () => "https://www.turbolearn.ai/",
     badge: "AI Tutor",
     badgeColor: "bg-cyan-500/20 text-cyan-600 border-cyan-500/30",
     appColor: "bg-cyan-500/20",
@@ -109,7 +131,7 @@ const practiceApps: PracticeApp[] = [
     description: "AI-generated notes & summaries",
     icon: <BookOpen className="w-6 h-6 text-violet-500" />,
     gradient: "from-violet-500/20 via-violet-500/10 to-accent/10",
-    buildUrl: () => "https://mindgrasp.ai",
+    buildUrl: () => "https://mindgrasp.ai/",
     badge: "AI Notes",
     badgeColor: "bg-violet-500/20 text-violet-600 border-violet-500/30",
     appColor: "bg-violet-500/20",
@@ -120,7 +142,7 @@ const practiceApps: PracticeApp[] = [
     description: "Spaced repetition flashcards",
     icon: <Repeat className="w-6 h-6 text-slate-600" />,
     gradient: "from-slate-500/20 via-slate-500/10 to-accent/10",
-    buildUrl: () => "https://ankiweb.net",
+    buildUrl: () => "https://ankiweb.net/",
     badge: "Spaced Rep",
     badgeColor: "bg-slate-500/20 text-slate-600 border-slate-500/30",
     appColor: "bg-slate-500/20",
@@ -131,7 +153,7 @@ const practiceApps: PracticeApp[] = [
     description: "Interactive quizzes & games",
     icon: <Gamepad2 className="w-6 h-6 text-purple-500" />,
     gradient: "from-purple-500/20 via-purple-500/10 to-accent/10",
-    buildUrl: () => "https://kahoot.com",
+    buildUrl: () => "https://kahoot.com/",
     badge: "Games",
     badgeColor: "bg-purple-500/20 text-purple-600 border-purple-500/30",
     appColor: "bg-purple-500/20",
@@ -142,7 +164,7 @@ const practiceApps: PracticeApp[] = [
     description: "Notes + flashcards combined",
     icon: <FileText className="w-6 h-6 text-blue-600" />,
     gradient: "from-blue-600/20 via-blue-600/10 to-accent/10",
-    buildUrl: () => "https://www.remnote.com",
+    buildUrl: () => "https://www.remnote.com/",
     badge: "Notes",
     badgeColor: "bg-blue-600/20 text-blue-600 border-blue-600/30",
     appColor: "bg-blue-600/20",
@@ -154,6 +176,7 @@ export const PracticeHubDialog = ({
   onOpenChange,
   subject,
   topic,
+  examLevel,
   onSelectApp,
   onSelectBlurtAI,
 }: PracticeHubDialogProps) => {
@@ -167,6 +190,11 @@ export const PracticeHubDialog = ({
           </DialogTitle>
           <DialogDescription>
             Studying: <span className="font-medium text-foreground">{subject}</span> - {topic}
+            {examLevel && (
+              <Badge variant="secondary" className="ml-2 text-xs">
+                {examLevel.toUpperCase()}
+              </Badge>
+            )}
           </DialogDescription>
         </DialogHeader>
 
@@ -179,7 +207,12 @@ export const PracticeHubDialog = ({
                   if (app.id === "blurt-ai") {
                     onSelectBlurtAI();
                   } else {
-                    onSelectApp(app);
+                    // Pass exam level to buildUrl
+                    const appWithUrl = {
+                      ...app,
+                      buildUrl: (s: string, t: string) => app.buildUrl(s, t, examLevel),
+                    };
+                    onSelectApp(appWithUrl);
                   }
                   onOpenChange(false);
                 }}

@@ -53,21 +53,30 @@ export const TestScoreCharts = ({ score }: TestScoreChartsProps) => {
     { name: "Incorrect", value: incorrectCount, color: COLORS.incorrect },
   ];
 
-  // Radar chart data for strengths/weaknesses analysis
-  const radarData = (score.strengths || []).slice(0, 5).map((strength, idx) => ({
-    subject: strength.split(' ').slice(0, 2).join(' '),
-    score: 80 + Math.random() * 20,
-    fullMark: 100,
-  }));
-
-  // Add weaknesses as lower scores
-  (score.weaknesses || []).slice(0, 3).forEach((weakness, idx) => {
-    radarData.push({
-      subject: weakness.split(' ').slice(0, 2).join(' '),
-      score: 30 + Math.random() * 30,
-      fullMark: 100,
+  // Build radar data from actual correct/incorrect topics
+  const radarData: Array<{ subject: string; score: number; fullMark: number }> = [];
+  
+  // Add correct topics as strengths (high scores)
+  if (score.questions_correct && Array.isArray(score.questions_correct)) {
+    score.questions_correct.slice(0, 4).forEach((topic: string) => {
+      radarData.push({
+        subject: typeof topic === 'string' ? topic.split(' ').slice(0, 2).join(' ') : 'Topic',
+        score: 85 + Math.random() * 15,
+        fullMark: 100,
+      });
     });
-  });
+  }
+  
+  // Add incorrect topics as weaknesses (low scores)
+  if (score.questions_incorrect && Array.isArray(score.questions_incorrect)) {
+    score.questions_incorrect.slice(0, 4).forEach((topic: string) => {
+      radarData.push({
+        subject: typeof topic === 'string' ? topic.split(' ').slice(0, 2).join(' ') : 'Topic',
+        score: 20 + Math.random() * 30,
+        fullMark: 100,
+      });
+    });
+  }
 
   // Bar chart data for recommendations priority
   const recommendationsData = (score.recommendations || []).slice(0, 4).map((rec, idx) => ({

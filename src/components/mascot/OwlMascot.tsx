@@ -26,7 +26,7 @@ export type OwlType =
 
 interface OwlMascotProps {
   type: OwlType;
-  size?: "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl";
+  size?: "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl" | "4xl" | "5xl";
   animate?: boolean;
   className?: string;
   glow?: boolean;
@@ -47,12 +47,14 @@ const owlImages: Record<OwlType, string> = {
 
 const sizeClasses: Record<string, string> = {
   xs: "w-12 h-12",
-  sm: "w-16 h-16",
-  md: "w-28 h-28",
-  lg: "w-40 h-40",
-  xl: "w-52 h-52",
-  "2xl": "w-64 h-64",
-  "3xl": "w-72 h-72",
+  sm: "w-20 h-20",
+  md: "w-32 h-32",
+  lg: "w-48 h-48",
+  xl: "w-64 h-64",
+  "2xl": "w-80 h-80",
+  "3xl": "w-96 h-96",
+  "4xl": "w-[28rem] h-[28rem]",
+  "5xl": "w-[32rem] h-[32rem]",
 };
 
 export const OwlMascot = ({ type, size = "md", animate = true, className = "", glow = false }: OwlMascotProps) => {
