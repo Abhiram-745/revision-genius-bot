@@ -257,7 +257,7 @@ export const TimetableEditDialog = ({
           Edit & Regenerate
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-3xl h-[85vh] flex flex-col overflow-hidden p-0">
+      <DialogContent className="max-w-3xl max-h-[90vh] h-[85vh] flex flex-col overflow-hidden p-0 mx-2 sm:mx-auto">
         <DialogHeader className="px-6 pt-6 pb-4 flex-shrink-0">
           <DialogTitle>Edit Timetable Configuration</DialogTitle>
           <DialogDescription>
@@ -277,14 +277,14 @@ export const TimetableEditDialog = ({
           )}
 
           <Tabs defaultValue="dates" className="h-full flex flex-col">
-            <TabsList className="grid w-full grid-cols-7 flex-shrink-0">
-              <TabsTrigger value="dates">Dates</TabsTrigger>
-              <TabsTrigger value="subjects">Subjects</TabsTrigger>
-              <TabsTrigger value="topics">Topics</TabsTrigger>
-              <TabsTrigger value="tests">Tests</TabsTrigger>
-              <TabsTrigger value="homework">Homework</TabsTrigger>
-              <TabsTrigger value="preferences">Preferences</TabsTrigger>
-              <TabsTrigger value="timing">Timing</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-4 sm:grid-cols-7 flex-shrink-0 h-auto gap-1 p-1">
+              <TabsTrigger value="dates" className="text-xs sm:text-sm px-2 py-1.5">Dates</TabsTrigger>
+              <TabsTrigger value="subjects" className="text-xs sm:text-sm px-2 py-1.5">Subjects</TabsTrigger>
+              <TabsTrigger value="topics" className="text-xs sm:text-sm px-2 py-1.5">Topics</TabsTrigger>
+              <TabsTrigger value="tests" className="text-xs sm:text-sm px-2 py-1.5">Tests</TabsTrigger>
+              <TabsTrigger value="homework" className="text-xs sm:text-sm px-2 py-1.5">Homework</TabsTrigger>
+              <TabsTrigger value="preferences" className="text-xs sm:text-sm px-2 py-1.5">Prefs</TabsTrigger>
+              <TabsTrigger value="timing" className="text-xs sm:text-sm px-2 py-1.5">Timing</TabsTrigger>
             </TabsList>
 
             <div className="flex-1 min-h-0 mt-4">

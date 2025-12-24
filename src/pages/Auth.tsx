@@ -307,7 +307,7 @@ const Auth = () => {
           </Button>
         </div>
         
-        <Card className="w-full max-w-md shadow-lg max-h-[90vh] overflow-y-auto">
+        <Card className="w-full max-w-md shadow-lg max-h-[90vh] overflow-y-auto" style={{ WebkitOverflowScrolling: 'touch' }}>
           <CardHeader className="space-y-1 text-center">
             <div className="flex justify-center mb-6">
               <VistaraLogo size="xl" animate />
@@ -331,10 +331,15 @@ const Auth = () => {
                     <Input
                       id="signin-email"
                       type="email"
+                      inputMode="email"
+                      autoComplete="email"
+                      autoCapitalize="none"
+                      autoCorrect="off"
                       placeholder="you@example.com"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       required
+                      className="text-base"
                     />
                   </div>
                   <div className="space-y-2">
@@ -427,10 +432,15 @@ const Auth = () => {
                     <Input
                       id="signup-email"
                       type="email"
+                      inputMode="email"
+                      autoComplete="email"
+                      autoCapitalize="none"
+                      autoCorrect="off"
                       placeholder="you@example.com"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       required
+                      className="text-base"
                     />
                   </div>
                   <div className="space-y-2">
