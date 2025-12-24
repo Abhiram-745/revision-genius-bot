@@ -626,60 +626,7 @@ const Landing = () => {
           </div>
         </section>
 
-        {/* Testimonial */}
-        <section className="py-24 px-6">
-          <div className="max-w-3xl mx-auto">
-            <motion.div initial={{
-            opacity: 0,
-            scale: 0.95,
-            y: 30
-          }} whileInView={{
-            opacity: 1,
-            scale: 1,
-            y: 0
-          }} viewport={{
-            once: true
-          }} transition={{
-            type: "spring",
-            stiffness: 100
-          }} className="relative bg-gradient-to-br from-card to-primary/5 border border-border rounded-3xl p-10 shadow-xl">
-              <div className="absolute top-0 right-0 w-48 h-48 bg-primary/10 rounded-full blur-3xl" />
-              <div className="relative z-10">
-                <div className="flex gap-1 mb-6">
-                  {[...Array(5)].map((_, i) => <motion.div key={i} initial={{
-                  opacity: 0,
-                  scale: 0,
-                  rotate: -180
-                }} whileInView={{
-                  opacity: 1,
-                  scale: 1,
-                  rotate: 0
-                }} viewport={{
-                  once: true
-                }} transition={{
-                  delay: i * 0.1,
-                  type: "spring",
-                  stiffness: 200
-                }}>
-                      <Star className="w-5 h-5 fill-accent text-accent" />
-                    </motion.div>)}
-                </div>
-                <blockquote className="text-xl md:text-2xl font-display font-medium leading-relaxed mb-6">
-                  "I had 6 tests in 3 weeks and felt completely lost. Now I have a plan that actually works around my football practice!"
-                </blockquote>
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white font-bold text-lg">
-                    A
-                  </div>
-                  <div>
-                    <p className="font-semibold">Abhiram K.</p>
-                    <p className="text-sm text-muted-foreground">Year 10 Student</p>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          </div>
-        </section>
+        {/* Removed standalone Abhiram K. testimonial - kept in SuccessStoriesSection */}
 
         {/* Success Stories Section */}
         <SuccessStoriesSection />

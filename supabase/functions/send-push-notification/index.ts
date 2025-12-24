@@ -312,8 +312,8 @@ serve(async (req) => {
     const notificationPayload = {
       title: title || 'Vistara',
       body: body || 'You have a notification',
-      icon: '/favicon.png',
-      badge: '/favicon.png',
+      icon: 'https://ectqhxyfuvssgyouwjnp.supabase.co/storage/v1/object/public/assets/vistara-mascot-logo.png',
+      badge: 'https://ectqhxyfuvssgyouwjnp.supabase.co/storage/v1/object/public/assets/vistara-mascot-logo.png',
       tag: tag || 'general',
       data: data || { url: '/' }
     };
