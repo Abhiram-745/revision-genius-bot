@@ -256,27 +256,44 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (error) throw error;
       
       if (data.user) {
+        // Clear any previous wizard progress to ensure fresh start
+        localStorage.removeItem('timetable-wizard-progress');
+        
         // Create profile with full name
         await supabase.from('profiles').upsert({
           id: data.user.id,
           full_name: fullName || null
         });
 
-        // Check if within free premium offer period (before Jan 27, 2025)
+        // ALWAYS grant 2 months of free premium for new signups during offer period
         const offerEndDate = new Date('2025-01-27T23:59:59Z');
         const now = new Date();
         
         if (now < offerEndDate) {
-          // Grant 2 months of free premium for early signups
-          const premiumExpiry = new Date();
-          premiumExpiry.setMonth(premiumExpiry.getMonth() + 2);
+          // Check if user already has premium grant (shouldn't happen for new users)
+          const { data: existingGrant } = await supabase
+            .from('premium_grants')
+            .select('id')
+            .eq('user_id', data.user.id)
+            .maybeSingle();
           
-          await supabase.from('premium_grants').insert({
-            user_id: data.user.id,
-            grant_type: 'early_signup_offer',
-            starts_at: new Date().toISOString(),
-            expires_at: premiumExpiry.toISOString()
-          });
+          if (!existingGrant) {
+            const premiumExpiry = new Date();
+            premiumExpiry.setMonth(premiumExpiry.getMonth() + 2);
+            
+            const { error: premiumError } = await supabase.from('premium_grants').insert({
+              user_id: data.user.id,
+              grant_type: 'early_signup_offer',
+              starts_at: new Date().toISOString(),
+              expires_at: premiumExpiry.toISOString()
+            });
+            
+            if (premiumError) {
+              console.error('Error granting premium:', premiumError);
+            } else {
+              console.log('Premium granted to new user:', data.user.id);
+            }
+          }
         }
 
         setUser(data.user);

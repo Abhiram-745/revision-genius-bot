@@ -3,6 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Calendar, Clock, Trash2, Plus, BookOpen, CalendarDays, Info } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
@@ -23,6 +24,7 @@ interface Event {
   date: string;
   startTime: string;
   endTime: string;
+  isAllDay?: boolean;
 }
 
 interface AgendaStepProps {
@@ -44,8 +46,9 @@ const AgendaStep = ({ subjects, homeworks, setHomeworks, events, setEvents }: Ag
   const [newEvent, setNewEvent] = useState<Partial<Event>>({
     title: "",
     date: "",
-    startTime: "",
-    endTime: "",
+    startTime: "09:00",
+    endTime: "17:00",
+    isAllDay: false,
   });
 
   const addHomework = () => {
@@ -74,22 +77,28 @@ const AgendaStep = ({ subjects, homeworks, setHomeworks, events, setEvents }: Ag
   };
 
   const addEvent = () => {
-    if (newEvent.title && newEvent.date && newEvent.startTime && newEvent.endTime) {
+    if (newEvent.title && newEvent.date) {
+      // For all-day events, set times to span the whole day
+      const startTime = newEvent.isAllDay ? "00:00" : (newEvent.startTime || "09:00");
+      const endTime = newEvent.isAllDay ? "23:59" : (newEvent.endTime || "17:00");
+      
       setEvents([
         ...events,
         {
           id: crypto.randomUUID(),
           title: newEvent.title,
           date: newEvent.date,
-          startTime: newEvent.startTime,
-          endTime: newEvent.endTime,
+          startTime,
+          endTime,
+          isAllDay: newEvent.isAllDay,
         },
       ]);
       setNewEvent({
         title: "",
         date: "",
-        startTime: "",
-        endTime: "",
+        startTime: "09:00",
+        endTime: "17:00",
+        isAllDay: false,
       });
     }
   };
@@ -244,7 +253,7 @@ const AgendaStep = ({ subjects, homeworks, setHomeworks, events, setEvents }: Ag
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-sm truncate">{event.title}</p>
                     <p className="text-xs text-muted-foreground">
-                      {format(new Date(event.date), "MMM d, yyyy")} • {event.startTime} - {event.endTime}
+                      {format(new Date(event.date), "MMM d, yyyy")} • {event.isAllDay ? "All day" : `${event.startTime} - ${event.endTime}`}
                     </p>
                   </div>
                   <Button
@@ -300,33 +309,45 @@ const AgendaStep = ({ subjects, homeworks, setHomeworks, events, setEvents }: Ag
                 </PopoverContent>
               </Popover>
             </div>
-            <div className="grid grid-cols-2 gap-2">
-              <div className="space-y-1.5">
-                <Label className="text-xs">Start</Label>
-                <Input
-                  type="time"
-                  value={newEvent.startTime || ""}
-                  onChange={(e) => setNewEvent({ ...newEvent, startTime: e.target.value })}
-                  className="h-9"
+            <div className="space-y-1.5">
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id="all-day-event"
+                  checked={newEvent.isAllDay || false}
+                  onCheckedChange={(checked) => setNewEvent({ ...newEvent, isAllDay: !!checked })}
                 />
-              </div>
-              <div className="space-y-1.5">
-                <Label className="text-xs">End</Label>
-                <Input
-                  type="time"
-                  value={newEvent.endTime || ""}
-                  onChange={(e) => setNewEvent({ ...newEvent, endTime: e.target.value })}
-                  className="h-9"
-                />
+                <Label htmlFor="all-day-event" className="text-xs cursor-pointer">All-day event</Label>
               </div>
             </div>
+            {!newEvent.isAllDay && (
+              <div className="grid grid-cols-2 gap-2 sm:col-span-2">
+                <div className="space-y-1.5">
+                  <Label className="text-xs">Start Time</Label>
+                  <Input
+                    type="time"
+                    value={newEvent.startTime || "09:00"}
+                    onChange={(e) => setNewEvent({ ...newEvent, startTime: e.target.value })}
+                    className="h-9"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs">End Time</Label>
+                  <Input
+                    type="time"
+                    value={newEvent.endTime || "17:00"}
+                    onChange={(e) => setNewEvent({ ...newEvent, endTime: e.target.value })}
+                    className="h-9"
+                  />
+                </div>
+              </div>
+            )}
           </div>
           <Button
             onClick={addEvent}
             className="w-full mt-3"
             variant="secondary"
             size="sm"
-            disabled={!newEvent.title || !newEvent.date || !newEvent.startTime || !newEvent.endTime}
+            disabled={!newEvent.title || !newEvent.date}
           >
             <Plus className="mr-2 h-4 w-4" />
             Add Event

@@ -123,7 +123,7 @@ const handler = async (req: Request): Promise<Response> => {
     
     console.log("[send-verification-code] Using from address:", fromAddress);
 
-    // Send email via Resend with green-orange gradient theme
+    // Send email via Resend with green-yellow gradient theme matching Vistara brand
     const { data, error: emailError } = await resend.emails.send({
       from: fromAddress,
       to: [email],
@@ -135,28 +135,30 @@ const handler = async (req: Request): Promise<Response> => {
           <meta charset="utf-8">
           <meta name="viewport" content="width=device-width, initial-scale=1.0">
         </head>
-        <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #fefce8;">
-          <div style="background: linear-gradient(135deg, #22c55e 0%, #f97316 100%); padding: 30px; border-radius: 16px 16px 0 0; text-align: center;">
-            <img src="https://ectqhxyfuvssgyouwjnp.supabase.co/storage/v1/object/public/assets/vistara-mascot-logo.png" alt="Vistara Owl" style="width: 80px; height: 80px; margin-bottom: 12px; border-radius: 50%; background: white; padding: 8px;" />
-            <h1 style="color: white; margin: 0; font-size: 32px; font-weight: 700; text-shadow: 0 2px 4px rgba(0,0,0,0.1);">Vistara</h1>
+        <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f0fdf4;">
+          <div style="background: linear-gradient(135deg, #84cc16 0%, #eab308 50%, #a3e635 100%); padding: 30px; border-radius: 16px 16px 0 0; text-align: center;">
+            <div style="width: 80px; height: 80px; margin: 0 auto 12px; border-radius: 50%; background: white; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+              <img src="https://ectqhxyfuvssgyouwjnp.supabase.co/storage/v1/object/public/avatars/owl-waving-book.png" alt="Vistara Owl" style="width: 60px; height: 60px; object-fit: contain;" onerror="this.style.display='none'" />
+            </div>
+            <h1 style="color: white; margin: 0; font-size: 32px; font-weight: 700; text-shadow: 0 2px 4px rgba(0,0,0,0.15);">Vistara</h1>
             <p style="color: rgba(255,255,255,0.95); margin: 8px 0 0 0; font-size: 16px;">Email Verification</p>
           </div>
           
-          <div style="background: linear-gradient(180deg, #ffffff 0%, #fef9c3 100%); padding: 35px; border-radius: 0 0 16px 16px; border: 1px solid #fde047; border-top: none;">
-            <p style="margin-top: 0; font-size: 18px; color: #365314;">Hi there! 👋</p>
-            <p style="color: #4d7c0f; font-size: 15px;">You're almost ready to start using <strong>Vistara</strong>. Enter this verification code to complete your sign-up:</p>
+          <div style="background: linear-gradient(180deg, #ffffff 0%, #fefce8 100%); padding: 35px; border-radius: 0 0 16px 16px; border: 1px solid #bef264; border-top: none;">
+            <p style="margin-top: 0; font-size: 18px; color: #3f6212;">Hi there! 👋</p>
+            <p style="color: #4d7c0f; font-size: 15px;">You're almost ready to start using <strong style="color: #65a30d;">Vistara</strong>. Enter this verification code to complete your sign-up:</p>
             
-            <div style="background: linear-gradient(135deg, #dcfce7 0%, #fef3c7 100%); border: 3px solid #22c55e; border-radius: 12px; padding: 24px; text-align: center; margin: 28px 0; box-shadow: 0 4px 12px rgba(34, 197, 94, 0.2);">
-              <span style="font-size: 42px; font-weight: bold; letter-spacing: 10px; background: linear-gradient(135deg, #16a34a 0%, #ea580c 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">${code}</span>
+            <div style="background: linear-gradient(135deg, #ecfccb 0%, #fef9c3 100%); border: 3px solid #84cc16; border-radius: 12px; padding: 24px; text-align: center; margin: 28px 0; box-shadow: 0 4px 12px rgba(132, 204, 22, 0.25);">
+              <span style="font-size: 42px; font-weight: bold; letter-spacing: 10px; color: #4d7c0f;">${code}</span>
             </div>
             
             <p style="color: #65a30d; font-size: 14px;">⏱️ This code expires in <strong>10 minutes</strong>.</p>
             <p style="color: #84cc16; font-size: 14px;">If you didn't request this code, you can safely ignore this email.</p>
             
-            <hr style="border: none; border-top: 2px solid #fde047; margin: 28px 0;">
+            <hr style="border: none; border-top: 2px solid #d9f99d; margin: 28px 0;">
             
             <p style="color: #a3a3a3; font-size: 12px; margin-bottom: 0; text-align: center;">
-              © ${new Date().getFullYear()} <span style="color: #22c55e; font-weight: 600;">Vistara</span> - AI-Powered Revision Timetables
+              © ${new Date().getFullYear()} <span style="color: #84cc16; font-weight: 600;">Vistara</span> - AI-Powered Revision Timetables
             </p>
           </div>
         </body>
