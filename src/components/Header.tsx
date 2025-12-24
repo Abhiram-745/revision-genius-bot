@@ -37,7 +37,6 @@ import { Separator } from "@/components/ui/separator";
 import VistaraLogo from "./VistaraLogo";
 import { NotificationToggle } from "./NotificationToggle";
 import InstallAppButton from "./InstallAppButton";
-import { OwlMascot } from "./mascot/OwlMascot";
 
 interface HeaderProps {
   onNewTimetable?: () => void;
@@ -344,12 +343,11 @@ const Header = ({ onNewTimetable }: HeaderProps) => {
     <>
       <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/80 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60">
         <div className="container flex h-14 md:h-16 items-center justify-between px-3 md:px-4">
-          {/* Logo with Mascot */}
+          {/* Logo */}
           <div
             onClick={() => navigate("/")}
             className="flex items-center gap-1.5 md:gap-2 cursor-pointer hover:opacity-80 transition-opacity group"
           >
-            <OwlMascot type="waving" size="xs" animate={false} className="transition-transform duration-300 group-hover:scale-110" />
             <VistaraLogo size="sm" className="md:hidden transition-transform duration-300 group-hover:scale-110" />
             <VistaraLogo size="md" className="hidden md:block transition-transform duration-300 group-hover:scale-110" />
             <span className="text-lg md:text-xl font-bold gradient-text hidden sm:block">Vistara</span>

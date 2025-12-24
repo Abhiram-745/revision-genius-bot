@@ -281,7 +281,7 @@ const Dashboard = () => {
                 <motion.div variants={itemVariants} className="lg:col-span-2">
                   <Card className="overflow-hidden border-0 shadow-xl bg-gradient-to-br from-primary/10 via-card to-accent/10 h-full">
                     <CardContent className="p-4 sm:p-6">
-                      <div className="flex flex-col sm:flex-row items-center gap-4">
+                      <div className="flex flex-col sm:flex-row items-center justify-center gap-6 text-center sm:text-left">
                         <motion.div
                           animate={floatAnimation}
                           className="flex-shrink-0 relative"
@@ -293,11 +293,11 @@ const Dashboard = () => {
                           <img 
                             src={wavingOwl} 
                             alt="Owl mascot" 
-                            className="w-24 h-24 sm:w-28 sm:h-28 object-contain relative z-10 drop-shadow-lg" 
+                            className="w-28 h-28 sm:w-32 sm:h-32 object-contain relative z-10 drop-shadow-lg" 
                           />
                         </motion.div>
                         
-                        <div className="flex-1 text-center sm:text-left space-y-3">
+                        <div className="flex flex-col items-center sm:items-start space-y-3">
                           <div>
                             <motion.h1 
                               className="text-2xl sm:text-4xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text"
@@ -634,11 +634,11 @@ const Dashboard = () => {
 
                 {/* Achievements */}
                 <motion.div variants={itemVariants}>
-                  <Card className="h-full bg-gradient-to-br from-amber-500/5 via-card to-yellow-500/5 border-amber-500/10">
+                  <Card className="h-full bg-gradient-to-br from-primary/5 via-card to-accent/5 border-primary/10">
                     <CardContent className="p-4">
                       <div className="flex items-center gap-3 mb-4">
                         <motion.div 
-                          className="p-2 rounded-xl bg-gradient-to-br from-amber-500 to-yellow-500"
+                          className="p-2 rounded-xl bg-gradient-to-br from-primary to-accent"
                           animate={{ rotate: [0, 10, -10, 0] }}
                           transition={{ duration: 3, repeat: Infinity }}
                         >
@@ -655,11 +655,11 @@ const Dashboard = () => {
                           {achievements.map((ach, i) => (
                             <motion.div 
                               key={ach.id}
-                              className="flex items-center gap-3 p-2 rounded-lg bg-muted/30"
+                              className="flex items-center gap-3 p-2 rounded-lg bg-gradient-to-r from-primary/5 to-accent/5 border border-primary/10"
                               initial={{ opacity: 0, scale: 0.8 }}
                               animate={{ opacity: 1, scale: 1 }}
                               transition={{ delay: 0.1 * i }}
-                              whileHover={{ scale: 1.02 }}
+                              whileHover={{ scale: 1.02, backgroundColor: "hsl(var(--primary) / 0.1)" }}
                             >
                               <span className="text-2xl">{ach.achievements?.icon || "🏆"}</span>
                               <div className="flex-1 min-w-0">
@@ -690,11 +690,11 @@ const Dashboard = () => {
 
                 {/* Quick Actions */}
                 <motion.div variants={itemVariants}>
-                  <Card className="h-full bg-gradient-to-br from-cyan-500/5 via-card to-blue-500/5 border-cyan-500/10">
+                  <Card className="h-full bg-gradient-to-br from-primary/5 via-card to-accent/5 border-primary/10">
                     <CardContent className="p-4">
                       <div className="flex items-center gap-3 mb-4">
                         <motion.div 
-                          className="p-2 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-500"
+                          className="p-2 rounded-xl bg-gradient-to-br from-primary to-accent"
                           animate={pulseAnimation}
                         >
                           <Zap className="h-8 w-8 text-white" />
@@ -707,10 +707,10 @@ const Dashboard = () => {
                       
                       <div className="grid grid-cols-2 gap-2">
                         {[
-                          { icon: Calendar, label: "Calendar", path: "/agenda", color: "from-violet-500 to-purple-500" },
-                          { icon: Brain, label: "Practice", path: "/practice", color: "from-pink-500 to-rose-500" },
-                          { icon: GraduationCap, label: "Groups", path: "/groups", color: "from-emerald-500 to-teal-500" },
-                          { icon: BarChart3, label: "Insights", path: "/insights", color: "from-amber-500 to-orange-500" },
+                          { icon: Calendar, label: "Calendar", path: "/agenda", color: "from-primary to-primary/80" },
+                          { icon: Brain, label: "Practice", path: "/practice", color: "from-secondary to-secondary/80" },
+                          { icon: GraduationCap, label: "Groups", path: "/groups", color: "from-primary to-accent" },
+                          { icon: BarChart3, label: "Insights", path: "/insights", color: "from-accent to-accent/80" },
                         ].map((action, i) => (
                           <motion.div
                             key={action.label}
@@ -719,7 +719,7 @@ const Dashboard = () => {
                           >
                             <Button
                               variant="outline"
-                              className="w-full h-auto py-4 flex flex-col gap-2 hover:bg-muted/50"
+                              className="w-full h-auto py-4 flex flex-col gap-2 hover:bg-primary/5 border-primary/20"
                               onClick={() => navigate(action.path)}
                             >
                               <div className={`p-2 rounded-lg bg-gradient-to-br ${action.color}`}>
