@@ -6,6 +6,7 @@ import { BrowserRouter } from "react-router-dom";
 import { PWAInstallPrompt } from "./components/PWAInstallPrompt";
 import AnimatedRoutes from "./components/AnimatedRoutes";
 import { AuthProvider } from "./context/AuthContext";
+import FreePremiumGift from "./components/FreePremiumGift";
 
 const queryClient = new QueryClient();
 
@@ -18,6 +19,7 @@ const App = () => (
         <PWAInstallPrompt />
         <BrowserRouter>
           <AnimatedRoutes />
+          <FreePremiumGift />
         </BrowserRouter>
       </TooltipProvider>
     </AuthProvider>
