@@ -152,7 +152,7 @@ const ProfileSettings = ({ open, onOpenChange, onProfileUpdate }: ProfileSetting
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[450px] animate-scale-in max-h-[85vh] flex flex-col">
+      <DialogContent className="sm:max-w-[450px] animate-scale-in max-h-[85vh] h-[85vh] sm:h-auto flex flex-col">
         <DialogHeader className="flex-shrink-0">
           <DialogTitle className="flex items-center gap-3 text-xl">
             <div className="p-2 bg-gradient-primary rounded-lg">
@@ -165,7 +165,7 @@ const ProfileSettings = ({ open, onOpenChange, onProfileUpdate }: ProfileSetting
           </DialogDescription>
         </DialogHeader>
         
-        <ScrollArea className="flex-1 pr-4">
+        <ScrollArea className="flex-1 overflow-y-auto pr-4 -mr-4" style={{ WebkitOverflowScrolling: 'touch' }}>
           <div className="space-y-6 py-6">
             <div className="flex flex-col items-center gap-4">
               <div className="relative">

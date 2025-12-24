@@ -162,21 +162,21 @@ Format your response as JSON with this structure:
   "overallSummary": "string"
 }`;
 
-    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
-    if (!LOVABLE_API_KEY) {
-      throw new Error("LOVABLE_API_KEY not configured");
+    const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
+    if (!openAIApiKey) {
+      throw new Error("OPENAI_API_KEY not configured");
     }
 
-    console.log('Calling Lovable AI...');
+    console.log('Calling OpenAI for insights...');
 
-    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: "POST",
       headers: { 
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${LOVABLE_API_KEY}`,
+        "Authorization": `Bearer ${openAIApiKey}`,
       },
       body: JSON.stringify({
-        model: "openai/gpt-5-nano",
+        model: "gpt-4o-mini",
         messages: [
           { 
             role: "system", 

@@ -132,10 +132,40 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [checkEmailVerified, checkBanStatus]);
 
+  // Grant premium for OAuth users (Google, etc.) who signed up during offer period
+  const grantOAuthPremium = async (userId: string) => {
+    const offerEndDate = new Date('2025-01-27T23:59:59Z');
+    const now = new Date();
+    
+    if (now >= offerEndDate) return;
+    
+    // Check if user already has premium grant
+    const { data: existingGrant } = await supabase
+      .from('premium_grants')
+      .select('id')
+      .eq('user_id', userId)
+      .maybeSingle();
+    
+    if (existingGrant) return; // Already has premium
+    
+    // Grant 1 year of free premium
+    const premiumExpiry = new Date();
+    premiumExpiry.setFullYear(premiumExpiry.getFullYear() + 1);
+    
+    await supabase.from('premium_grants').insert({
+      user_id: userId,
+      grant_type: 'early_signup_offer',
+      starts_at: new Date().toISOString(),
+      expires_at: premiumExpiry.toISOString()
+    });
+    
+    console.log('Premium granted to OAuth user:', userId);
+  };
+
   useEffect(() => {
     refreshUser();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       // Only synchronous state updates in callback to prevent deadlock
       if (session) {
         setUser(session.user);
@@ -154,6 +184,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setSession(null);
             setUser(null);
             return;
+          }
+          
+          // Grant premium for OAuth signups (event === 'SIGNED_IN' for first-time OAuth)
+          if (event === 'SIGNED_IN' && session.user.app_metadata?.provider !== 'email') {
+            await grantOAuthPremium(session.user.id);
           }
           
           checkEmailVerified(session.user.email || '');
