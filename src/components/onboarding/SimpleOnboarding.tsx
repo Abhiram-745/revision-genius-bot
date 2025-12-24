@@ -151,12 +151,12 @@ export const SimpleOnboarding = () => {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogContent className="max-w-md p-0 overflow-hidden border-0 bg-transparent shadow-none">
+      <DialogContent className="max-w-md p-0 border-0 bg-transparent shadow-none max-h-[90vh] overflow-y-auto scrollbar-hide">
         {/* Main card */}
         <motion.div 
           initial={{ opacity: 0, scale: 0.9, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
-          className="relative rounded-3xl overflow-hidden shadow-2xl"
+          className="relative rounded-3xl shadow-2xl my-4"
         >
           {/* Gradient border effect */}
           <div className="absolute inset-0 bg-gradient-to-br from-yellow-400 via-lime-400 to-emerald-500 rounded-3xl" />

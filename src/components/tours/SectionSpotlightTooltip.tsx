@@ -1,7 +1,7 @@
 import { TooltipRenderProps } from "react-joyride";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
-import { X } from "lucide-react";
+import { X, ChevronRight, ChevronLeft } from "lucide-react";
 import { useState } from "react";
 
 interface SectionSpotlightTooltipProps extends TooltipRenderProps {
@@ -17,6 +17,7 @@ const SectionSpotlightTooltip = ({
   primaryProps,
   tooltipProps,
   onDontShowAgain,
+  isLastStep,
 }: SectionSpotlightTooltipProps) => {
   const [dontShowAgain, setDontShowAgain] = useState(false);
 
@@ -76,16 +77,32 @@ const SectionSpotlightTooltip = ({
         </label>
       </div>
 
-      {/* Action button */}
-      <Button
-        onClick={handlePrimaryClick}
-        className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold py-3 rounded-xl shadow-lg"
-        style={{
-          boxShadow: "0 6px 20px hsla(190, 70%, 50%, 0.5)",
-        }}
-      >
-        Got it
-      </Button>
+      {/* Action buttons */}
+      <div className="flex items-center gap-2">
+        {index > 0 && (
+          <Button
+            variant="outline"
+            onClick={backProps.onClick}
+            className="flex-1 border-primary/30 hover:bg-primary/10"
+          >
+            <ChevronLeft className="h-4 w-4 mr-1" /> Back
+          </Button>
+        )}
+        
+        <Button
+          onClick={handlePrimaryClick}
+          className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold shadow-lg"
+          style={{
+            boxShadow: "0 6px 20px hsla(190, 70%, 50%, 0.5)",
+          }}
+        >
+          {continuous && !isLastStep ? (
+            <>Next <ChevronRight className="h-4 w-4 ml-1" /></>
+          ) : (
+            "Got it"
+          )}
+        </Button>
+      </div>
     </div>
   );
 };

@@ -10,7 +10,7 @@ interface SectionSpotlightProps {
 
 const SectionSpotlight = ({ sectionKey, onComplete, sectionSteps }: SectionSpotlightProps) => {
   const [run, setRun] = useState(false);
-  const [currentStep, setCurrentStep] = useState<Step[]>([]);
+  const [steps, setSteps] = useState<Step[]>([]);
   const [stepIndex, setStepIndex] = useState(0);
   const dontShowAgainRef = useRef(false);
 
@@ -28,19 +28,26 @@ const SectionSpotlight = ({ sectionKey, onComplete, sectionSteps }: SectionSpotl
 
   useEffect(() => {
     if (sectionKey && sectionSteps[sectionKey]) {
-      const step = {
-        ...sectionSteps[sectionKey],
+      // Convert record to array of steps to enable navigation
+      const allSteps = Object.values(sectionSteps).map(step => ({
+        ...step,
         placement: 'auto' as const,
         disableScrolling: false,
         spotlightPadding: 8,
-      };
-      setCurrentStep([step]);
-      setStepIndex(0);
-      dontShowAgainRef.current = false;
-      setTimeout(() => setRun(true), 200);
+      }));
+      
+      // Find index of current sectionKey
+      const keys = Object.keys(sectionSteps);
+      const index = keys.indexOf(sectionKey);
+      
+      if (index !== -1) {
+        setSteps(allSteps);
+        setStepIndex(index);
+        dontShowAgainRef.current = false;
+        setTimeout(() => setRun(true), 200);
+      }
     } else {
       setRun(false);
-      setCurrentStep([]);
     }
   }, [sectionKey, sectionSteps]);
 
@@ -49,14 +56,17 @@ const SectionSpotlight = ({ sectionKey, onComplete, sectionSteps }: SectionSpotl
   }, []);
 
   const handleCallback = (data: CallBackProps) => {
-    const { status, type, action } = data;
+    const { status, type, action, index } = data;
     
+    // Update step index if changed
+    if (type === EVENTS.STEP_AFTER || type === EVENTS.TARGET_NOT_FOUND) {
+        setStepIndex(index + (action === ACTIONS.PREV ? -1 : 1));
+    }
+
     const shouldClose = 
       type === EVENTS.TOUR_END ||
-      type === EVENTS.TARGET_NOT_FOUND ||
       action === ACTIONS.CLOSE ||
       action === ACTIONS.SKIP ||
-      action === ACTIONS.NEXT ||
       status === STATUS.FINISHED || 
       status === STATUS.SKIPPED;
     
@@ -68,16 +78,16 @@ const SectionSpotlight = ({ sectionKey, onComplete, sectionSteps }: SectionSpotl
     }
   };
 
-  if (!sectionKey || currentStep.length === 0) return null;
+  if (!sectionKey || steps.length === 0) return null;
 
   return (
     <Joyride
-      steps={currentStep}
+      steps={steps}
       run={run}
       stepIndex={stepIndex}
-      continuous={false}
-      showProgress={false}
-      showSkipButton={false}
+      continuous={true}
+      showProgress={true}
+      showSkipButton={true}
       disableOverlayClose={false}
       disableCloseOnEsc={false}
       hideCloseButton={true}
