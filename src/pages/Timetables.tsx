@@ -9,7 +9,7 @@ import TimetableList from "@/components/TimetableList";
 import OnboardingWizard from "@/components/OnboardingWizard";
 import PageTransition from "@/components/PageTransition";
 import { motion } from "framer-motion";
-import owlStudying from "@/assets/owl-studying.png";
+import studyingOwl from "@/assets/studying-owl.png";
 import owlChecklist from "@/assets/owl-checklist.png";
 import owlFolder from "@/assets/owl-folder.png";
 
@@ -60,7 +60,7 @@ const Timetables = () => {
         
         {/* Floating mascots */}
         <motion.img 
-          src={owlStudying}
+          src={studyingOwl}
           alt=""
           className="absolute top-32 right-8 w-24 h-24 opacity-30"
           animate={{ y: [0, -10, 0] }}
