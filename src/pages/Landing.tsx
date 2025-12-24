@@ -638,7 +638,7 @@ const Landing = () => {
         <BeforeAfterSection />
 
         {/* Personal Tutor / BlurtAI Integration Section */}
-        <PersonalTutorSection onTryClick={() => setShowComingSoon(true)} />
+        <PersonalTutorSection onTryClick={() => navigate("/auth")} />
 
         {/* Pricing Section with Enhanced Hover */}
         <section className="py-24 px-6">
