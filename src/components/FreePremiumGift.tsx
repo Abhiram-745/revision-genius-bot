@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { Gift, Crown, Users, Sparkles, Copy, Check, ArrowRight, ArrowLeft, TrendingUp, CheckCircle2, Youtube, Video, Instagram, Loader2, XCircle, Clock } from "lucide-react";
+import { Gift, Crown, Users, Sparkles, Copy, Check, ArrowRight, ArrowLeft, TrendingUp, CheckCircle2, Youtube, Video, Instagram, Loader2, XCircle, Clock, Bell } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -24,6 +24,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
+import owlWaving from "@/assets/waving-owl.png";
 
 type DialogStep = "main" | "referral" | "referralStats" | "ambassador" | "ambassadorSubmit" | "ambassadorStats";
 type Platform = "youtube" | "tiktok" | "instagram";
@@ -43,6 +44,7 @@ const FreePremiumGift = () => {
   const [submitting, setSubmitting] = useState(false);
   const [submissionPlatform, setSubmissionPlatform] = useState<Platform>("youtube");
   const [submissionUrl, setSubmissionUrl] = useState<string>("");
+  const [notificationCount, setNotificationCount] = useState(0);
 
   // Public pages where the gift should NOT appear
   const publicPages = ["/", "/auth"];
@@ -166,7 +168,11 @@ const FreePremiumGift = () => {
       if (!error && userSubmissions) {
         setSubmissions(userSubmissions);
         const approved = userSubmissions.filter((s: any) => s.status === "approved").length;
+        const rejected = userSubmissions.filter((s: any) => s.status === "rejected").length;
+        const pending = userSubmissions.filter((s: any) => s.status === "pending").length;
         setApprovedVideos(approved);
+        // Count rejected submissions as notifications (user should be aware)
+        setNotificationCount(rejected + pending);
       }
     } catch (err) {
       console.error("Error fetching ambassador data:", err);
@@ -269,6 +275,13 @@ const FreePremiumGift = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, user?.id, isAuthenticated, isPublicPage]);
 
+  // Fetch notification count on mount
+  useEffect(() => {
+    if (user && isAuthenticated && !isPublicPage) {
+      fetchAmbassadorData();
+    }
+  }, [user?.id, isAuthenticated, isPublicPage]);
+
   // Only show on authenticated pages - early return AFTER all hooks
   if (!isAuthenticated || isPublicPage || !user) {
     return null;
@@ -294,6 +307,12 @@ const FreePremiumGift = () => {
               <div className="relative bg-background border-2 border-primary rounded-full p-3 shadow-lg hover:shadow-xl transition-shadow">
                 <Gift className="h-6 w-6 text-primary" />
               </div>
+              {/* Notification badge */}
+              {notificationCount > 0 && (
+                <div className="absolute -bottom-1 -left-1 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center shadow-md">
+                  {notificationCount}
+                </div>
+              )}
             </div>
             {/* Animated sparkles */}
             <motion.div

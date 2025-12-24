@@ -4,7 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus, Play, ChevronRight, Users, Target, Zap, Calendar, BookOpen, Clock, Flame, TrendingUp, Award } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
+import { Plus, Play, ChevronRight, Users, Target, Zap, Calendar, BookOpen, Clock, Flame, TrendingUp, Award, CheckCircle, Search, ClipboardList } from "lucide-react";
 import { toast } from "sonner";
 import Header from "@/components/Header";
 import OnboardingWizard from "@/components/OnboardingWizard";
@@ -15,6 +16,14 @@ import { OwlMascot } from "@/components/mascot/OwlMascot";
 import { motion } from "framer-motion";
 import PremiumGrantNotification from "@/components/PremiumGrantNotification";
 import { format, isToday, parseISO } from "date-fns";
+
+// Import the new mascot/icon images
+import timerIcon from "@/assets/timer-icon.png";
+import checklistIcon from "@/assets/checklist-icon.png";
+import lightbulbIcon from "@/assets/lightbulb-icon.png";
+import magnifyingGlassIcon from "@/assets/magnifying-glass-icon.png";
+import notebookIcon from "@/assets/notebook-icon.png";
+import owlStudying from "@/assets/owl-studying.png";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -29,6 +38,9 @@ const Dashboard = () => {
   const [sessionsToday, setSessionsToday] = useState<any[]>([]);
   const [recentActivity, setRecentActivity] = useState<any[]>([]);
   const [achievements, setAchievements] = useState<any[]>([]);
+  const [homeworks, setHomeworks] = useState<any[]>([]);
+  const [events, setEvents] = useState<any[]>([]);
+  const [subjectProgress, setSubjectProgress] = useState<Record<string, number>>({});
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -54,15 +66,17 @@ const Dashboard = () => {
 
   const loadDashboardData = async (userId: string) => {
     try {
-      const [subjectsResult, timetablesResult, profileResult, streakResult, premiumResult, sessionsResult, activityResult, achievementsResult] = await Promise.all([
-        supabase.from("subjects").select("id").eq("user_id", userId).limit(1),
-        supabase.from("timetables").select("id, schedule").eq("user_id", userId).order("created_at", { ascending: false }).limit(1),
+      const [subjectsResult, timetablesResult, profileResult, streakResult, premiumResult, sessionsResult, activityResult, achievementsResult, homeworksResult, eventsResult] = await Promise.all([
+        supabase.from("subjects").select("id, name").eq("user_id", userId),
+        supabase.from("timetables").select("id, schedule, topics").eq("user_id", userId).order("created_at", { ascending: false }).limit(1),
         supabase.from("profiles").select("full_name").eq("id", userId).single(),
         supabase.from("study_streaks").select("*").eq("user_id", userId).order("date", { ascending: false }).limit(7),
         supabase.from("premium_grants").select("id, created_at").eq("user_id", userId).order("created_at", { ascending: false }).limit(1),
         supabase.from("study_sessions").select("*").eq("user_id", userId).gte("planned_start", new Date().toISOString().split('T')[0]).order("planned_start", { ascending: true }).limit(5),
         supabase.from("study_sessions").select("*").eq("user_id", userId).eq("status", "completed").order("actual_end", { ascending: false }).limit(5),
-        supabase.from("user_achievements").select("*, achievements(*)").eq("user_id", userId).order("unlocked_at", { ascending: false }).limit(3)
+        supabase.from("user_achievements").select("*, achievements(*)").eq("user_id", userId).order("unlocked_at", { ascending: false }).limit(3),
+        supabase.from("homeworks").select("*").eq("user_id", userId).eq("completed", false).order("due_date", { ascending: true }).limit(5),
+        supabase.from("events").select("*").eq("user_id", userId).gte("start_time", new Date().toISOString()).order("start_time", { ascending: true }).limit(5),
       ]);
       
       const hasSubjects = subjectsResult.data && subjectsResult.data.length > 0;
@@ -107,10 +121,32 @@ const Dashboard = () => {
         const todayStr = new Date().toISOString().split('T')[0];
         const todaySessions = schedule?.[todayStr] || [];
         setSessionsToday(todaySessions.filter((s: any) => s.type !== 'break').slice(0, 3));
+
+        // Calculate subject progress based on completed topics
+        const topics = timetablesResult.data[0].topics as any[] || [];
+        const subjectTopicCount: Record<string, { total: number; reviewed: number }> = {};
+        topics.forEach((topic: any) => {
+          const subjectName = subjectsResult.data?.find(s => s.id === topic.subject_id)?.name || "Unknown";
+          if (!subjectTopicCount[subjectName]) {
+            subjectTopicCount[subjectName] = { total: 0, reviewed: 0 };
+          }
+          subjectTopicCount[subjectName].total++;
+        });
+        
+        // Count reviewed topics from activity
+        const subjectProgressCalc: Record<string, number> = {};
+        Object.entries(subjectTopicCount).forEach(([subject, counts]) => {
+          subjectProgressCalc[subject] = counts.total > 0 
+            ? Math.round((activityResult.data?.filter(a => a.subject === subject).length || 0) / counts.total * 100) 
+            : 0;
+        });
+        setSubjectProgress(subjectProgressCalc);
       }
 
       setRecentActivity(activityResult.data || []);
       setAchievements(achievementsResult.data || []);
+      setHomeworks(homeworksResult.data || []);
+      setEvents(eventsResult.data || []);
       setHasData(hasSubjects || hasTimetables);
       setProfile(profileResult.data);
     } catch (error) {
@@ -139,6 +175,13 @@ const Dashboard = () => {
     return `You have ${sessionsToday.length} session${sessionsToday.length > 1 ? 's' : ''} planned today`;
   };
 
+  // Calculate overall exam readiness
+  const overallReadiness = useMemo(() => {
+    const values = Object.values(subjectProgress);
+    if (values.length === 0) return 0;
+    return Math.round(values.reduce((a, b) => a + b, 0) / values.length);
+  }, [subjectProgress]);
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -152,18 +195,18 @@ const Dashboard = () => {
 
   return (
     <PageTransition>
-      <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/20">
+      <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/10">
         <SimpleOnboarding />
         <Header onNewTimetable={() => setShowOnboarding(true)} />
 
-        <main className="max-w-5xl mx-auto px-4 sm:px-6 py-6 space-y-6">
+        <main className="max-w-5xl mx-auto px-4 sm:px-6 py-6 space-y-8">
           {!hasData && !showOnboarding ? (
             <motion.div 
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               className="flex flex-col items-center justify-center py-16 space-y-8"
             >
-              <OwlMascot type="waving" size="2xl" glow />
+              <img src={owlStudying} alt="Owl mascot" className="w-48 h-48 object-contain" />
               <div className="text-center space-y-3 max-w-md">
                 <h2 className="text-3xl font-bold">Welcome to Vistara!</h2>
                 <p className="text-muted-foreground text-lg">
@@ -189,8 +232,8 @@ const Dashboard = () => {
               onCancel={() => setShowOnboarding(false)}
             />
           ) : (
-            <div className="space-y-6">
-              {/* Hero Section - Floating Greeting Card */}
+            <div className="space-y-8">
+              {/* Hero Section - Floating Greeting Card (only floating element) */}
               <motion.div 
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -204,7 +247,7 @@ const Dashboard = () => {
                         transition={{ delay: 0.1, type: "spring" }}
                         className="flex-shrink-0"
                       >
-                        <OwlMascot type="happy" size="lg" glow />
+                        <img src={owlStudying} alt="Owl mascot" className="w-24 h-24 sm:w-28 sm:h-28 object-contain" />
                       </motion.div>
                       
                       <div className="flex-1 text-center sm:text-left space-y-3">
@@ -245,194 +288,247 @@ const Dashboard = () => {
                 </Card>
               </motion.div>
 
-              {/* Your Focus - Today Section */}
-              <motion.div
+              {/* FLAT SECTION: Today's Focus */}
+              <motion.section
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 }}
+                className="relative bg-gradient-to-br from-primary/5 via-transparent to-accent/5 rounded-3xl p-6 sm:p-8"
               >
-                <Card className="border shadow-sm">
-                  <CardHeader className="pb-3">
-                    <CardTitle className="flex items-center gap-2 text-lg">
-                      <Calendar className="h-5 w-5 text-primary" />
-                      Today's Focus
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
+                <div className="flex items-start gap-6">
+                  <img src={timerIcon} alt="Timer" className="w-20 h-20 sm:w-24 sm:h-24 object-contain flex-shrink-0" />
+                  <div className="flex-1 space-y-4">
+                    <div>
+                      <h2 className="text-xl sm:text-2xl font-bold text-foreground">Today's Focus</h2>
+                      <p className="text-muted-foreground text-sm">What should I study right now?</p>
+                    </div>
+                    
                     {sessionsToday.length > 0 ? (
                       <div className="space-y-3">
-                        {sessionsToday.map((session, i) => (
-                          <div key={i} className="flex items-center gap-4 p-3 rounded-xl bg-muted/50 hover:bg-muted transition-colors">
-                            <div className="p-2 rounded-lg bg-primary/10">
-                              <BookOpen className="h-4 w-4 text-primary" />
+                        {/* Highlight first session as "Up Next" */}
+                        <div className="p-4 rounded-xl bg-primary/10 border border-primary/20">
+                          <div className="flex items-center gap-2 text-xs text-primary font-medium mb-2">
+                            <Play className="h-3 w-3" />
+                            UP NEXT
+                          </div>
+                          <p className="font-semibold text-lg">{sessionsToday[0].subject}</p>
+                          {sessionsToday[0].topic && (
+                            <p className="text-sm text-muted-foreground">{sessionsToday[0].topic}</p>
+                          )}
+                          <div className="flex items-center gap-1 mt-2 text-sm text-muted-foreground">
+                            <Clock className="h-3.5 w-3.5" />
+                            <span>{sessionsToday[0].duration} minutes</span>
+                          </div>
+                        </div>
+                        
+                        {sessionsToday.slice(1).map((session, i) => (
+                          <div key={i} className="flex items-center gap-4 p-3 border-b border-border/50 last:border-0">
+                            <BookOpen className="h-4 w-4 text-muted-foreground" />
+                            <div className="flex-1">
+                              <p className="font-medium text-sm">{session.subject}</p>
+                              {session.topic && <p className="text-xs text-muted-foreground">{session.topic}</p>}
                             </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="font-medium truncate">{session.subject}</p>
-                              {session.topic && <p className="text-sm text-muted-foreground truncate">{session.topic}</p>}
-                            </div>
-                            <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                              <Clock className="h-3.5 w-3.5" />
-                              <span>{session.duration}m</span>
-                            </div>
+                            <span className="text-xs text-muted-foreground">{session.duration}m</span>
                           </div>
                         ))}
-                        <Button 
-                          variant="outline" 
-                          className="w-full gap-2" 
+                        
+                        <button 
                           onClick={() => navigate("/timetables")}
+                          className="text-sm text-primary hover:underline flex items-center gap-1"
                         >
-                          View Full Schedule
-                          <ChevronRight className="h-4 w-4" />
-                        </Button>
+                          View full schedule <ChevronRight className="h-4 w-4" />
+                        </button>
                       </div>
                     ) : (
-                      <div className="flex flex-col items-center py-8 gap-4">
-                        <OwlMascot type="folder" size="md" animate={false} />
-                        <div className="text-center">
-                          <p className="font-medium">No sessions today</p>
-                          <p className="text-sm text-muted-foreground">Create a timetable to get started</p>
-                        </div>
-                        <Button onClick={() => setShowOnboarding(true)} className="gap-2">
+                      <div className="py-6 text-center">
+                        <p className="text-muted-foreground mb-4">No sessions scheduled for today</p>
+                        <Button onClick={() => setShowOnboarding(true)} variant="outline" className="gap-2">
                           <Plus className="h-4 w-4" />
                           Create Timetable
                         </Button>
                       </div>
                     )}
-                  </CardContent>
-                </Card>
-              </motion.div>
+                  </div>
+                </div>
+              </motion.section>
 
-              {/* Progress Overview - Simplified */}
-              <motion.div
+              {/* FLAT SECTION: Exam Readiness Overview */}
+              <motion.section
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.15 }}
-                className="grid grid-cols-2 sm:grid-cols-4 gap-3"
+                className="relative bg-gradient-to-br from-emerald-500/5 via-transparent to-teal-500/5 rounded-3xl p-6 sm:p-8"
               >
-                {[
-                  { label: "This Week", value: `${weeklyHours}h`, icon: Clock, color: "text-blue-500" },
-                  { label: "Streak", value: streak || 0, icon: Flame, color: "text-orange-500" },
-                  { label: "Sessions", value: recentActivity.length, icon: Target, color: "text-emerald-500" },
-                  { label: "Achievements", value: achievements.length, icon: Award, color: "text-violet-500" },
-                ].map((stat, i) => (
-                  <Card key={i} className="p-4 border shadow-sm">
-                    <div className="flex items-center gap-3">
-                      <div className={`p-2 rounded-lg bg-muted ${stat.color}`}>
-                        <stat.icon className="h-4 w-4" />
+                <div className="flex items-start gap-6">
+                  <div className="flex flex-col gap-4">
+                    <img src={checklistIcon} alt="Checklist" className="w-16 h-16 sm:w-20 sm:h-20 object-contain" />
+                    <img src={magnifyingGlassIcon} alt="Analysis" className="w-14 h-14 sm:w-16 sm:h-16 object-contain opacity-70" />
+                  </div>
+                  <div className="flex-1 space-y-5">
+                    <div>
+                      <h2 className="text-xl sm:text-2xl font-bold text-foreground">Exam Readiness</h2>
+                      <p className="text-muted-foreground text-sm">How prepared are you for exams?</p>
+                    </div>
+                    
+                    {/* Overall Readiness Ring */}
+                    <div className="flex items-center gap-6">
+                      <div className="relative w-24 h-24">
+                        <svg className="w-full h-full transform -rotate-90">
+                          <circle
+                            cx="48"
+                            cy="48"
+                            r="42"
+                            stroke="hsl(var(--muted))"
+                            strokeWidth="8"
+                            fill="none"
+                          />
+                          <circle
+                            cx="48"
+                            cy="48"
+                            r="42"
+                            stroke="hsl(var(--primary))"
+                            strokeWidth="8"
+                            fill="none"
+                            strokeDasharray={`${overallReadiness * 2.64} 264`}
+                            strokeLinecap="round"
+                          />
+                        </svg>
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <span className="text-2xl font-bold">{overallReadiness}%</span>
+                        </div>
                       </div>
                       <div>
-                        <p className="text-xl font-bold">{stat.value}</p>
-                        <p className="text-xs text-muted-foreground">{stat.label}</p>
+                        <p className="font-semibold">Overall Readiness</p>
+                        <p className="text-sm text-muted-foreground">
+                          {overallReadiness < 30 ? "Just getting started" : 
+                           overallReadiness < 60 ? "Making good progress" : 
+                           overallReadiness < 80 ? "Almost there!" : "Excellent preparation!"}
+                        </p>
                       </div>
                     </div>
-                  </Card>
-                ))}
-              </motion.div>
 
-              {/* Quick Navigation */}
-              <motion.div
+                    {/* Subject Progress Bars */}
+                    <div className="space-y-3">
+                      {Object.entries(subjectProgress).slice(0, 4).map(([subject, progress]) => (
+                        <div key={subject} className="space-y-1">
+                          <div className="flex justify-between text-sm">
+                            <span className="font-medium">{subject}</span>
+                            <span className="text-muted-foreground">{progress}%</span>
+                          </div>
+                          <Progress value={progress} className="h-2" />
+                        </div>
+                      ))}
+                      {Object.keys(subjectProgress).length === 0 && (
+                        <p className="text-sm text-muted-foreground">Complete study sessions to track progress</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </motion.section>
+
+              {/* FLAT SECTION: Planning & Organisation */}
+              <motion.section
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}
-                className="grid grid-cols-2 sm:grid-cols-4 gap-3"
+                className="relative bg-gradient-to-br from-violet-500/5 via-transparent to-purple-500/5 rounded-3xl p-6 sm:p-8"
               >
-                {[
-                  { icon: Target, label: "Practice", path: "/practice", desc: "Test your knowledge" },
-                  { icon: TrendingUp, label: "Insights", path: "/insights", desc: "View analytics" },
-                  { icon: Calendar, label: "Calendar", path: "/calendar", desc: "Manage events" },
-                  { icon: Users, label: "Social", path: "/social", desc: "Study together" },
-                ].map((item, i) => (
-                  <Card 
-                    key={item.label}
-                    className="p-4 cursor-pointer hover:shadow-md hover:border-primary/30 transition-all group"
-                    onClick={() => navigate(item.path)}
-                  >
-                    <div className="flex flex-col gap-2">
-                      <div className="p-2 rounded-lg bg-primary/10 w-fit group-hover:bg-primary/20 transition-colors">
-                        <item.icon className="h-5 w-5 text-primary" />
-                      </div>
+                <div className="flex items-start gap-6">
+                  <img src={notebookIcon} alt="Notebook" className="w-20 h-20 sm:w-24 sm:h-24 object-contain flex-shrink-0" />
+                  <div className="flex-1 space-y-5">
+                    <div>
+                      <h2 className="text-xl sm:text-2xl font-bold text-foreground">Planning & Organisation</h2>
+                      <p className="text-muted-foreground text-sm">Everything school-related, clearly organised</p>
+                    </div>
+                    
+                    <div className="grid sm:grid-cols-2 gap-6">
+                      {/* Homework List */}
                       <div>
-                        <p className="font-semibold">{item.label}</p>
-                        <p className="text-xs text-muted-foreground">{item.desc}</p>
+                        <h3 className="font-semibold text-sm text-muted-foreground mb-3 flex items-center gap-2">
+                          <ClipboardList className="h-4 w-4" />
+                          HOMEWORK
+                        </h3>
+                        {homeworks.length > 0 ? (
+                          <div className="space-y-2">
+                            {homeworks.slice(0, 3).map((hw, i) => (
+                              <div key={hw.id} className="flex items-center gap-3 py-2 border-b border-border/30 last:border-0">
+                                <div className="flex-1 min-w-0">
+                                  <p className="font-medium text-sm truncate">{hw.title}</p>
+                                  <p className="text-xs text-muted-foreground">{hw.subject}</p>
+                                </div>
+                                <span className="text-xs px-2 py-1 rounded bg-muted">{format(new Date(hw.due_date), "MMM d")}</span>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="text-sm text-muted-foreground py-4">No homework due</p>
+                        )}
+                      </div>
+
+                      {/* Upcoming Events */}
+                      <div>
+                        <h3 className="font-semibold text-sm text-muted-foreground mb-3 flex items-center gap-2">
+                          <Calendar className="h-4 w-4" />
+                          UPCOMING
+                        </h3>
+                        {events.length > 0 ? (
+                          <div className="space-y-2">
+                            {events.slice(0, 3).map((event, i) => (
+                              <div key={event.id} className="flex items-center gap-3 py-2 border-b border-border/30 last:border-0">
+                                <div className="flex-1 min-w-0">
+                                  <p className="font-medium text-sm truncate">{event.title}</p>
+                                  <p className="text-xs text-muted-foreground">{format(new Date(event.start_time), "MMM d, h:mm a")}</p>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="text-sm text-muted-foreground py-4">No upcoming events</p>
+                        )}
                       </div>
                     </div>
-                  </Card>
-                ))}
-              </motion.div>
 
-              {/* Two Column - AI Insights & Recent Activity */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.25 }}
-                >
-                  <AIInsightsCard userId={user?.id || ""} />
-                </motion.div>
-
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.3 }}
-                >
-                  <Card className="border shadow-sm h-full">
-                    <CardHeader className="pb-3">
-                      <CardTitle className="flex items-center gap-2 text-lg">
-                        <Zap className="h-5 w-5 text-primary" />
-                        Recent Activity
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      {recentActivity.length > 0 ? (
-                        <div className="space-y-3">
-                          {recentActivity.slice(0, 4).map((activity, i) => (
-                            <div key={i} className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/50 transition-colors">
-                              <div className="w-2 h-2 rounded-full bg-emerald-500" />
-                              <div className="flex-1 min-w-0">
-                                <p className="text-sm font-medium truncate">{activity.subject}</p>
-                                <p className="text-xs text-muted-foreground">
-                                  {activity.actual_duration_minutes || activity.planned_duration_minutes}m completed
-                                </p>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <div className="flex flex-col items-center py-6 gap-3">
-                          <OwlMascot type="checklist" size="sm" animate={false} />
-                          <p className="text-sm text-muted-foreground text-center">
-                            Complete sessions to see your activity here
-                          </p>
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              </div>
-
-              {/* Bottom CTA */}
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.35 }}
-              >
-                <Card className="overflow-hidden bg-gradient-to-r from-primary/5 via-background to-accent/5 border shadow-sm">
-                  <CardContent className="p-5">
-                    <div className="flex items-center gap-4">
-                      <OwlMascot type="thumbsup" size="sm" animate={false} />
-                      <div className="flex-1">
-                        <p className="font-medium">Keep up the momentum!</p>
-                        <p className="text-sm text-muted-foreground">
-                          View detailed insights and track your progress over time.
-                        </p>
-                      </div>
-                      <Button variant="outline" className="gap-1 shrink-0" onClick={() => navigate("/insights")}>
-                        View Insights
-                        <ChevronRight className="h-4 w-4" />
+                    <div className="flex gap-3 pt-2">
+                      <Button variant="outline" size="sm" onClick={() => navigate("/agenda")} className="gap-2">
+                        <Calendar className="h-4 w-4" />
+                        Manage Calendar
                       </Button>
                     </div>
-                  </CardContent>
-                </Card>
+                  </div>
+                </div>
+              </motion.section>
+
+              {/* FLAT SECTION: AI Insights */}
+              <motion.section
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.25 }}
+                className="relative bg-gradient-to-br from-amber-500/5 via-transparent to-yellow-500/5 rounded-3xl p-6 sm:p-8"
+              >
+                <div className="flex items-start gap-6">
+                  <img src={lightbulbIcon} alt="Insights" className="w-20 h-20 sm:w-24 sm:h-24 object-contain flex-shrink-0" />
+                  <div className="flex-1">
+                    <AIInsightsCard userId={user?.id || ""} />
+                  </div>
+                </div>
+              </motion.section>
+
+              {/* Progress Footer - Minimal Stats */}
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+                className="flex justify-center gap-8 py-6 border-t border-border/30"
+              >
+                <div className="text-center">
+                  <p className="text-2xl font-bold text-foreground">{weeklyHours}h</p>
+                  <p className="text-xs text-muted-foreground">This Week</p>
+                </div>
+                <div className="w-px bg-border" />
+                <div className="text-center">
+                  <p className="text-2xl font-bold text-orange-500">{streak}</p>
+                  <p className="text-xs text-muted-foreground">Day Streak</p>
+                </div>
               </motion.div>
             </div>
           )}
