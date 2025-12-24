@@ -52,6 +52,12 @@ interface ActivityLog {
   total_keywords: number | null;
   session_type: string | null;
   ai_analysis: any;
+  confidence_level: number | null;
+  raw_data: {
+    activity_type?: string;
+    notes?: string;
+    app_name?: string;
+  } | null;
   created_at: string;
 }
 

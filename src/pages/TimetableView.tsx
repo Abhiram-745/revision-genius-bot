@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Calendar as CalendarIcon, Edit2, Users, Share2 } from "lucide-react";
+import { Calendar as CalendarIcon, Edit2, Users, Share2, SlidersHorizontal } from "lucide-react";
 import { toast } from "sonner";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Progress } from "@/components/ui/progress";
@@ -26,12 +26,14 @@ import { TopicResourcesPanel } from "@/components/TopicResourcesPanel";
 import { TopicReflectionDialog } from "@/components/TopicReflectionDialog";
 import { SessionReflectionDialog } from "@/components/SessionReflectionDialog";
 import { SessionTimer } from "@/components/SessionTimer";
-import { PracticeTypeDialog } from "@/components/PracticeTypeDialog";
+import { PracticeHubDialog, PracticeApp } from "@/components/PracticeHubDialog";
 import { BlurtAIPracticeSession } from "@/components/BlurtAIPracticeSession";
+import { UniversalPracticeSession } from "@/components/UniversalPracticeSession";
 import { StudyInsightsPanel } from "@/components/StudyInsightsPanel";
 import { ShareTimetableDialog } from "@/components/ShareTimetableDialog";
 import { DailyInsightsPanel } from "@/components/DailyInsightsPanel";
 import { TimetableHistoryDialog } from "@/components/TimetableHistoryDialog";
+import ManualTimetableEditor from "@/components/ManualTimetableEditor";
 import PageTransition from "@/components/PageTransition";
 
 interface TimetableSession {
@@ -86,7 +88,7 @@ const TimetableView = () => {
     index: number;
     session: TimetableSession;
   } | null>(null);
-  const [practiceTypeSession, setPracticeTypeSession] = useState<{
+  const [practiceHubSession, setPracticeHubSession] = useState<{
     date: string;
     index: number;
     session: TimetableSession;
@@ -96,10 +98,26 @@ const TimetableView = () => {
     index: number;
     session: TimetableSession;
   } | null>(null);
+  const [universalSession, setUniversalSession] = useState<{
+    date: string;
+    index: number;
+    session: TimetableSession;
+    app: PracticeApp;
+  } | null>(null);
   const [showReflectionAfterTimer, setShowReflectionAfterTimer] = useState(false);
   const [resourcesRefreshKey, setResourcesRefreshKey] = useState(0);
   const [showShareDialog, setShowShareDialog] = useState(false);
   const [showTour, setShowTour] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
+  const [manualEditDate, setManualEditDate] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) setUserId(user.id);
+    };
+    fetchUser();
+  }, []);
 
   useEffect(() => {
     if (id) {
@@ -499,11 +517,20 @@ const TimetableView = () => {
             
             return (
               <Card key={date} className="shadow-lg hover-lift">
-                <CardHeader>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="flex items-center gap-2">
                     <CalendarIcon className="h-5 w-5 text-primary" />
                     {format(dateObj, "EEEE, dd/MM/yyyy")}
                   </CardTitle>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setManualEditDate(date)}
+                    className="gap-1.5 text-muted-foreground hover:text-foreground"
+                  >
+                    <SlidersHorizontal className="w-4 h-4" />
+                    <span className="hidden sm:inline">Edit Schedule</span>
+                  </Button>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
@@ -588,7 +615,7 @@ const TimetableView = () => {
                                     size="sm"
                                     variant="default"
                                     data-tour={idx === 0 ? "session-start-btn" : undefined}
-                                    onClick={() => setPracticeTypeSession({ date, index: originalIdx, session })}
+                                    onClick={() => setPracticeHubSession({ date, index: originalIdx, session })}
                                   >
                                     Start
                                   </Button>
@@ -763,20 +790,23 @@ const TimetableView = () => {
         />
       )}
 
-      {/* Practice Type Selection Dialog */}
-      {practiceTypeSession && (
-        <PracticeTypeDialog
-          open={!!practiceTypeSession}
-          onOpenChange={(open) => !open && setPracticeTypeSession(null)}
-          subject={practiceTypeSession.session.subject}
-          topic={practiceTypeSession.session.topic}
+      {/* Practice Hub Selection Dialog */}
+      {practiceHubSession && (
+        <PracticeHubDialog
+          open={!!practiceHubSession}
+          onOpenChange={(open) => !open && setPracticeHubSession(null)}
+          subject={practiceHubSession.session.subject}
+          topic={practiceHubSession.session.topic}
           onSelectBlurtAI={() => {
-            setBlurtSession(practiceTypeSession);
-            setPracticeTypeSession(null);
+            setBlurtSession(practiceHubSession);
+            setPracticeHubSession(null);
           }}
-          onSelectOther={() => {
-            setTimerSession(practiceTypeSession);
-            setPracticeTypeSession(null);
+          onSelectApp={(app) => {
+            setUniversalSession({
+              ...practiceHubSession,
+              app,
+            });
+            setPracticeHubSession(null);
           }}
         />
       )}
@@ -795,6 +825,55 @@ const TimetableView = () => {
             setBlurtSession(null);
           }}
         />
+      )}
+
+      {/* Universal Practice Session */}
+      {universalSession && userId && (
+        <UniversalPracticeSession
+          open={!!universalSession}
+          onOpenChange={(open) => !open && setUniversalSession(null)}
+          appId={universalSession.app.id}
+          appName={universalSession.app.name}
+          appUrl={universalSession.app.buildUrl(universalSession.session.subject, universalSession.session.topic)}
+          appIcon={universalSession.app.icon}
+          appColor={universalSession.app.appColor}
+          subject={universalSession.session.subject}
+          topic={universalSession.session.topic}
+          supportsIframe={true}
+          userId={userId}
+          onComplete={async () => {
+            await toggleSessionComplete(universalSession.date, universalSession.index);
+            setUniversalSession(null);
+          }}
+        />
+      )}
+
+      {/* Manual Timetable Editor */}
+      {manualEditDate && timetable?.schedule[manualEditDate] && (
+        <Dialog open={!!manualEditDate} onOpenChange={(open) => !open && setManualEditDate(null)}>
+          <DialogContent className="max-w-3xl max-h-[90vh] overflow-auto">
+            <ManualTimetableEditor
+              sessions={timetable.schedule[manualEditDate]}
+              date={format(new Date(manualEditDate), "EEEE, dd/MM/yyyy")}
+              onSave={async (updatedSessions) => {
+                const updatedSchedule = { ...timetable.schedule, [manualEditDate]: updatedSessions };
+                const { error } = await supabase
+                  .from("timetables")
+                  .update({ schedule: updatedSchedule as any })
+                  .eq("id", id);
+                
+                if (error) {
+                  toast.error("Failed to update schedule");
+                } else {
+                  setTimetable({ ...timetable, schedule: updatedSchedule });
+                  toast.success("Schedule updated!");
+                }
+                setManualEditDate(null);
+              }}
+              onCancel={() => setManualEditDate(null)}
+            />
+          </DialogContent>
+        </Dialog>
       )}
 
     </div>

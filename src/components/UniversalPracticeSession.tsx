@@ -84,11 +84,12 @@ export const UniversalPracticeSession = ({
   const handleStartSession = () => {
     setSessionStarted(true);
     setSessionStart(new Date());
-    
-    // Open in new tab if doesn't support iframe
-    if (!supportsIframe) {
-      window.open(appUrl, "_blank", "noopener,noreferrer");
-    }
+    setIframeError(false);
+    // Always try iframe first - user can open in new tab if needed
+  };
+
+  const handleOpenNewTab = () => {
+    window.open(appUrl, "_blank", "noopener,noreferrer");
   };
 
   const handleEndSession = async () => {
@@ -237,7 +238,7 @@ export const UniversalPracticeSession = ({
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => window.open(appUrl, "_blank")}
+                  onClick={handleOpenNewTab}
                   className="gap-1"
                 >
                   <ExternalLink className="w-3 h-3" />
@@ -255,23 +256,34 @@ export const UniversalPracticeSession = ({
                 </div>
                 <h3 className="text-xl font-semibold mb-2">Ready to Study with {appName}?</h3>
                 <p className="text-muted-foreground max-w-md mb-6">
-                  {supportsIframe 
-                    ? `Click "Start Session" to begin. ${appName} will load here and your study time will be tracked.`
-                    : `Click "Start Session" to open ${appName} in a new tab. Your study time will be tracked here.`
-                  }
+                  Click "Start Session" to begin. {appName} will load here and your study time will be tracked.
                 </p>
                 <Button onClick={handleStartSession} size="lg" className="gap-2 bg-gradient-to-r from-primary to-accent hover:opacity-90">
                   <Clock className="w-5 h-5" />
                   Start Study Session
                 </Button>
               </div>
-            ) : supportsIframe && !iframeError ? (
+            ) : !iframeError ? (
               <iframe
                 src={appUrl}
                 className="w-full h-full border-0"
                 title={appName}
-                sandbox="allow-same-origin allow-scripts allow-popups allow-forms allow-top-navigation"
+                sandbox="allow-same-origin allow-scripts allow-popups allow-forms allow-top-navigation allow-modals"
+                allow="accelerometer; camera; encrypted-media; geolocation; gyroscope; microphone; payment"
+                referrerPolicy="no-referrer-when-downgrade"
                 onError={handleIframeError}
+                onLoad={(e) => {
+                  // Check if iframe loaded correctly (some sites block iframes)
+                  try {
+                    const iframe = e.target as HTMLIFrameElement;
+                    // If we can't access contentDocument, it might be blocked
+                    if (!iframe.contentDocument && !iframe.contentWindow) {
+                      setIframeError(true);
+                    }
+                  } catch {
+                    // Cross-origin error - iframe loaded but we can't access it (this is fine)
+                  }
+                }}
               />
             ) : (
               <div className="flex flex-col items-center justify-center h-full p-8 text-center">
@@ -286,9 +298,14 @@ export const UniversalPracticeSession = ({
                   {appIcon}
                 </div>
                 
-                <h3 className="text-xl font-semibold mb-2">Studying with {appName}</h3>
+                <h3 className="text-xl font-semibold mb-2">
+                  {iframeError ? `${appName} couldn't load in iframe` : `Studying with ${appName}`}
+                </h3>
                 <p className="text-muted-foreground max-w-md mb-4">
-                  {appName} is open in another tab. When you're done studying, come back here and click "End Session" to log your progress.
+                  {iframeError 
+                    ? `This site doesn't allow embedding. Click below to open ${appName} in a new tab while we track your time here.`
+                    : `${appName} is open in another tab. When you're done studying, come back here and click "End Session" to log your progress.`
+                  }
                 </p>
                 
                 <div className="flex items-center gap-2 p-3 bg-amber-500/10 rounded-lg text-amber-700 dark:text-amber-400 mb-6">
@@ -296,14 +313,14 @@ export const UniversalPracticeSession = ({
                   <span className="text-sm">Keep this window open to track your study time</span>
                 </div>
                 
-                <div className="flex gap-3">
+                <div className="flex gap-3 flex-wrap justify-center">
                   <Button
                     variant="outline"
-                    onClick={() => window.open(appUrl, "_blank")}
+                    onClick={handleOpenNewTab}
                     className="gap-2"
                   >
                     <ExternalLink className="w-4 h-4" />
-                    Reopen {appName}
+                    {iframeError ? `Open ${appName}` : `Reopen ${appName}`}
                   </Button>
                   <Button onClick={handleEndSession} variant="destructive" className="gap-2">
                     <Square className="w-4 h-4" />
