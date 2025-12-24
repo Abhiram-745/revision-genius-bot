@@ -68,7 +68,10 @@ export const StudyArchetypeCard = ({ userId }: StudyArchetypeCardProps) => {
   const shineX = useSpring(useTransform(mouseX, [-0.5, 0.5], [0, 100]), shineSpringConfig);
   const shineY = useSpring(useTransform(mouseY, [-0.5, 0.5], [0, 100]), shineSpringConfig);
 
-  // Create multiple shine effects for holographic look
+  // Glow intensity based on hover
+  const glowIntensity = useSpring(0, { stiffness: 300, damping: 30 });
+
+  // Create all transforms at top level (not inside JSX)
   const shineBackground = useTransform(
     [shineX, shineY],
     ([x, y]) =>
@@ -86,8 +89,20 @@ export const StudyArchetypeCard = ({ userId }: StudyArchetypeCardProps) => {
         rgba(255,0,150,0.15) 100%)`
   );
 
-  // Glow intensity based on hover
-  const glowIntensity = useSpring(0, { stiffness: 300, damping: 30 });
+  const sparkleBackground = useTransform(
+    [shineX, shineY],
+    ([x, y]) =>
+      `conic-gradient(from ${Number(x) * 3.6}deg at ${x}% ${y}%, 
+        rgba(255,255,255,0.8) 0deg, 
+        transparent 60deg, 
+        rgba(255,255,255,0.4) 120deg, 
+        transparent 180deg,
+        rgba(255,255,255,0.6) 240deg,
+        transparent 300deg,
+        rgba(255,255,255,0.8) 360deg)`
+  );
+
+  const glowOpacity = useTransform(glowIntensity, [0, 1], [0.3, 0.7]);
 
   useEffect(() => {
     determineArchetype();
@@ -173,6 +188,9 @@ export const StudyArchetypeCard = ({ userId }: StudyArchetypeCardProps) => {
     glowIntensity.set(0);
   };
 
+  // Get current glow color (use default if archetype not loaded yet)
+  const currentGlowColor = archetype?.glowColor || "rgba(34, 197, 94, 0.6)";
+
   if (loading) {
     return (
       <div className="flex justify-center">
@@ -205,8 +223,8 @@ export const StudyArchetypeCard = ({ userId }: StudyArchetypeCardProps) => {
           <motion.div
             className="absolute -inset-4 rounded-[28px] blur-xl transition-opacity duration-300"
             style={{
-              background: archetype.glowColor,
-              opacity: useTransform(glowIntensity, [0, 1], [0.3, 0.7]),
+              background: currentGlowColor,
+              opacity: glowOpacity,
             }}
           />
 
@@ -216,7 +234,7 @@ export const StudyArchetypeCard = ({ userId }: StudyArchetypeCardProps) => {
             style={{
               boxShadow: `
                 0 25px 50px -12px rgba(0, 0, 0, 0.4),
-                0 0 30px ${archetype.glowColor}
+                0 0 30px ${currentGlowColor}
               `,
             }}
           >
@@ -253,18 +271,7 @@ export const StudyArchetypeCard = ({ userId }: StudyArchetypeCardProps) => {
             <motion.div
               className="absolute inset-0 rounded-[20px] opacity-0 group-hover:opacity-60 pointer-events-none transition-opacity duration-200 mix-blend-soft-light"
               style={{
-                background: useTransform(
-                  [shineX, shineY],
-                  ([x, y]) =>
-                    `conic-gradient(from ${Number(x) * 3.6}deg at ${x}% ${y}%, 
-                      rgba(255,255,255,0.8) 0deg, 
-                      transparent 60deg, 
-                      rgba(255,255,255,0.4) 120deg, 
-                      transparent 180deg,
-                      rgba(255,255,255,0.6) 240deg,
-                      transparent 300deg,
-                      rgba(255,255,255,0.8) 360deg)`
-                ),
+                background: sparkleBackground,
               }}
             />
 
