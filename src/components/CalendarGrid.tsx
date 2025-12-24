@@ -356,10 +356,14 @@ const CalendarItemCard = ({ item, compact = false }: { item: CalendarItem, compa
 
   const getColors = () => {
     switch (item.type) {
-      case "session": return "bg-primary/10 border-primary/20 text-primary-dark hover:bg-primary/15";
-      case "homework": return "bg-purple-500/10 border-purple-500/20 text-purple-700 dark:text-purple-300 hover:bg-purple-500/15";
-      case "event": return "bg-destructive/10 border-destructive/20 text-destructive hover:bg-destructive/15";
-      default: return "bg-muted border-border text-muted-foreground";
+      case "session": 
+        return "bg-primary/15 border-primary/30 text-primary-dark dark:text-primary-foreground hover:bg-primary/25 shadow-sm";
+      case "homework": 
+        return "bg-violet-500/15 border-violet-500/30 text-violet-700 dark:text-violet-300 hover:bg-violet-500/25 shadow-sm";
+      case "event": 
+        return "bg-destructive/15 border-destructive/30 text-destructive dark:text-red-300 hover:bg-destructive/25 shadow-sm";
+      default: 
+        return "bg-muted border-border text-muted-foreground hover:bg-muted/80";
     }
   };
 

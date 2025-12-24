@@ -677,7 +677,7 @@ const Dashboard = () => {
                       <Button 
                         variant="ghost" 
                         size="sm"
-                        onClick={() => navigate("/activity")}
+                        onClick={() => navigate("/insights")}
                         className="w-full mt-3"
                       >
                         View All <ChevronRight className="h-4 w-4" />

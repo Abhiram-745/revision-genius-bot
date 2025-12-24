@@ -47,7 +47,6 @@ export const AnimatedRoutes = () => {
         <Route path="/practice" element={<Practice />} />
         <Route path="/pmt" element={<PMT />} />
         <Route path="/quizlet" element={<Quizlet />} />
-        <Route path="/activity" element={<Activity />} />
         <Route path="/reflections" element={<Reflections />} />
         <Route path="/timetable/:id" element={<TimetableView />} />
         <Route path="/import-account" element={<ImportAccount />} />

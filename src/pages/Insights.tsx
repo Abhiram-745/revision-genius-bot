@@ -154,29 +154,7 @@ const Insights = () => {
   const avgFocusLevel = reflections.length > 0
     ? Math.round(reflections.reduce((acc, r) => acc + (r.reflection_data.focusLevel || 0), 0) / reflections.length)
     : 0;
-  // Filter out general practice sessions (null scores) and 0 scores from the average calculation
-  const scoredActivities = activities.filter(a => a.score_percentage !== null && a.score_percentage > 0);
-  const avgScore = scoredActivities.length > 0
-    ? Math.round(scoredActivities.reduce((acc, a) => acc + (a.score_percentage || 0), 0) / scoredActivities.length)
-    : 0;
   const totalPracticeTime = activities.reduce((acc, a) => acc + a.duration_seconds, 0);
-
-  const recentActivity = [
-    ...reflections.slice(0, 5).map(r => ({
-      type: 'reflection' as const,
-      date: new Date(r.session_date),
-      subject: r.subject,
-      topic: r.topic,
-      data: r
-    })),
-    ...activities.slice(0, 5).map(a => ({
-      type: 'practice' as const,
-      date: new Date(a.created_at),
-      subject: a.subject_name,
-      topic: a.topic_name,
-      data: a
-    }))
-  ].sort((a, b) => b.date.getTime() - a.date.getTime()).slice(0, 6);
 
   return (
     <PageTransition>
@@ -250,22 +228,14 @@ const Insights = () => {
             </div>
 
             <Tabs defaultValue="overview" className="w-full">
-              <TabsList className="grid w-full grid-cols-5 mb-4 sm:mb-6 h-auto p-1">
+              <TabsList className="grid w-full grid-cols-3 mb-4 sm:mb-6 h-auto p-1">
                 <TabsTrigger value="overview" className="gap-1.5 text-xs sm:text-sm py-2">
                   <BarChart3 className="h-3.5 w-3.5 hidden sm:inline" />
-                  Overview
-                </TabsTrigger>
-                <TabsTrigger value="scores" className="gap-1.5 text-xs sm:text-sm py-2">
-                  <Trophy className="h-3.5 w-3.5 hidden sm:inline" />
-                  Scores
+                  Overview & Scores
                 </TabsTrigger>
                 <TabsTrigger value="reflections" className="gap-1.5 text-xs sm:text-sm py-2">
                   <BookOpen className="h-3.5 w-3.5 hidden sm:inline" />
                   Reflections
-                </TabsTrigger>
-                <TabsTrigger value="practice" className="gap-1.5 text-xs sm:text-sm py-2">
-                  <Activity className="h-3.5 w-3.5 hidden sm:inline" />
-                  Practice
                 </TabsTrigger>
                 <TabsTrigger value="analysis" className="gap-1.5 text-xs sm:text-sm py-2">
                   <Sparkles className="h-3.5 w-3.5 hidden sm:inline" />
@@ -331,64 +301,20 @@ const Insights = () => {
                   </Card>
                 </div>
 
-                {/* Recent Activity */}
-                <Card>
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-base sm:text-lg flex items-center gap-2">
-                      <Clock className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
-                      Recent Activity
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    {recentActivity.length === 0 ? (
-                      <p className="text-muted-foreground text-center py-8 text-sm">No activity yet. Start studying!</p>
-                    ) : (
-                      <div className="space-y-2 sm:space-y-3">
-                        {recentActivity.map((item, idx) => (
-                          <div key={idx} className="flex items-center gap-3 p-2.5 sm:p-3 bg-muted/30 rounded-lg hover:bg-muted/50 transition-colors">
-                            <div className={`p-1.5 sm:p-2 rounded-lg ${item.type === 'reflection' ? 'bg-primary/10' : 'bg-secondary/10'}`}>
-                              {item.type === 'reflection' ? (
-                                <BookOpen className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary" />
-                              ) : (
-                                <Activity className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-secondary" />
-                              )}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium truncate">{item.subject} – {item.topic}</p>
-                              <p className="text-xs text-muted-foreground">
-                                {format(item.date, "d MMM, h:mm a")}
-                              </p>
-                            </div>
-                            {item.type === 'reflection' ? (
-                              <Badge variant="secondary" className="text-xs">
-                                {(item.data as Reflection).reflection_data.focusLevel || 0}%
-                              </Badge>
-                            ) : (
-                              <Badge variant="outline" className="text-xs">
-                                {(item.data as ActivityLog).score_percentage !== null ? `${(item.data as ActivityLog).score_percentage}%` : '—'}
-                              </Badge>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              </TabsContent>
-
-              {/* Test Scores Tab */}
-              <TabsContent value="scores" className="space-y-4 sm:space-y-6">
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-                  <div>
-                    <h2 className="text-lg sm:text-xl font-semibold flex items-center gap-2">
-                      <TrendingUp className="h-5 w-5 text-primary" />
-                      Test Scores & Analysis
-                    </h2>
-                    <p className="text-xs sm:text-sm text-muted-foreground">Track results and get AI insights</p>
+                {/* Test Scores Section */}
+                <div className="space-y-4">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                    <div>
+                      <h2 className="text-lg sm:text-xl font-semibold flex items-center gap-2">
+                        <TrendingUp className="h-5 w-5 text-primary" />
+                        Test Scores & Analysis
+                      </h2>
+                      <p className="text-xs sm:text-sm text-muted-foreground">Track results and get AI insights</p>
+                    </div>
+                    {userId && <TestScoreEntry userId={userId} onScoreAdded={() => setScoresRefresh(r => r + 1)} />}
                   </div>
-                  {userId && <TestScoreEntry userId={userId} onScoreAdded={() => setScoresRefresh(r => r + 1)} />}
+                  {userId && <TestScoresList userId={userId} refresh={scoresRefresh} />}
                 </div>
-                {userId && <TestScoresList userId={userId} refresh={scoresRefresh} />}
               </TabsContent>
 
               {/* Reflections Tab */}
@@ -444,82 +370,6 @@ const Insights = () => {
                           <p className="text-[10px] text-muted-foreground">
                             {format(new Date(reflection.session_date), "d MMM yyyy")}
                           </p>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                )}
-              </TabsContent>
-
-              {/* Practice Tab */}
-              <TabsContent value="practice" className="space-y-4 sm:space-y-6">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-lg sm:text-xl font-semibold">Practice Sessions</h2>
-                  <Badge variant="outline">{activities.length} sessions</Badge>
-                </div>
-
-                {/* Practice Stats */}
-                <div className="grid grid-cols-3 gap-3 sm:gap-4">
-                  <Card>
-                    <CardContent className="pt-4 sm:pt-6 text-center">
-                      <p className="text-2xl sm:text-3xl font-bold text-primary">{activities.length}</p>
-                      <p className="text-[10px] sm:text-xs text-muted-foreground">Sessions</p>
-                    </CardContent>
-                  </Card>
-                  <Card>
-                    <CardContent className="pt-4 sm:pt-6 text-center">
-                      <p className="text-2xl sm:text-3xl font-bold text-secondary">{formatDuration(totalPracticeTime)}</p>
-                      <p className="text-[10px] sm:text-xs text-muted-foreground">Total Time</p>
-                    </CardContent>
-                  </Card>
-                  <Card>
-                    <CardContent className="pt-4 sm:pt-6 text-center">
-                      <p className="text-2xl sm:text-3xl font-bold text-green-600">{avgScore}%</p>
-                      <p className="text-[10px] sm:text-xs text-muted-foreground">Avg Score</p>
-                    </CardContent>
-                  </Card>
-                </div>
-
-                {activities.length === 0 ? (
-                  <Card>
-                    <CardContent className="text-center py-12">
-                      <Activity className="h-12 w-12 mx-auto text-muted-foreground/40 mb-4" />
-                      <h3 className="text-base font-semibold mb-2">No practice sessions yet</h3>
-                      <p className="text-sm text-muted-foreground mb-4">Start practicing to track progress</p>
-                      <Button onClick={() => navigate("/practice")} size="sm">
-                        <Sparkles className="h-4 w-4 mr-2" />
-                        Start Practicing
-                      </Button>
-                    </CardContent>
-                  </Card>
-                ) : (
-                  <div className="space-y-2 sm:space-y-3">
-                    {activities.slice(0, 10).map((activity) => (
-                      <Card key={activity.id} className="hover:bg-muted/30 transition-colors">
-                        <CardContent className="py-3 sm:py-4">
-                          <div className="flex items-center justify-between gap-3">
-                            <div className="flex items-center gap-3">
-                              <div className="p-2 bg-secondary/10 rounded-lg">
-                                <Activity className="h-4 w-4 sm:h-5 sm:w-5 text-secondary" />
-                              </div>
-                              <div>
-                                <p className="text-sm font-medium">{activity.subject_name} – {activity.topic_name}</p>
-                                <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                                  <Clock className="h-3 w-3" />
-                                  <span>{formatDuration(activity.duration_seconds)}</span>
-                                  <span>•</span>
-                                  <span>{format(new Date(activity.created_at), "d MMM")}</span>
-                                </div>
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              {activity.score_percentage !== null && (
-                                <Badge variant={activity.score_percentage >= 70 ? "default" : "secondary"}>
-                                  {activity.score_percentage}%
-                                </Badge>
-                              )}
-                            </div>
-                          </div>
                         </CardContent>
                       </Card>
                     ))}

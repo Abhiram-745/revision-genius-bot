@@ -419,6 +419,7 @@ export const StudyArchetypeCard = ({ userId }: StudyArchetypeCardProps) => {
       
       <div className="perspective-1000" style={{ perspective: "1200px" }}>
         <motion.div
+          key={archetype.type}
           ref={cardRef}
           onMouseMove={handleMouseMove}
           onMouseLeave={handleMouseLeave}
