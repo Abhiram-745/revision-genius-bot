@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { motion, useScroll, useTransform, useInView, useSpring } from "framer-motion";
 import { useRef, useEffect, useState } from "react";
-import { Calendar, Brain, Target, Users, Clock, Sparkles, ArrowRight, CheckCircle2, Star, Heart, Zap, Laptop, TrendingUp, Award, BookOpen, RefreshCw, Shield, Rocket, BarChart3, MessageSquare, ChevronUp, MousePointer, Gift, X } from "lucide-react";
+import { Calendar, Brain, Target, Users, Clock, Sparkles, ArrowRight, CheckCircle2, Star, Heart, Zap, Laptop, TrendingUp, Award, BookOpen, RefreshCw, Shield, Rocket, BarChart3, MessageSquare, ChevronUp, MousePointer, Gift, X, Download, Smartphone } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import PageTransition from "@/components/PageTransition";
 import TypewriterText from "@/components/landing/TypewriterText";
@@ -33,6 +33,7 @@ import owlWithBook from "@/assets/owl-with-book.png";
 import pointingOwl from "@/assets/pointing-owl.png";
 import wavingOwl from "@/assets/waving-owl.png";
 import VistaraLogo from "@/components/VistaraLogo";
+import InstallAppButton from "@/components/InstallAppButton";
 const Landing = () => {
   const navigate = useNavigate();
   const [showComingSoon, setShowComingSoon] = useState(false);
@@ -270,6 +271,7 @@ const Landing = () => {
                   <Laptop className="mr-2 w-4 h-4 md:w-5 md:h-5" />
                   Try Demo
                 </RippleButton>
+                <InstallAppButton variant="landing" size="lg" className="w-full sm:w-auto text-base md:text-lg px-6 py-5 md:px-8 md:py-6" />
               </motion.div>
 
               {/* Social proof */}

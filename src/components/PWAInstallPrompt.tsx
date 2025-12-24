@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Download, X } from "lucide-react";
 import { toast } from "sonner";
+import vistaraMascot from "@/assets/vistara-mascot-logo.png";
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -71,12 +72,12 @@ export const PWAInstallPrompt = () => {
       </button>
       
       <div className="flex gap-4 items-start">
-        <div className="p-3 bg-primary/10 rounded-lg">
-          <Download className="w-6 h-6 text-primary" />
+        <div className="p-2 bg-primary/10 rounded-lg">
+          <img src={vistaraMascot} alt="Vistara" className="w-10 h-10 object-contain" />
         </div>
         
         <div className="flex-1 space-y-2">
-          <h3 className="font-semibold text-foreground">Install StudyPlanAI</h3>
+          <h3 className="font-semibold text-foreground">Install Vistara</h3>
           <p className="text-sm text-muted-foreground">
             Install our app for quick access, offline support, and a native experience
           </p>
