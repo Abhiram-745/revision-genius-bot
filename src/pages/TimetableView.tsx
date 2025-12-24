@@ -602,11 +602,6 @@ const TimetableView = () => {
                                   📚 Due: {format(new Date(session.homeworkDueDate), "dd/MM/yyyy")}
                                 </p>
                               )}
-                              {session.notes && (
-                                <p className="text-sm text-muted-foreground mt-2">
-                                  {session.notes}
-                                </p>
-                              )}
                             </div>
                             {session.type !== "break" && session.type !== "event" && hasValidOriginalIndex && (
                               <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>

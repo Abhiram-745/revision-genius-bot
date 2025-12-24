@@ -12,8 +12,9 @@ export const OfferCountdown = () => {
   const [timeLeft, setTimeLeft] = useState<TimeLeft>({ days: 0, hours: 0, minutes: 0, seconds: 0 });
 
   useEffect(() => {
-    // End date: January 27, 2025 at 11:59:59 PM UTC
-    const targetDate = new Date('2025-01-27T23:59:59Z');
+    // End date: One month from now at 11:59:59 PM UTC
+    const now = new Date();
+    const targetDate = new Date(now.getFullYear(), now.getMonth() + 1, now.getDate(), 23, 59, 59);
 
     const calculateTimeLeft = () => {
       const now = new Date();

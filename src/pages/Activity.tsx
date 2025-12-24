@@ -46,8 +46,10 @@ const Activity = () => {
   // Stats
   const totalSessions = activities.length;
   const totalTimeMinutes = Math.round(activities.reduce((sum, a) => sum + (a.duration_seconds || 0), 0) / 60);
-  const avgScore = activities.filter(a => a.score_percentage).length > 0
-    ? Math.round(activities.filter(a => a.score_percentage).reduce((sum, a) => sum + (a.score_percentage || 0), 0) / activities.filter(a => a.score_percentage).length)
+  // Filter out general practice (null/0 scores) from average calculation
+  const scoredActivities = activities.filter(a => a.score_percentage && a.score_percentage > 0);
+  const avgScore = scoredActivities.length > 0
+    ? Math.round(scoredActivities.reduce((sum, a) => sum + (a.score_percentage || 0), 0) / scoredActivities.length)
     : null;
 
   useEffect(() => {

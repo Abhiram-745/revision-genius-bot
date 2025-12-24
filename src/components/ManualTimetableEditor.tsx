@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useMemo, memo } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -25,6 +25,97 @@ interface ManualTimetableEditorProps {
 const HOUR_HEIGHT = 60; // pixels per hour
 const MIN_DURATION = 15; // minimum session duration in minutes
 
+const timeToMinutes = (time: string): number => {
+  const [hours, mins] = time.split(":").map(Number);
+  return hours * 60 + mins;
+};
+
+const minutesToTime = (minutes: number): string => {
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  return `${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}`;
+};
+
+const getSessionColor = (subject: string, type: string): string => {
+  if (type === "break") return "bg-muted/50 border-muted";
+  const colors = [
+    "bg-primary/10 border-primary/30",
+    "bg-secondary/10 border-secondary/30",
+    "bg-accent/10 border-accent/30",
+    "bg-green-500/10 border-green-500/30",
+    "bg-purple-500/10 border-purple-500/30",
+    "bg-orange-500/10 border-orange-500/30",
+  ];
+  const index = subject.charCodeAt(0) % colors.length;
+  return colors[index];
+};
+
+// Memoized session component for better performance
+const SessionBlock = memo(({ 
+  session, 
+  index, 
+  top, 
+  height, 
+  isDragging, 
+  onMouseDownTop, 
+  onMouseDownBottom 
+}: {
+  session: TimetableSession;
+  index: number;
+  top: number;
+  height: number;
+  isDragging: boolean;
+  onMouseDownTop: (e: React.MouseEvent) => void;
+  onMouseDownBottom: (e: React.MouseEvent) => void;
+}) => (
+  <div
+    className={cn(
+      "absolute left-12 right-2 rounded-lg border-2 transition-shadow",
+      getSessionColor(session.subject, session.type),
+      isDragging && "shadow-lg ring-2 ring-primary/50"
+    )}
+    style={{
+      top: `${top}px`,
+      height: `${Math.max(height, 30)}px`,
+    }}
+  >
+    {/* Top resize handle */}
+    <div
+      className="absolute -top-1 left-0 right-0 h-3 cursor-ns-resize flex items-center justify-center group"
+      onMouseDown={onMouseDownTop}
+    >
+      <div className="w-8 h-1 rounded-full bg-foreground/20 group-hover:bg-primary transition-colors" />
+    </div>
+
+    {/* Session content */}
+    <div className="p-2 h-full flex flex-col justify-center overflow-hidden">
+      <div className="flex items-center gap-2">
+        <GripVertical className="w-4 h-4 text-muted-foreground shrink-0" />
+        <div className="min-w-0 flex-1">
+          <p className="font-medium text-sm truncate">{session.subject}</p>
+          {session.topic && height > 40 && (
+            <p className="text-xs text-muted-foreground truncate">{session.topic}</p>
+          )}
+        </div>
+        <div className="flex items-center gap-1 text-xs text-muted-foreground shrink-0">
+          <Clock className="w-3 h-3" />
+          <span>{session.duration}m</span>
+        </div>
+      </div>
+    </div>
+
+    {/* Bottom resize handle */}
+    <div
+      className="absolute -bottom-1 left-0 right-0 h-3 cursor-ns-resize flex items-center justify-center group"
+      onMouseDown={onMouseDownBottom}
+    >
+      <div className="w-8 h-1 rounded-full bg-foreground/20 group-hover:bg-primary transition-colors" />
+    </div>
+  </div>
+));
+
+SessionBlock.displayName = "SessionBlock";
+
 const ManualTimetableEditor = ({ sessions, date, onSave, onCancel }: ManualTimetableEditorProps) => {
   const [editableSessions, setEditableSessions] = useState<TimetableSession[]>(() => 
     sessions.filter(s => s.type !== "break").map(s => ({ ...s }))
@@ -39,40 +130,24 @@ const ManualTimetableEditor = ({ sessions, date, onSave, onCancel }: ManualTimet
   
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const timeToMinutes = (time: string): number => {
-    const [hours, mins] = time.split(":").map(Number);
-    return hours * 60 + mins;
-  };
-
-  const minutesToTime = (minutes: number): string => {
-    const h = Math.floor(minutes / 60);
-    const m = minutes % 60;
-    return `${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}`;
-  };
-
-  const getSessionColor = (subject: string, type: string): string => {
-    if (type === "break") return "bg-muted/50 border-muted";
-    const colors = [
-      "bg-primary/10 border-primary/30",
-      "bg-secondary/10 border-secondary/30",
-      "bg-accent/10 border-accent/30",
-      "bg-green-500/10 border-green-500/30",
-      "bg-purple-500/10 border-purple-500/30",
-      "bg-orange-500/10 border-orange-500/30",
-    ];
-    const index = subject.charCodeAt(0) % colors.length;
-    return colors[index];
-  };
-
-  // Calculate the time range for the day
-  const dayStart = Math.min(...editableSessions.map(s => timeToMinutes(s.time)));
-  const dayEnd = Math.max(...editableSessions.map(s => timeToMinutes(s.time) + s.duration));
-  const totalMinutes = dayEnd - dayStart;
-  const startHour = Math.floor(dayStart / 60);
-  const endHour = Math.ceil(dayEnd / 60);
+  // Memoize time calculations
+  const { dayStart, dayEnd, startHour, endHour } = useMemo(() => {
+    if (editableSessions.length === 0) {
+      return { dayStart: 540, dayEnd: 1080, startHour: 9, endHour: 18 }; // Default 9am-6pm
+    }
+    const dStart = Math.min(...editableSessions.map(s => timeToMinutes(s.time)));
+    const dEnd = Math.max(...editableSessions.map(s => timeToMinutes(s.time) + s.duration));
+    return {
+      dayStart: dStart,
+      dayEnd: dEnd,
+      startHour: Math.floor(dStart / 60),
+      endHour: Math.ceil(dEnd / 60)
+    };
+  }, [editableSessions]);
 
   const handleMouseDown = useCallback((e: React.MouseEvent, index: number, edge: "top" | "bottom") => {
     e.preventDefault();
+    e.stopPropagation();
     const session = editableSessions[index];
     setDragState({
       index,
@@ -90,7 +165,7 @@ const ManualTimetableEditor = ({ sessions, date, onSave, onCancel }: ManualTimet
     const deltaMinutes = Math.round((deltaY / HOUR_HEIGHT) * 60 / 5) * 5; // Round to 5-minute intervals
     
     setEditableSessions(prev => {
-      const updated = [...prev];
+      const updated = prev.map(s => ({ ...s })); // Create new array with new objects
       const session = updated[dragState.index];
       
       if (dragState.edge === "bottom") {
@@ -146,7 +221,7 @@ const ManualTimetableEditor = ({ sessions, date, onSave, onCancel }: ManualTimet
     return sessions[index].duration + (nextStart - currentEnd) + sessions[index + 1].duration - MIN_DURATION;
   };
 
-  const handleSave = () => {
+  const handleSave = useCallback(() => {
     // Recalculate breaks between sessions
     const finalSessions: TimetableSession[] = [];
     
@@ -174,7 +249,21 @@ const ManualTimetableEditor = ({ sessions, date, onSave, onCancel }: ManualTimet
     
     onSave(finalSessions);
     toast.success("Timetable updated!");
-  };
+  }, [editableSessions, onSave]);
+
+  // Memoize hour markers
+  const hourMarkers = useMemo(() => 
+    Array.from({ length: endHour - startHour + 1 }, (_, i) => (
+      <div
+        key={i}
+        className="absolute left-0 right-0 border-t border-dashed border-muted-foreground/20 flex items-start"
+        style={{ top: `${i * HOUR_HEIGHT}px` }}
+      >
+        <span className="text-xs text-muted-foreground bg-background pr-2 -mt-2.5">
+          {`${(startHour + i).toString().padStart(2, "0")}:00`}
+        </span>
+      </div>
+    )), [startHour, endHour]);
 
   return (
     <Card className="p-4 max-w-2xl mx-auto">
@@ -206,17 +295,7 @@ const ManualTimetableEditor = ({ sessions, date, onSave, onCancel }: ManualTimet
           onMouseLeave={handleMouseUp}
         >
           {/* Hour markers */}
-          {Array.from({ length: endHour - startHour + 1 }, (_, i) => (
-            <div
-              key={i}
-              className="absolute left-0 right-0 border-t border-dashed border-muted-foreground/20 flex items-start"
-              style={{ top: `${i * HOUR_HEIGHT}px` }}
-            >
-              <span className="text-xs text-muted-foreground bg-background pr-2 -mt-2.5">
-                {`${(startHour + i).toString().padStart(2, "0")}:00`}
-              </span>
-            </div>
-          ))}
+          {hourMarkers}
 
           {/* Sessions */}
           {editableSessions.map((session, index) => {
@@ -225,51 +304,16 @@ const ManualTimetableEditor = ({ sessions, date, onSave, onCancel }: ManualTimet
             const height = (session.duration / 60) * HOUR_HEIGHT;
 
             return (
-              <div
-                key={index}
-                className={cn(
-                  "absolute left-12 right-2 rounded-lg border-2 transition-shadow",
-                  getSessionColor(session.subject, session.type),
-                  dragState?.index === index && "shadow-lg ring-2 ring-primary/50"
-                )}
-                style={{
-                  top: `${top}px`,
-                  height: `${Math.max(height, 30)}px`,
-                }}
-              >
-                {/* Top resize handle */}
-                <div
-                  className="absolute -top-1 left-0 right-0 h-3 cursor-ns-resize flex items-center justify-center group"
-                  onMouseDown={(e) => handleMouseDown(e, index, "top")}
-                >
-                  <div className="w-8 h-1 rounded-full bg-foreground/20 group-hover:bg-primary transition-colors" />
-                </div>
-
-                {/* Session content */}
-                <div className="p-2 h-full flex flex-col justify-center overflow-hidden">
-                  <div className="flex items-center gap-2">
-                    <GripVertical className="w-4 h-4 text-muted-foreground shrink-0" />
-                    <div className="min-w-0 flex-1">
-                      <p className="font-medium text-sm truncate">{session.subject}</p>
-                      {session.topic && height > 40 && (
-                        <p className="text-xs text-muted-foreground truncate">{session.topic}</p>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-1 text-xs text-muted-foreground shrink-0">
-                      <Clock className="w-3 h-3" />
-                      <span>{session.duration}m</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Bottom resize handle */}
-                <div
-                  className="absolute -bottom-1 left-0 right-0 h-3 cursor-ns-resize flex items-center justify-center group"
-                  onMouseDown={(e) => handleMouseDown(e, index, "bottom")}
-                >
-                  <div className="w-8 h-1 rounded-full bg-foreground/20 group-hover:bg-primary transition-colors" />
-                </div>
-              </div>
+              <SessionBlock
+                key={`${index}-${session.time}`}
+                session={session}
+                index={index}
+                top={top}
+                height={height}
+                isDragging={dragState?.index === index}
+                onMouseDownTop={(e) => handleMouseDown(e, index, "top")}
+                onMouseDownBottom={(e) => handleMouseDown(e, index, "bottom")}
+              />
             );
           })}
         </div>

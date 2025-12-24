@@ -1255,12 +1255,13 @@ TIMETABLE PERIOD: ${startDate} to ${endDate}
         "subject": "subject name",
         "topic": "topic name",
         "type": "practice|exam_questions|homework|revision|break",
-        "notes": "Resource recommendation",
         "mode": "${timetableMode || 'balanced'}"
       }
     ]
   }
 }
+
+IMPORTANT: Do NOT include a "notes" field. Only include the fields shown above.
 
 Session types:
 - "practice": Active practice (first session for a topic)
