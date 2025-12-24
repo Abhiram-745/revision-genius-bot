@@ -1,27 +1,20 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Plus, Play, ChevronRight, Users, Target, Zap } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Plus, Play, ChevronRight, Users, Target, Zap, Calendar, BookOpen, Clock, Flame, TrendingUp, Award } from "lucide-react";
 import { toast } from "sonner";
 import Header from "@/components/Header";
 import OnboardingWizard from "@/components/OnboardingWizard";
 import { AIInsightsCard } from "@/components/dashboard/AIInsightsCard";
-import { UnifiedProgressSection } from "@/components/dashboard/UnifiedProgressSection";
-import { RecentActivitySection } from "@/components/dashboard/RecentActivitySection";
-import { UpcomingSessionsCard } from "@/components/dashboard/UpcomingSessionsCard";
-import { SubjectMasteryCard } from "@/components/dashboard/SubjectMasteryCard";
-import { StudyTipsCard } from "@/components/dashboard/StudyTipsCard";
-import { AchievementsPreviewCard } from "@/components/dashboard/AchievementsPreviewCard";
-import { QuickStatsCard } from "@/components/dashboard/QuickStatsCard";
 import SimpleOnboarding from "@/components/onboarding/SimpleOnboarding";
 import PageTransition from "@/components/PageTransition";
 import { OwlMascot } from "@/components/mascot/OwlMascot";
-import { DashboardFloatingElements, MotivationalBadge } from "@/components/dashboard/FloatingElements";
 import { motion } from "framer-motion";
 import PremiumGrantNotification from "@/components/PremiumGrantNotification";
+import { format, isToday, parseISO } from "date-fns";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -32,12 +25,16 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [streak, setStreak] = useState(0);
   const [showPremiumNotification, setShowPremiumNotification] = useState(false);
+  const [weeklyHours, setWeeklyHours] = useState(0);
+  const [sessionsToday, setSessionsToday] = useState<any[]>([]);
+  const [recentActivity, setRecentActivity] = useState<any[]>([]);
+  const [achievements, setAchievements] = useState<any[]>([]);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
         setUser(session.user);
-        checkSubjects(session.user.id);
+        loadDashboardData(session.user.id);
       } else {
         navigate("/");
       }
@@ -46,9 +43,7 @@ const Dashboard = () => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session?.user) {
         setUser(session.user);
-        setTimeout(() => {
-          checkSubjects(session.user.id);
-        }, 0);
+        loadDashboardData(session.user.id);
       } else {
         navigate("/");
       }
@@ -57,49 +52,72 @@ const Dashboard = () => {
     return () => subscription.unsubscribe();
   }, [navigate]);
 
-  const checkSubjects = async (userId: string) => {
-    const [subjectsResult, timetablesResult, profileResult, streakResult, premiumResult] = await Promise.all([
-      supabase.from("subjects").select("id").eq("user_id", userId).limit(1),
-      supabase.from("timetables").select("id").eq("user_id", userId).limit(1),
-      supabase.from("profiles").select("full_name").eq("id", userId).single(),
-      supabase.from("study_streaks").select("*").eq("user_id", userId).order("date", { ascending: false }).limit(7),
-      supabase.from("premium_grants").select("id, created_at").eq("user_id", userId).order("created_at", { ascending: false }).limit(1)
-    ]);
-    
-    const hasSubjects = subjectsResult.data && subjectsResult.data.length > 0;
-    const hasTimetables = timetablesResult.data && timetablesResult.data.length > 0;
-    
-    if (premiumResult.data && premiumResult.data.length > 0) {
-      const grantTime = new Date(premiumResult.data[0].created_at).getTime();
-      const now = Date.now();
-      const timeDiff = now - grantTime;
-      if (timeDiff < 30000) {
-        const shownKey = `premium_shown_${premiumResult.data[0].id}`;
-        if (!localStorage.getItem(shownKey)) {
-          localStorage.setItem(shownKey, 'true');
-          setShowPremiumNotification(true);
-        }
-      }
-    }
-    
-    if (streakResult.data && streakResult.data.length > 0) {
-      let currentStreak = 0;
-      const today = new Date().toISOString().split('T')[0];
-      const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+  const loadDashboardData = async (userId: string) => {
+    try {
+      const [subjectsResult, timetablesResult, profileResult, streakResult, premiumResult, sessionsResult, activityResult, achievementsResult] = await Promise.all([
+        supabase.from("subjects").select("id").eq("user_id", userId).limit(1),
+        supabase.from("timetables").select("id, schedule").eq("user_id", userId).order("created_at", { ascending: false }).limit(1),
+        supabase.from("profiles").select("full_name").eq("id", userId).single(),
+        supabase.from("study_streaks").select("*").eq("user_id", userId).order("date", { ascending: false }).limit(7),
+        supabase.from("premium_grants").select("id, created_at").eq("user_id", userId).order("created_at", { ascending: false }).limit(1),
+        supabase.from("study_sessions").select("*").eq("user_id", userId).gte("planned_start", new Date().toISOString().split('T')[0]).order("planned_start", { ascending: true }).limit(5),
+        supabase.from("study_sessions").select("*").eq("user_id", userId).eq("status", "completed").order("actual_end", { ascending: false }).limit(5),
+        supabase.from("user_achievements").select("*, achievements(*)").eq("user_id", userId).order("unlocked_at", { ascending: false }).limit(3)
+      ]);
       
-      for (const s of streakResult.data) {
-        if (s.date === today || s.date === yesterday || currentStreak > 0) {
-          currentStreak++;
-        } else {
-          break;
+      const hasSubjects = subjectsResult.data && subjectsResult.data.length > 0;
+      const hasTimetables = timetablesResult.data && timetablesResult.data.length > 0;
+      
+      // Check for premium notification
+      if (premiumResult.data && premiumResult.data.length > 0) {
+        const grantTime = new Date(premiumResult.data[0].created_at).getTime();
+        const now = Date.now();
+        if (now - grantTime < 30000) {
+          const shownKey = `premium_shown_${premiumResult.data[0].id}`;
+          if (!localStorage.getItem(shownKey)) {
+            localStorage.setItem(shownKey, 'true');
+            setShowPremiumNotification(true);
+          }
         }
       }
-      setStreak(currentStreak);
+      
+      // Calculate streak
+      if (streakResult.data && streakResult.data.length > 0) {
+        let currentStreak = 0;
+        const today = new Date().toISOString().split('T')[0];
+        const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+        
+        for (const s of streakResult.data) {
+          if (s.date === today || s.date === yesterday || currentStreak > 0) {
+            currentStreak++;
+          } else {
+            break;
+          }
+        }
+        setStreak(currentStreak);
+        
+        // Calculate weekly hours
+        const weekHours = streakResult.data.reduce((acc, s) => acc + (s.minutes_studied || 0), 0) / 60;
+        setWeeklyHours(Math.round(weekHours * 10) / 10);
+      }
+
+      // Get today's sessions from timetable
+      if (timetablesResult.data && timetablesResult.data.length > 0) {
+        const schedule = timetablesResult.data[0].schedule as any;
+        const todayStr = new Date().toISOString().split('T')[0];
+        const todaySessions = schedule?.[todayStr] || [];
+        setSessionsToday(todaySessions.filter((s: any) => s.type !== 'break').slice(0, 3));
+      }
+
+      setRecentActivity(activityResult.data || []);
+      setAchievements(achievementsResult.data || []);
+      setHasData(hasSubjects || hasTimetables);
+      setProfile(profileResult.data);
+    } catch (error) {
+      console.error("Error loading dashboard:", error);
+    } finally {
+      setLoading(false);
     }
-    
-    setHasData(hasSubjects || hasTimetables);
-    setProfile(profileResult.data);
-    setLoading(false);
   };
 
   const getGreeting = () => {
@@ -114,12 +132,19 @@ const Dashboard = () => {
     return profile.full_name.split(" ")[0];
   };
 
+  const getContextualMessage = () => {
+    if (sessionsToday.length === 0) {
+      return "No sessions scheduled today. Ready to create one?";
+    }
+    return `You have ${sessionsToday.length} session${sessionsToday.length > 1 ? 's' : ''} planned today`;
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-4">
           <OwlMascot type="sleeping" size="xl" glow />
-          <p className="text-muted-foreground animate-pulse text-lg">Loading your dashboard...</p>
+          <p className="text-muted-foreground animate-pulse">Loading...</p>
         </div>
       </div>
     );
@@ -127,122 +152,157 @@ const Dashboard = () => {
 
   return (
     <PageTransition>
-      <div className="min-h-screen bg-background relative overflow-hidden">
-        <DashboardFloatingElements />
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5 pointer-events-none" />
-        
+      <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/20">
         <SimpleOnboarding />
         <Header onNewTimetable={() => setShowOnboarding(true)} />
 
-        <main className="max-w-6xl mx-auto px-4 sm:px-6 py-6 relative z-10">
+        <main className="max-w-5xl mx-auto px-4 sm:px-6 py-6 space-y-6">
           {!hasData && !showOnboarding ? (
             <motion.div 
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="flex flex-col items-center justify-center py-12 space-y-8"
+              className="flex flex-col items-center justify-center py-16 space-y-8"
             >
-              <MotivationalBadge isNewUser />
               <OwlMascot type="waving" size="2xl" glow />
-              <div className="text-center space-y-2">
-                <h2 className="text-3xl font-display font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-                  Welcome to Vistara!
-                </h2>
-                <p className="text-muted-foreground text-lg max-w-md">
+              <div className="text-center space-y-3 max-w-md">
+                <h2 className="text-3xl font-bold">Welcome to Vistara!</h2>
+                <p className="text-muted-foreground text-lg">
                   Create your personalized study timetable to start your journey.
                 </p>
               </div>
-              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                <Button
-                  size="lg"
-                  onClick={() => setShowOnboarding(true)}
-                  className="gap-2 rounded-full px-10 py-6 text-lg bg-gradient-to-r from-primary to-accent shadow-xl shadow-primary/25 hover:shadow-2xl hover:shadow-primary/30 transition-all"
-                >
-                  <Plus className="h-6 w-6" />
-                  Get Started
-                </Button>
-              </motion.div>
+              <Button
+                size="lg"
+                onClick={() => setShowOnboarding(true)}
+                className="gap-2 rounded-xl px-8 py-6 text-lg bg-gradient-to-r from-primary to-accent shadow-lg"
+              >
+                <Plus className="h-5 w-5" />
+                Get Started
+              </Button>
             </motion.div>
           ) : showOnboarding ? (
             <OnboardingWizard
               onComplete={() => {
                 setShowOnboarding(false);
                 setHasData(true);
-                toast.success("Setup complete! You can now view your timetable.");
+                toast.success("Setup complete!");
               }}
               onCancel={() => setShowOnboarding(false)}
             />
           ) : (
-            <div className="space-y-6 animate-fade-in">
-              {/* Hero Section */}
+            <div className="space-y-6">
+              {/* Hero Section - Floating Greeting Card */}
               <motion.div 
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary/10 via-background to-accent/10 border border-border/50 shadow-xl"
               >
-                <div className="absolute -top-32 -right-32 w-64 h-64 bg-primary/30 rounded-full blur-3xl animate-pulse" />
-                <div className="absolute -bottom-20 -left-20 w-48 h-48 bg-accent/30 rounded-full blur-3xl animate-pulse" />
-                
-                <div className="relative p-6 sm:p-8">
-                  <div className="flex justify-center mb-4">
-                    <MotivationalBadge streak={streak} />
-                  </div>
-                  
-                  <div className="flex flex-col lg:flex-row items-center gap-6 lg:gap-10">
-                    <motion.div
-                      initial={{ scale: 0.5, opacity: 0 }}
-                      animate={{ scale: 1, opacity: 1 }}
-                      transition={{ delay: 0.2, type: "spring", bounce: 0.5 }}
-                      className="flex-shrink-0"
-                    >
-                      <OwlMascot type="happy" size="2xl" glow />
-                    </motion.div>
-                    
-                    <div className="flex-1 text-center lg:text-left space-y-4">
+                <Card className="overflow-hidden border-0 shadow-xl bg-gradient-to-br from-card via-card to-primary/5">
+                  <CardContent className="p-6 sm:p-8">
+                    <div className="flex flex-col sm:flex-row items-center gap-6">
                       <motion.div
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: 0.3 }}
+                        initial={{ scale: 0.8, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        transition={{ delay: 0.1, type: "spring" }}
+                        className="flex-shrink-0"
                       >
-                        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-display font-bold">
-                          {getGreeting()}, {getFirstName()}! 👋
-                        </h1>
-                        <p className="text-muted-foreground text-base sm:text-lg mt-2">
-                          Ready to make today count? Let's crush some goals!
-                        </p>
+                        <OwlMascot type="happy" size="lg" glow />
                       </motion.div>
                       
-                      <motion.div
-                        whileHover={{ scale: 1.03 }}
-                        whileTap={{ scale: 0.97 }}
-                        className="inline-block"
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.4 }}
-                      >
+                      <div className="flex-1 text-center sm:text-left space-y-3">
+                        <div>
+                          <h1 className="text-2xl sm:text-3xl font-bold">
+                            {getGreeting()}, {getFirstName()}!
+                          </h1>
+                          <p className="text-muted-foreground mt-1">
+                            {getContextualMessage()}
+                          </p>
+                        </div>
+                        
                         <Button
                           size="lg"
                           onClick={() => navigate("/timetables")}
-                          className="gap-2 px-8 py-6 bg-gradient-to-r from-primary to-accent shadow-lg hover:shadow-xl rounded-xl"
+                          className="gap-2 bg-gradient-to-r from-primary to-accent shadow-md hover:shadow-lg transition-all"
                         >
-                          <Play className="h-5 w-5" />
-                          Start Study Session
+                          <Play className="h-4 w-4" />
+                          Start Today's Session
                         </Button>
-                      </motion.div>
+                      </div>
+
+                      {/* Streak Badge */}
+                      {streak > 0 && (
+                        <motion.div 
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                          transition={{ delay: 0.2, type: "spring" }}
+                          className="flex flex-col items-center gap-1 px-4 py-3 rounded-2xl bg-gradient-to-br from-orange-500/10 to-amber-500/10 border border-orange-500/20"
+                        >
+                          <Flame className="h-6 w-6 text-orange-500" />
+                          <span className="text-2xl font-bold text-orange-600 dark:text-orange-400">{streak}</span>
+                          <span className="text-xs text-muted-foreground">day streak</span>
+                        </motion.div>
+                      )}
                     </div>
-                  </div>
-                </div>
+                  </CardContent>
+                </Card>
               </motion.div>
 
-              {/* Quick Stats Row */}
+              {/* Your Focus - Today Section */}
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 }}
               >
-                <QuickStatsCard userId={user?.id || ""} />
+                <Card className="border shadow-sm">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="flex items-center gap-2 text-lg">
+                      <Calendar className="h-5 w-5 text-primary" />
+                      Today's Focus
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {sessionsToday.length > 0 ? (
+                      <div className="space-y-3">
+                        {sessionsToday.map((session, i) => (
+                          <div key={i} className="flex items-center gap-4 p-3 rounded-xl bg-muted/50 hover:bg-muted transition-colors">
+                            <div className="p-2 rounded-lg bg-primary/10">
+                              <BookOpen className="h-4 w-4 text-primary" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="font-medium truncate">{session.subject}</p>
+                              {session.topic && <p className="text-sm text-muted-foreground truncate">{session.topic}</p>}
+                            </div>
+                            <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                              <Clock className="h-3.5 w-3.5" />
+                              <span>{session.duration}m</span>
+                            </div>
+                          </div>
+                        ))}
+                        <Button 
+                          variant="outline" 
+                          className="w-full gap-2" 
+                          onClick={() => navigate("/timetables")}
+                        >
+                          View Full Schedule
+                          <ChevronRight className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center py-8 gap-4">
+                        <OwlMascot type="folder" size="md" animate={false} />
+                        <div className="text-center">
+                          <p className="font-medium">No sessions today</p>
+                          <p className="text-sm text-muted-foreground">Create a timetable to get started</p>
+                        </div>
+                        <Button onClick={() => setShowOnboarding(true)} className="gap-2">
+                          <Plus className="h-4 w-4" />
+                          Create Timetable
+                        </Button>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
               </motion.div>
 
-              {/* Quick Actions Grid */}
+              {/* Progress Overview - Simplified */}
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -250,87 +310,103 @@ const Dashboard = () => {
                 className="grid grid-cols-2 sm:grid-cols-4 gap-3"
               >
                 {[
-                  { icon: Target, label: "Practice", path: "/practice", owl: "lightbulb" as const, color: "from-primary/10 to-primary/5 border-primary/20 hover:border-primary/40" },
-                  { icon: Zap, label: "Insights", path: "/insights", owl: "chart" as const, color: "from-secondary/10 to-secondary/5 border-secondary/20 hover:border-secondary/40" },
-                  { icon: Plus, label: "Calendar", path: "/calendar", owl: "checklist" as const, color: "from-accent/10 to-accent/5 border-accent/20 hover:border-accent/40" },
-                  { icon: Users, label: "Social", path: "/social", owl: "waving" as const, color: "from-muted to-muted/50 border-border hover:border-primary/30" },
-                ].map((item, i) => (
-                  <Card 
-                    key={item.label}
-                    className={`p-4 cursor-pointer hover:shadow-lg transition-all bg-gradient-to-br ${item.color} group`}
-                    onClick={() => navigate(item.path)}
-                  >
-                    <div className="flex flex-col items-center text-center gap-2">
-                      <motion.div whileHover={{ scale: 1.1, rotate: 5 }}>
-                        <OwlMascot type={item.owl} size="sm" animate={false} />
-                      </motion.div>
-                      <span className="font-medium text-sm">{item.label}</span>
+                  { label: "This Week", value: `${weeklyHours}h`, icon: Clock, color: "text-blue-500" },
+                  { label: "Streak", value: streak || 0, icon: Flame, color: "text-orange-500" },
+                  { label: "Sessions", value: recentActivity.length, icon: Target, color: "text-emerald-500" },
+                  { label: "Achievements", value: achievements.length, icon: Award, color: "text-violet-500" },
+                ].map((stat, i) => (
+                  <Card key={i} className="p-4 border shadow-sm">
+                    <div className="flex items-center gap-3">
+                      <div className={`p-2 rounded-lg bg-muted ${stat.color}`}>
+                        <stat.icon className="h-4 w-4" />
+                      </div>
+                      <div>
+                        <p className="text-xl font-bold">{stat.value}</p>
+                        <p className="text-xs text-muted-foreground">{stat.label}</p>
+                      </div>
                     </div>
                   </Card>
                 ))}
               </motion.div>
 
-              {/* Study Tip Card */}
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.18 }}
-              >
-                <StudyTipsCard />
-              </motion.div>
-
-              {/* Progress Section */}
+              {/* Quick Navigation */}
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}
+                className="grid grid-cols-2 sm:grid-cols-4 gap-3"
               >
-                <UnifiedProgressSection userId={user?.id || ""} />
+                {[
+                  { icon: Target, label: "Practice", path: "/practice", desc: "Test your knowledge" },
+                  { icon: TrendingUp, label: "Insights", path: "/insights", desc: "View analytics" },
+                  { icon: Calendar, label: "Calendar", path: "/calendar", desc: "Manage events" },
+                  { icon: Users, label: "Social", path: "/social", desc: "Study together" },
+                ].map((item, i) => (
+                  <Card 
+                    key={item.label}
+                    className="p-4 cursor-pointer hover:shadow-md hover:border-primary/30 transition-all group"
+                    onClick={() => navigate(item.path)}
+                  >
+                    <div className="flex flex-col gap-2">
+                      <div className="p-2 rounded-lg bg-primary/10 w-fit group-hover:bg-primary/20 transition-colors">
+                        <item.icon className="h-5 w-5 text-primary" />
+                      </div>
+                      <div>
+                        <p className="font-semibold">{item.label}</p>
+                        <p className="text-xs text-muted-foreground">{item.desc}</p>
+                      </div>
+                    </div>
+                  </Card>
+                ))}
               </motion.div>
 
-              {/* Three Column Layout */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.22 }}
-                >
-                  <UpcomingSessionsCard userId={user?.id || ""} />
-                </motion.div>
-
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.24 }}
-                >
-                  <SubjectMasteryCard userId={user?.id || ""} />
-                </motion.div>
-
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.26 }}
-                >
-                  <AchievementsPreviewCard userId={user?.id || ""} />
-                </motion.div>
-              </div>
-
-              {/* Two Column Layout - Activity & AI Insights */}
+              {/* Two Column - AI Insights & Recent Activity */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 <motion.div
-                  initial={{ opacity: 0, y: 20 }}
+                  initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.28 }}
+                  transition={{ delay: 0.25 }}
                 >
-                  <RecentActivitySection userId={user?.id || ""} />
+                  <AIInsightsCard userId={user?.id || ""} />
                 </motion.div>
 
                 <motion.div
-                  initial={{ opacity: 0, y: 20 }}
+                  initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.3 }}
                 >
-                  <AIInsightsCard userId={user?.id || ""} />
+                  <Card className="border shadow-sm h-full">
+                    <CardHeader className="pb-3">
+                      <CardTitle className="flex items-center gap-2 text-lg">
+                        <Zap className="h-5 w-5 text-primary" />
+                        Recent Activity
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      {recentActivity.length > 0 ? (
+                        <div className="space-y-3">
+                          {recentActivity.slice(0, 4).map((activity, i) => (
+                            <div key={i} className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/50 transition-colors">
+                              <div className="w-2 h-2 rounded-full bg-emerald-500" />
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-medium truncate">{activity.subject}</p>
+                                <p className="text-xs text-muted-foreground">
+                                  {activity.actual_duration_minutes || activity.planned_duration_minutes}m completed
+                                </p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="flex flex-col items-center py-6 gap-3">
+                          <OwlMascot type="checklist" size="sm" animate={false} />
+                          <p className="text-sm text-muted-foreground text-center">
+                            Complete sessions to see your activity here
+                          </p>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
                 </motion.div>
               </div>
 
@@ -340,20 +416,20 @@ const Dashboard = () => {
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.35 }}
               >
-                <Card className="overflow-hidden bg-gradient-to-r from-primary/5 via-secondary/5 to-accent/5 border-border/50 shadow-lg">
-                  <CardContent className="p-6">
-                    <div className="flex flex-col sm:flex-row items-center gap-4">
-                      <OwlMascot type="thumbsup" size="lg" />
-                      <div className="flex-1 text-center sm:text-left">
-                        <h3 className="text-lg font-bold mb-1">Keep up the great work!</h3>
-                        <p className="text-sm text-muted-foreground mb-3">
-                          View all your insights and track your progress over time.
+                <Card className="overflow-hidden bg-gradient-to-r from-primary/5 via-background to-accent/5 border shadow-sm">
+                  <CardContent className="p-5">
+                    <div className="flex items-center gap-4">
+                      <OwlMascot type="thumbsup" size="sm" animate={false} />
+                      <div className="flex-1">
+                        <p className="font-medium">Keep up the momentum!</p>
+                        <p className="text-sm text-muted-foreground">
+                          View detailed insights and track your progress over time.
                         </p>
-                        <Button variant="outline" className="gap-1" onClick={() => navigate("/insights")}>
-                          <ChevronRight className="h-4 w-4" />
-                          View All Insights
-                        </Button>
                       </div>
+                      <Button variant="outline" className="gap-1 shrink-0" onClick={() => navigate("/insights")}>
+                        View Insights
+                        <ChevronRight className="h-4 w-4" />
+                      </Button>
                     </div>
                   </CardContent>
                 </Card>

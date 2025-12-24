@@ -4,18 +4,17 @@ import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronRight, ChevronLeft, Sparkles, Calendar, Brain, Users, Home, BarChart3, BookOpen, UserPlus } from "lucide-react";
+import { ChevronRight, ChevronLeft, Sparkles, Calendar, Brain, Users, Home, BarChart3, BookOpen, UserPlus, X } from "lucide-react";
 import { OwlMascot } from "@/components/mascot/OwlMascot";
 import VistaraLogo from "@/components/VistaraLogo";
 
-// Comprehensive tour covering all pages
+// Simplified tour - stays on dashboard, no page navigation to prevent reload issues
 const tourSteps = [
   {
     owl: "waving" as const,
     title: "Welcome to Vistara!",
-    description: "Let me show you around your new AI-powered study companion.",
+    description: "Your AI-powered study companion is ready to help you ace your exams.",
     icon: Sparkles,
-    page: "/dashboard",
     highlights: [
       "AI-generated study timetables",
       "Smart progress tracking",
@@ -25,9 +24,8 @@ const tourSteps = [
   {
     owl: "happy" as const,
     title: "Your Dashboard",
-    description: "This is your home base - see your progress, upcoming sessions, and quick actions.",
+    description: "This is your home base - see progress, upcoming sessions, and quick actions all in one place.",
     icon: Home,
-    page: "/dashboard",
     highlights: [
       "View your study streak",
       "Quick access to all features",
@@ -36,10 +34,9 @@ const tourSteps = [
   },
   {
     owl: "folder" as const,
-    title: "Timetables",
-    description: "Create AI-powered study schedules tailored to your subjects and exam dates.",
+    title: "Create Timetables",
+    description: "Head to Timetables to create AI-powered study schedules tailored to your subjects.",
     icon: Calendar,
-    page: "/timetables",
     highlights: [
       "Add your subjects & topics",
       "Set your exam dates",
@@ -49,9 +46,8 @@ const tourSteps = [
   {
     owl: "lightbulb" as const,
     title: "Practice Hub",
-    description: "Test yourself with various practice methods to reinforce your learning.",
+    description: "Test yourself with SaveMyExams, PMT, and Blurt AI to reinforce learning.",
     icon: BookOpen,
-    page: "/practice",
     highlights: [
       "SaveMyExams integration",
       "Physics & Maths Tutor",
@@ -60,10 +56,9 @@ const tourSteps = [
   },
   {
     owl: "chart" as const,
-    title: "Insights & Analytics",
-    description: "Track your performance and get AI-powered recommendations.",
+    title: "Track Your Progress",
+    description: "Insights page shows your performance analytics and AI recommendations.",
     icon: BarChart3,
-    page: "/insights",
     highlights: [
       "Performance analytics",
       "Subject mastery tracking",
@@ -72,10 +67,9 @@ const tourSteps = [
   },
   {
     owl: "checklist" as const,
-    title: "Calendar & Events",
-    description: "Keep track of all your commitments, exams, and homework deadlines.",
+    title: "Stay Organized",
+    description: "Use Calendar for events, homework, and never miss a deadline.",
     icon: Calendar,
-    page: "/calendar",
     highlights: [
       "Visual calendar view",
       "Add events & homework",
@@ -84,10 +78,9 @@ const tourSteps = [
   },
   {
     owl: "magnifying" as const,
-    title: "Social & Groups",
-    description: "Connect with friends and study together in groups.",
+    title: "Study Together",
+    description: "Connect with friends and join study groups in the Social tab.",
     icon: Users,
-    page: "/social",
     highlights: [
       "Join study groups",
       "Compete on leaderboards",
@@ -97,9 +90,8 @@ const tourSteps = [
   {
     owl: "thumbsup" as const,
     title: "You're All Set!",
-    description: "Create your first timetable and start your journey to exam success!",
+    description: "You have 2 months of free premium! Create your first timetable now.",
     icon: UserPlus,
-    page: "/dashboard",
     highlights: [
       "2 months free premium",
       "Unlimited timetables",
@@ -110,7 +102,6 @@ const tourSteps = [
 
 export const SimpleOnboarding = () => {
   const navigate = useNavigate();
-  const location = useLocation();
   const [open, setOpen] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
 
@@ -134,17 +125,11 @@ export const SimpleOnboarding = () => {
       localStorage.setItem(`app_tour_complete_${user.id}`, "true");
     }
     setOpen(false);
-    navigate("/dashboard");
   };
 
   const handleNext = () => {
     if (currentStep < tourSteps.length - 1) {
-      const nextStep = currentStep + 1;
-      setCurrentStep(nextStep);
-      // Navigate to the page for next step
-      if (tourSteps[nextStep].page !== location.pathname) {
-        navigate(tourSteps[nextStep].page);
-      }
+      setCurrentStep(currentStep + 1);
     } else {
       handleComplete();
     }
@@ -152,11 +137,7 @@ export const SimpleOnboarding = () => {
 
   const handlePrev = () => {
     if (currentStep > 0) {
-      const prevStep = currentStep - 1;
-      setCurrentStep(prevStep);
-      if (tourSteps[prevStep].page !== location.pathname) {
-        navigate(tourSteps[prevStep].page);
-      }
+      setCurrentStep(currentStep - 1);
     }
   };
 
@@ -170,129 +151,91 @@ export const SimpleOnboarding = () => {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogContent className="max-w-lg p-0 overflow-hidden border-none bg-transparent shadow-2xl">
-        {/* Main card with gradient border effect */}
-        <div className="relative rounded-2xl overflow-hidden">
-          {/* Animated gradient border */}
-          <motion.div 
-            className="absolute inset-0 bg-gradient-to-br from-yellow-400 via-lime-400 to-emerald-400 rounded-2xl"
-            animate={{
-              background: [
-                "linear-gradient(135deg, #facc15, #a3e635, #34d399)",
-                "linear-gradient(225deg, #34d399, #a3e635, #facc15)",
-                "linear-gradient(315deg, #facc15, #a3e635, #34d399)",
-              ]
-            }}
-            transition={{ duration: 4, repeat: Infinity }}
-          />
+      <DialogContent className="max-w-md p-0 overflow-hidden border-0 bg-transparent shadow-none">
+        {/* Main card */}
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.9, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          className="relative rounded-3xl overflow-hidden shadow-2xl"
+        >
+          {/* Gradient border effect */}
+          <div className="absolute inset-0 bg-gradient-to-br from-yellow-400 via-lime-400 to-emerald-500 rounded-3xl" />
           
           {/* Inner content */}
-          <div className="relative m-[3px] rounded-2xl bg-background overflow-hidden">
-            {/* Progress bar with gradient */}
-            <div className="h-1.5 bg-muted">
+          <div className="relative m-[2px] rounded-3xl bg-card overflow-hidden">
+            {/* Progress bar */}
+            <div className="h-1 bg-muted">
               <motion.div
                 className="h-full bg-gradient-to-r from-yellow-400 via-lime-400 to-emerald-500"
                 initial={{ width: 0 }}
                 animate={{ width: `${progress}%` }}
-                transition={{ duration: 0.4, ease: "easeOut" }}
+                transition={{ duration: 0.3 }}
               />
             </div>
 
-            {/* Skip button */}
-            <div className="absolute top-4 right-4 z-10">
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={handleSkip}
-                className="text-muted-foreground hover:text-foreground text-xs"
-              >
-                Skip tour
-              </Button>
-            </div>
+            {/* Close button */}
+            <button 
+              onClick={handleSkip}
+              className="absolute top-4 right-4 z-20 p-1.5 rounded-full bg-muted/80 hover:bg-muted transition-colors"
+            >
+              <X className="w-4 h-4 text-muted-foreground" />
+            </button>
 
-            <div className="p-8 space-y-6">
-              {/* Header with logo */}
-              <motion.div 
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="flex items-center justify-center gap-2"
-              >
+            <div className="p-6 pt-8 space-y-5">
+              {/* Logo */}
+              <div className="flex items-center justify-center gap-2">
                 <VistaraLogo size="sm" />
-                <span className="font-bold text-lg bg-gradient-to-r from-yellow-500 via-lime-500 to-emerald-500 bg-clip-text text-transparent">
+                <span className="font-bold text-lg bg-gradient-to-r from-lime-600 to-emerald-600 dark:from-lime-400 dark:to-emerald-400 bg-clip-text text-transparent">
                   Vistara
                 </span>
-              </motion.div>
+              </div>
 
-              {/* Animated content */}
               <AnimatePresence mode="wait">
                 <motion.div
                   key={currentStep}
-                  initial={{ opacity: 0, x: 30 }}
+                  initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -30 }}
-                  transition={{ duration: 0.35, ease: "easeOut" }}
-                  className="space-y-6"
+                  exit={{ opacity: 0, x: -20 }}
+                  transition={{ duration: 0.25 }}
+                  className="space-y-5"
                 >
-                  {/* Large Owl mascot with glow effect */}
-                  <div className="flex justify-center relative">
-                    {/* Gradient glow behind owl */}
-                    <motion.div 
-                      className="absolute inset-0 flex items-center justify-center"
-                      animate={{ 
-                        scale: [1, 1.1, 1],
-                        opacity: [0.4, 0.6, 0.4] 
-                      }}
-                      transition={{ duration: 3, repeat: Infinity }}
-                    >
-                      <div className="w-40 h-40 bg-gradient-to-br from-yellow-400/30 via-lime-400/30 to-emerald-400/30 rounded-full blur-2xl" />
-                    </motion.div>
-                    <OwlMascot type={step.owl} size="xl" glow />
+                  {/* Owl mascot */}
+                  <div className="flex justify-center">
+                    <div className="relative">
+                      <div className="absolute inset-0 bg-gradient-to-br from-yellow-400/20 via-lime-400/20 to-emerald-400/20 rounded-full blur-2xl scale-150" />
+                      <OwlMascot type={step.owl} size="lg" glow />
+                    </div>
                   </div>
 
                   {/* Icon badge */}
-                  <motion.div
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{ delay: 0.2, type: "spring" }}
-                    className="flex justify-center"
-                  >
-                    <div className="p-2 rounded-full bg-gradient-to-br from-yellow-400/20 via-lime-400/20 to-emerald-400/20 border border-lime-400/30">
+                  <div className="flex justify-center">
+                    <div className="p-2 rounded-xl bg-gradient-to-br from-lime-400/20 to-emerald-400/20 border border-lime-500/30">
                       <Icon className="h-5 w-5 text-lime-600 dark:text-lime-400" />
                     </div>
-                  </motion.div>
-
-                  {/* Title and description */}
-                  <div className="text-center space-y-2">
-                    <motion.h2 
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.1 }}
-                      className="text-2xl font-bold bg-gradient-to-r from-yellow-600 via-lime-600 to-emerald-600 dark:from-yellow-400 dark:via-lime-400 dark:to-emerald-400 bg-clip-text text-transparent"
-                    >
-                      {step.title}
-                    </motion.h2>
-                    <motion.p 
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ delay: 0.15 }}
-                      className="text-sm text-muted-foreground max-w-xs mx-auto"
-                    >
-                      {step.description}
-                    </motion.p>
                   </div>
 
-                  {/* Highlights with gradient accents */}
+                  {/* Title and description */}
+                  <div className="text-center space-y-1.5">
+                    <h2 className="text-xl font-bold bg-gradient-to-r from-lime-600 to-emerald-600 dark:from-lime-400 dark:to-emerald-400 bg-clip-text text-transparent">
+                      {step.title}
+                    </h2>
+                    <p className="text-sm text-muted-foreground">
+                      {step.description}
+                    </p>
+                  </div>
+
+                  {/* Highlights */}
                   <div className="space-y-2">
                     {step.highlights.map((highlight, idx) => (
                       <motion.div
                         key={idx}
-                        initial={{ opacity: 0, x: -20 }}
+                        initial={{ opacity: 0, x: -10 }}
                         animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: 0.2 + idx * 0.08 }}
-                        className="flex items-center gap-3 p-3 rounded-xl bg-gradient-to-r from-yellow-500/10 via-lime-500/5 to-emerald-500/10 border border-lime-500/20"
+                        transition={{ delay: 0.1 + idx * 0.05 }}
+                        className="flex items-center gap-3 p-2.5 rounded-xl bg-gradient-to-r from-lime-500/10 to-emerald-500/10 border border-lime-500/20"
                       >
-                        <div className="w-2 h-2 rounded-full bg-gradient-to-r from-yellow-400 to-lime-400 flex-shrink-0" />
-                        <span className="text-sm font-medium">{highlight}</span>
+                        <div className="w-2 h-2 rounded-full bg-gradient-to-r from-lime-400 to-emerald-400 flex-shrink-0" />
+                        <span className="text-sm">{highlight}</span>
                       </motion.div>
                     ))}
                   </div>
@@ -300,7 +243,7 @@ export const SimpleOnboarding = () => {
               </AnimatePresence>
 
               {/* Navigation */}
-              <div className="flex items-center justify-between pt-4">
+              <div className="flex items-center justify-between pt-2">
                 <Button
                   variant="ghost"
                   size="sm"
@@ -312,21 +255,18 @@ export const SimpleOnboarding = () => {
                   Back
                 </Button>
 
-                {/* Step indicators with gradient */}
-                <div className="flex gap-2">
+                {/* Step dots */}
+                <div className="flex gap-1.5">
                   {tourSteps.map((_, idx) => (
-                    <motion.div
+                    <div
                       key={idx}
-                      className={`h-2 rounded-full transition-all ${
+                      className={`h-1.5 rounded-full transition-all ${
                         idx === currentStep 
-                          ? "w-6 bg-gradient-to-r from-yellow-400 via-lime-400 to-emerald-400" 
+                          ? "w-4 bg-gradient-to-r from-lime-400 to-emerald-400" 
                           : idx < currentStep
-                          ? "w-2 bg-lime-400/60"
-                          : "w-2 bg-muted-foreground/20"
+                          ? "w-1.5 bg-lime-400/60"
+                          : "w-1.5 bg-muted-foreground/30"
                       }`}
-                      animate={{ 
-                        scale: idx === currentStep ? 1 : 0.85,
-                      }}
                     />
                   ))}
                 </div>
@@ -334,7 +274,7 @@ export const SimpleOnboarding = () => {
                 <Button
                   size="sm"
                   onClick={handleNext}
-                  className="gap-1 bg-gradient-to-r from-yellow-500 via-lime-500 to-emerald-500 hover:from-yellow-600 hover:via-lime-600 hover:to-emerald-600 text-white shadow-lg shadow-lime-500/25"
+                  className="gap-1 bg-gradient-to-r from-lime-500 to-emerald-500 hover:from-lime-600 hover:to-emerald-600 text-white"
                 >
                   {currentStep < tourSteps.length - 1 ? (
                     <>
@@ -351,7 +291,7 @@ export const SimpleOnboarding = () => {
               </div>
             </div>
           </div>
-        </div>
+        </motion.div>
       </DialogContent>
     </Dialog>
   );
