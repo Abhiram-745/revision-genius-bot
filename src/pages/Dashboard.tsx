@@ -16,6 +16,7 @@ import PageTransition from "@/components/PageTransition";
 import { OwlMascot } from "@/components/mascot/OwlMascot";
 import { DashboardFloatingElements, MotivationalBadge } from "@/components/dashboard/FloatingElements";
 import { motion } from "framer-motion";
+import PremiumGrantNotification from "@/components/PremiumGrantNotification";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -25,6 +26,7 @@ const Dashboard = () => {
   const [hasData, setHasData] = useState(false);
   const [loading, setLoading] = useState(true);
   const [streak, setStreak] = useState(0);
+  const [showPremiumNotification, setShowPremiumNotification] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -51,15 +53,31 @@ const Dashboard = () => {
   }, [navigate]);
 
   const checkSubjects = async (userId: string) => {
-    const [subjectsResult, timetablesResult, profileResult, streakResult] = await Promise.all([
+    const [subjectsResult, timetablesResult, profileResult, streakResult, premiumResult] = await Promise.all([
       supabase.from("subjects").select("id").eq("user_id", userId).limit(1),
       supabase.from("timetables").select("id").eq("user_id", userId).limit(1),
       supabase.from("profiles").select("full_name").eq("id", userId).single(),
-      supabase.from("study_streaks").select("*").eq("user_id", userId).order("date", { ascending: false }).limit(7)
+      supabase.from("study_streaks").select("*").eq("user_id", userId).order("date", { ascending: false }).limit(7),
+      supabase.from("premium_grants").select("id, created_at").eq("user_id", userId).order("created_at", { ascending: false }).limit(1)
     ]);
     
     const hasSubjects = subjectsResult.data && subjectsResult.data.length > 0;
     const hasTimetables = timetablesResult.data && timetablesResult.data.length > 0;
+    
+    // Check if premium was just granted (within last 30 seconds)
+    if (premiumResult.data && premiumResult.data.length > 0) {
+      const grantTime = new Date(premiumResult.data[0].created_at).getTime();
+      const now = Date.now();
+      const timeDiff = now - grantTime;
+      // Show notification if premium was granted within 30 seconds
+      if (timeDiff < 30000) {
+        const shownKey = `premium_shown_${premiumResult.data[0].id}`;
+        if (!localStorage.getItem(shownKey)) {
+          localStorage.setItem(shownKey, 'true');
+          setShowPremiumNotification(true);
+        }
+      }
+    }
     
     // Calculate current streak
     if (streakResult.data && streakResult.data.length > 0) {
@@ -272,6 +290,12 @@ const Dashboard = () => {
             </div>
           )}
         </main>
+
+        {/* Premium Grant Notification */}
+        <PremiumGrantNotification 
+          show={showPremiumNotification} 
+          onClose={() => setShowPremiumNotification(false)} 
+        />
       </div>
     </PageTransition>
   );

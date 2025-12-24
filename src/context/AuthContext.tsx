@@ -133,11 +133,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [checkEmailVerified, checkBanStatus]);
 
   // Grant premium for OAuth users (Google, etc.) who signed up during offer period
-  const grantOAuthPremium = async (userId: string) => {
+  const grantOAuthPremium = async (userId: string): Promise<boolean> => {
     const offerEndDate = new Date('2025-01-27T23:59:59Z');
     const now = new Date();
     
-    if (now >= offerEndDate) return;
+    if (now >= offerEndDate) return false;
     
     // Check if user already has premium grant
     const { data: existingGrant } = await supabase
@@ -146,20 +146,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       .eq('user_id', userId)
       .maybeSingle();
     
-    if (existingGrant) return; // Already has premium
+    if (existingGrant) return false; // Already has premium
     
-    // Grant 1 year of free premium
+    // Grant 2 months of free premium
     const premiumExpiry = new Date();
-    premiumExpiry.setFullYear(premiumExpiry.getFullYear() + 1);
+    premiumExpiry.setMonth(premiumExpiry.getMonth() + 2);
     
-    await supabase.from('premium_grants').insert({
+    const { error } = await supabase.from('premium_grants').insert({
       user_id: userId,
       grant_type: 'early_signup_offer',
       starts_at: new Date().toISOString(),
       expires_at: premiumExpiry.toISOString()
     });
     
-    console.log('Premium granted to OAuth user:', userId);
+    if (!error) {
+      console.log('Premium granted to OAuth user:', userId);
+      return true; // Premium was granted
+    }
+    return false;
   };
 
   useEffect(() => {
@@ -263,9 +267,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const now = new Date();
         
         if (now < offerEndDate) {
-          // Grant 1 year of free premium for early signups
+          // Grant 2 months of free premium for early signups
           const premiumExpiry = new Date();
-          premiumExpiry.setFullYear(premiumExpiry.getFullYear() + 1);
+          premiumExpiry.setMonth(premiumExpiry.getMonth() + 2);
           
           await supabase.from('premium_grants').insert({
             user_id: data.user.id,

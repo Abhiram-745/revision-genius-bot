@@ -87,7 +87,7 @@ function SortableTopic({ topic, onRemove, onEdit, onConfidenceChange }: Sortable
     <div
       ref={setNodeRef}
       style={style}
-      className={`flex items-center gap-2 p-2 rounded-md bg-background border ${
+      className={`flex items-start gap-2 p-2 rounded-md bg-background border ${
         isDragging ? 'shadow-lg ring-2 ring-primary' : ''
       }`}
     >
@@ -120,17 +120,17 @@ function SortableTopic({ topic, onRemove, onEdit, onConfidenceChange }: Sortable
         </div>
       ) : (
         <>
-          <span className="flex-1 text-sm truncate">{topic.name}</span>
+          <span className="flex-1 text-sm break-words whitespace-normal leading-tight min-w-0">{topic.name}</span>
           
-          <div className="flex items-center gap-2 min-w-[140px]">
+          <div className="flex items-center gap-2 min-w-[120px] flex-shrink-0">
             <Slider
               value={[confidenceValue]}
               onValueChange={([value]) => onConfidenceChange(topic.id || topic.name, value)}
               max={100}
               step={10}
-              className="w-16"
+              className="w-14"
             />
-            <span className={`text-xs w-12 ${getConfidenceColor(confidenceValue)}`}>
+            <span className={`text-xs w-10 flex-shrink-0 ${getConfidenceColor(confidenceValue)}`}>
               {getConfidenceLabel(confidenceValue)}
             </span>
           </div>

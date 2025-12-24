@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import FloatingIcon from "./FloatingIcon";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface Session {
   id: string;
@@ -155,6 +156,7 @@ interface InteractiveTimetableDemoProps {
 }
 
 const InteractiveTimetableDemo = ({ onArrowClick }: InteractiveTimetableDemoProps) => {
+  const isMobile = useIsMobile();
   const [sessions, setSessions] = useState(demoSessions);
   const [isHovering, setIsHovering] = useState<string | null>(null);
   const [currentStep, setCurrentStep] = useState<DemoStep>("generation");
@@ -250,187 +252,295 @@ const InteractiveTimetableDemo = ({ onArrowClick }: InteractiveTimetableDemoProp
               </p>
             </motion.div>
 
-            {/* Generation Steps with Floating Cards */}
-            <div className="relative flex flex-col items-center gap-8">
-              
-              {/* Step 1: Upload Notes */}
-              <motion.div
-                initial={{ opacity: 0, x: -100, rotate: -5 }}
-                animate={{ 
-                  opacity: generationStep >= 0 ? 1 : 0, 
-                  x: generationStep >= 0 ? 0 : -100,
-                  rotate: generationStep >= 0 ? -3 : -5
-                }}
-                transition={{ type: "spring", damping: 20 }}
-                className="absolute left-0 md:left-10 top-0"
-              >
-                <FloatingIcon delay={0} duration={4}>
-                  <Card className="w-64 border-2 border-primary/30 bg-card/95 backdrop-blur-sm shadow-xl">
-                    <CardContent className="p-5">
-                      <div className="flex items-center gap-3 mb-3">
-                        <motion.div 
-                          animate={{ rotate: [0, 10, -10, 0] }}
-                          transition={{ duration: 2, repeat: Infinity }}
-                          className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center"
-                        >
+            {/* Generation Steps - Mobile stacked, Desktop floating */}
+            {isMobile ? (
+              <div className="space-y-4 px-2">
+                {/* Step 1 */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: generationStep >= 0 ? 1 : 0.3, y: 0 }}
+                  transition={{ delay: 0.1 }}
+                >
+                  <Card className={`border-2 transition-all ${generationStep >= 0 ? 'border-primary/40 bg-card' : 'border-muted bg-muted/20'}`}>
+                    <CardContent className="p-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
                           <Upload className="w-5 h-5 text-primary" />
-                        </motion.div>
-                        <div>
-                          <p className="font-semibold text-sm">Step 1</p>
-                          <p className="text-xs text-muted-foreground">Upload Notes</p>
                         </div>
-                      </div>
-                      <div className="space-y-2">
-                        <div className="flex items-center gap-2 text-xs">
-                          <FileText className="w-3 h-3 text-muted-foreground" />
-                          <span>Biology_Notes.pdf</span>
-                          <CheckCircle2 className="w-3 h-3 text-primary ml-auto" />
+                        <div className="flex-1">
+                          <p className="font-semibold text-sm">Step 1: Upload Notes</p>
+                          <p className="text-xs text-muted-foreground">Your exam specifications & notes</p>
                         </div>
-                        <div className="flex items-center gap-2 text-xs">
-                          <FileText className="w-3 h-3 text-muted-foreground" />
-                          <span>Maths_Revision.pdf</span>
-                          <CheckCircle2 className="w-3 h-3 text-primary ml-auto" />
-                        </div>
+                        {generationStep >= 1 && <CheckCircle2 className="w-5 h-5 text-primary" />}
                       </div>
                     </CardContent>
                   </Card>
-                </FloatingIcon>
-              </motion.div>
+                </motion.div>
 
-              {/* Step 2: AI Parsing Topics */}
-              <motion.div
-                initial={{ opacity: 0, y: 50 }}
-                animate={{ 
-                  opacity: generationStep >= 1 ? 1 : 0, 
-                  y: generationStep >= 1 ? 0 : 50 
-                }}
-                transition={{ type: "spring", damping: 20 }}
-                className="absolute right-0 md:right-10 top-20"
-              >
-                <FloatingIcon delay={0.5} duration={4.5}>
-                  <Card className="w-72 border-2 border-secondary/30 bg-card/95 backdrop-blur-sm shadow-xl">
-                    <CardContent className="p-5">
-                      <div className="flex items-center gap-3 mb-3">
-                        <motion.div 
-                          animate={{ scale: [1, 1.1, 1] }}
-                          transition={{ duration: 1.5, repeat: Infinity }}
-                          className="w-10 h-10 rounded-xl bg-secondary/10 flex items-center justify-center"
-                        >
+                {/* Step 2 */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: generationStep >= 1 ? 1 : 0.3, y: 0 }}
+                  transition={{ delay: 0.2 }}
+                >
+                  <Card className={`border-2 transition-all ${generationStep >= 1 ? 'border-secondary/40 bg-card' : 'border-muted bg-muted/20'}`}>
+                    <CardContent className="p-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-secondary/10 flex items-center justify-center">
                           <Brain className="w-5 h-5 text-secondary" />
-                        </motion.div>
-                        <div>
-                          <p className="font-semibold text-sm">Step 2</p>
-                          <p className="text-xs text-muted-foreground">AI Parsing Topics</p>
                         </div>
-                      </div>
-                      <div className="space-y-2">
-                        {["Quadratic Equations", "Cell Division", "Newton's Laws", "Atomic Structure"].map((topic, i) => (
-                          <motion.div 
-                            key={topic}
-                            initial={{ opacity: 0, x: -10 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: i * 0.2 }}
-                            className="flex items-center gap-2 text-xs bg-secondary/5 rounded-lg px-2 py-1.5"
-                          >
-                            <Sparkles className="w-3 h-3 text-secondary" />
-                            <span>{topic}</span>
-                          </motion.div>
-                        ))}
+                        <div className="flex-1">
+                          <p className="font-semibold text-sm">Step 2: AI Parsing</p>
+                          <p className="text-xs text-muted-foreground">Extracting topics from your materials</p>
+                        </div>
+                        {generationStep >= 2 && <CheckCircle2 className="w-5 h-5 text-secondary" />}
                       </div>
                     </CardContent>
                   </Card>
-                </FloatingIcon>
-              </motion.div>
+                </motion.div>
 
-              {/* Step 3: Difficulty Analysis */}
-              <motion.div
-                initial={{ opacity: 0, x: -80 }}
-                animate={{ 
-                  opacity: generationStep >= 2 ? 1 : 0, 
-                  x: generationStep >= 2 ? 0 : -80 
-                }}
-                transition={{ type: "spring", damping: 20 }}
-                className="absolute left-4 md:left-20 top-48"
-              >
-                <FloatingIcon delay={1} duration={5}>
-                  <Card className="w-60 border-2 border-accent/30 bg-card/95 backdrop-blur-sm shadow-xl">
-                    <CardContent className="p-5">
-                      <div className="flex items-center gap-3 mb-3">
-                        <motion.div 
-                          animate={{ rotate: [0, 5, -5, 0] }}
-                          transition={{ duration: 3, repeat: Infinity }}
-                          className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center"
-                        >
+                {/* Step 3 */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: generationStep >= 2 ? 1 : 0.3, y: 0 }}
+                  transition={{ delay: 0.3 }}
+                >
+                  <Card className={`border-2 transition-all ${generationStep >= 2 ? 'border-accent/40 bg-card' : 'border-muted bg-muted/20'}`}>
+                    <CardContent className="p-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center">
                           <AlertTriangle className="w-5 h-5 text-accent" />
-                        </motion.div>
-                        <div>
-                          <p className="font-semibold text-sm">Step 3</p>
-                          <p className="text-xs text-muted-foreground">Focus Points</p>
                         </div>
-                      </div>
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between text-xs">
-                          <span>Quadratic Equations</span>
-                          <span className="text-destructive font-medium">Hard</span>
+                        <div className="flex-1">
+                          <p className="font-semibold text-sm">Step 3: Difficulty Analysis</p>
+                          <p className="text-xs text-muted-foreground">Identifying focus areas</p>
                         </div>
-                        <div className="flex items-center justify-between text-xs">
-                          <span>Newton's Laws</span>
-                          <span className="text-accent font-medium">Medium</span>
-                        </div>
-                        <div className="flex items-center justify-between text-xs">
-                          <span>Cell Division</span>
-                          <span className="text-primary font-medium">Easy</span>
-                        </div>
+                        {generationStep >= 3 && <CheckCircle2 className="w-5 h-5 text-accent" />}
                       </div>
                     </CardContent>
                   </Card>
-                </FloatingIcon>
-              </motion.div>
+                </motion.div>
 
-              {/* Step 4: Schedule Optimization */}
-              <motion.div
-                initial={{ opacity: 0, x: 80 }}
-                animate={{ 
-                  opacity: generationStep >= 3 ? 1 : 0, 
-                  x: generationStep >= 3 ? 0 : 80 
-                }}
-                transition={{ type: "spring", damping: 20 }}
-                className="absolute right-4 md:right-16 top-64"
-              >
-                <FloatingIcon delay={1.5} duration={5.5}>
-                  <Card className="w-64 border-2 border-primary/30 bg-gradient-to-br from-card to-primary/5 backdrop-blur-sm shadow-xl">
-                    <CardContent className="p-5">
-                      <div className="flex items-center gap-3 mb-3">
-                        <motion.div 
-                          animate={{ rotate: 360 }}
-                          transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-                          className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center"
-                        >
+                {/* Step 4 */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: generationStep >= 3 ? 1 : 0.3, y: 0 }}
+                  transition={{ delay: 0.4 }}
+                >
+                  <Card className={`border-2 transition-all ${generationStep >= 3 ? 'border-primary/40 bg-gradient-to-br from-card to-primary/5' : 'border-muted bg-muted/20'}`}>
+                    <CardContent className="p-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
                           <Calendar className="w-5 h-5 text-primary" />
-                        </motion.div>
-                        <div>
-                          <p className="font-semibold text-sm">Step 4</p>
-                          <p className="text-xs text-muted-foreground">Optimizing Schedule</p>
                         </div>
-                      </div>
-                      <div className="space-y-2 text-xs">
-                        <div className="flex items-center gap-2">
-                          <CheckCircle2 className="w-3 h-3 text-primary" />
-                          <span>Avoiding Football Practice</span>
+                        <div className="flex-1">
+                          <p className="font-semibold text-sm">Step 4: Schedule Optimization</p>
+                          <p className="text-xs text-muted-foreground">Creating your perfect timetable</p>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <CheckCircle2 className="w-3 h-3 text-primary" />
-                          <span>Morning sessions added</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <CheckCircle2 className="w-3 h-3 text-primary" />
-                          <span>Breaks scheduled</span>
-                        </div>
+                        {generationStep >= 4 && <CheckCircle2 className="w-5 h-5 text-primary" />}
                       </div>
                     </CardContent>
                   </Card>
-                </FloatingIcon>
-              </motion.div>
+                </motion.div>
+
+                {/* Progress and Skip Button */}
+                <div className="flex flex-col items-center gap-4 pt-4">
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <motion.div
+                      animate={{ rotate: 360 }}
+                      transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                    >
+                      <Sparkles className="w-4 h-4 text-primary" />
+                    </motion.div>
+                    <span>Step {Math.min(generationStep + 1, 4)} of 4</span>
+                  </div>
+                  <Button variant="outline" onClick={skipToTimetable} className="gap-2">
+                    Skip to Timetable
+                    <ArrowRight className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              /* Desktop floating cards layout */
+              <div className="relative flex flex-col items-center gap-8">
+                {/* Step 1: Upload Notes */}
+                <motion.div
+                  initial={{ opacity: 0, x: -100, rotate: -5 }}
+                  animate={{ 
+                    opacity: generationStep >= 0 ? 1 : 0, 
+                    x: generationStep >= 0 ? 0 : -100,
+                    rotate: generationStep >= 0 ? -3 : -5
+                  }}
+                  transition={{ type: "spring", damping: 20 }}
+                  className="absolute left-0 md:left-10 top-0"
+                >
+                  <FloatingIcon delay={0} duration={4}>
+                    <Card className="w-64 border-2 border-primary/30 bg-card/95 backdrop-blur-sm shadow-xl">
+                      <CardContent className="p-5">
+                        <div className="flex items-center gap-3 mb-3">
+                          <motion.div 
+                            animate={{ rotate: [0, 10, -10, 0] }}
+                            transition={{ duration: 2, repeat: Infinity }}
+                            className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center"
+                          >
+                            <Upload className="w-5 h-5 text-primary" />
+                          </motion.div>
+                          <div>
+                            <p className="font-semibold text-sm">Step 1</p>
+                            <p className="text-xs text-muted-foreground">Upload Notes</p>
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2 text-xs">
+                            <FileText className="w-3 h-3 text-muted-foreground" />
+                            <span>Biology_Notes.pdf</span>
+                            <CheckCircle2 className="w-3 h-3 text-primary ml-auto" />
+                          </div>
+                          <div className="flex items-center gap-2 text-xs">
+                            <FileText className="w-3 h-3 text-muted-foreground" />
+                            <span>Maths_Revision.pdf</span>
+                            <CheckCircle2 className="w-3 h-3 text-primary ml-auto" />
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </FloatingIcon>
+                </motion.div>
+
+                {/* Step 2: AI Parsing Topics */}
+                <motion.div
+                  initial={{ opacity: 0, y: 50 }}
+                  animate={{ 
+                    opacity: generationStep >= 1 ? 1 : 0, 
+                    y: generationStep >= 1 ? 0 : 50 
+                  }}
+                  transition={{ type: "spring", damping: 20 }}
+                  className="absolute right-0 md:right-10 top-20"
+                >
+                  <FloatingIcon delay={0.5} duration={4.5}>
+                    <Card className="w-72 border-2 border-secondary/30 bg-card/95 backdrop-blur-sm shadow-xl">
+                      <CardContent className="p-5">
+                        <div className="flex items-center gap-3 mb-3">
+                          <motion.div 
+                            animate={{ scale: [1, 1.1, 1] }}
+                            transition={{ duration: 1.5, repeat: Infinity }}
+                            className="w-10 h-10 rounded-xl bg-secondary/10 flex items-center justify-center"
+                          >
+                            <Brain className="w-5 h-5 text-secondary" />
+                          </motion.div>
+                          <div>
+                            <p className="font-semibold text-sm">Step 2</p>
+                            <p className="text-xs text-muted-foreground">AI Parsing Topics</p>
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          {["Quadratic Equations", "Cell Division", "Newton's Laws", "Atomic Structure"].map((topic, i) => (
+                            <motion.div 
+                              key={topic}
+                              initial={{ opacity: 0, x: -10 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              transition={{ delay: i * 0.2 }}
+                              className="flex items-center gap-2 text-xs bg-secondary/5 rounded-lg px-2 py-1.5"
+                            >
+                              <Sparkles className="w-3 h-3 text-secondary" />
+                              <span>{topic}</span>
+                            </motion.div>
+                          ))}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </FloatingIcon>
+                </motion.div>
+
+                {/* Step 3: Difficulty Analysis */}
+                <motion.div
+                  initial={{ opacity: 0, x: -80 }}
+                  animate={{ 
+                    opacity: generationStep >= 2 ? 1 : 0, 
+                    x: generationStep >= 2 ? 0 : -80 
+                  }}
+                  transition={{ type: "spring", damping: 20 }}
+                  className="absolute left-4 md:left-20 top-48"
+                >
+                  <FloatingIcon delay={1} duration={5}>
+                    <Card className="w-60 border-2 border-accent/30 bg-card/95 backdrop-blur-sm shadow-xl">
+                      <CardContent className="p-5">
+                        <div className="flex items-center gap-3 mb-3">
+                          <motion.div 
+                            animate={{ rotate: [0, 5, -5, 0] }}
+                            transition={{ duration: 3, repeat: Infinity }}
+                            className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center"
+                          >
+                            <AlertTriangle className="w-5 h-5 text-accent" />
+                          </motion.div>
+                          <div>
+                            <p className="font-semibold text-sm">Step 3</p>
+                            <p className="text-xs text-muted-foreground">Focus Points</p>
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between text-xs">
+                            <span>Quadratic Equations</span>
+                            <span className="text-destructive font-medium">Hard</span>
+                          </div>
+                          <div className="flex items-center justify-between text-xs">
+                            <span>Newton's Laws</span>
+                            <span className="text-accent font-medium">Medium</span>
+                          </div>
+                          <div className="flex items-center justify-between text-xs">
+                            <span>Cell Division</span>
+                            <span className="text-primary font-medium">Easy</span>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </FloatingIcon>
+                </motion.div>
+
+                {/* Step 4: Schedule Optimization */}
+                <motion.div
+                  initial={{ opacity: 0, x: 80 }}
+                  animate={{ 
+                    opacity: generationStep >= 3 ? 1 : 0, 
+                    x: generationStep >= 3 ? 0 : 80 
+                  }}
+                  transition={{ type: "spring", damping: 20 }}
+                  className="absolute right-4 md:right-16 top-64"
+                >
+                  <FloatingIcon delay={1.5} duration={5.5}>
+                    <Card className="w-64 border-2 border-primary/30 bg-gradient-to-br from-card to-primary/5 backdrop-blur-sm shadow-xl">
+                      <CardContent className="p-5">
+                        <div className="flex items-center gap-3 mb-3">
+                          <motion.div 
+                            animate={{ rotate: 360 }}
+                            transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+                            className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center"
+                          >
+                            <Calendar className="w-5 h-5 text-primary" />
+                          </motion.div>
+                          <div>
+                            <p className="font-semibold text-sm">Step 4</p>
+                            <p className="text-xs text-muted-foreground">Optimizing Schedule</p>
+                          </div>
+                        </div>
+                        <div className="space-y-2 text-xs">
+                          <div className="flex items-center gap-2">
+                            <CheckCircle2 className="w-3 h-3 text-primary" />
+                            <span>Avoiding Football Practice</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <CheckCircle2 className="w-3 h-3 text-primary" />
+                            <span>Morning sessions added</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <CheckCircle2 className="w-3 h-3 text-primary" />
+                            <span>Breaks scheduled</span>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </FloatingIcon>
+                </motion.div>
 
               {/* Center Progress Indicator */}
               <motion.div 
