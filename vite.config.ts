@@ -24,10 +24,10 @@ export default defineConfig(({ mode }) => ({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'robots.txt'],
       manifest: {
-        name: 'StudyPlanAI - GCSE Study Planner',
-        short_name: 'StudyPlanAI',
-        description: 'AI-powered GCSE study planner with timetables, achievements, and social features',
-        theme_color: '#6366f1',
+        name: 'Vistara - Your Personal Study Companion',
+        short_name: 'Vistara',
+        description: 'AI-powered study planner with timetables, achievements, and social features - made by students, for students',
+        theme_color: '#3B82F6',
         background_color: '#ffffff',
         display: 'standalone',
         orientation: 'portrait',
@@ -35,14 +35,14 @@ export default defineConfig(({ mode }) => ({
         start_url: '/',
         icons: [
           {
-            src: '/placeholder.svg',
+            src: '/favicon.png',
             sizes: '192x192',
-            type: 'image/svg+xml'
+            type: 'image/png'
           },
           {
-            src: '/placeholder.svg',
+            src: '/favicon.png',
             sizes: '512x512',
-            type: 'image/svg+xml',
+            type: 'image/png',
             purpose: 'any maskable'
           }
         ]

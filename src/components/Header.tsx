@@ -28,7 +28,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Calendar, Plus, Home, LogOut, Settings, User, Sparkles, BookOpen, Users, Moon, Sun, ListTodo, CalendarClock, Menu, Brain, HelpCircle, Crown } from "lucide-react";
+import { Calendar, Plus, Home, LogOut, Settings, User, Sparkles, BookOpen, Users, Moon, Sun, ListTodo, CalendarClock, Menu, Brain, HelpCircle, Crown, Download } from "lucide-react";
 import { toast } from "sonner";
 import ProfileSettings from "./ProfileSettings";
 import { useUserRole, useUsageLimits } from "@/hooks/useUserRole";
@@ -36,6 +36,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import VistaraLogo from "./VistaraLogo";
 import { NotificationToggle } from "./NotificationToggle";
+import InstallAppButton from "./InstallAppButton";
 
 interface HeaderProps {
   onNewTimetable?: () => void;
@@ -462,8 +463,10 @@ const Header = ({ onNewTimetable }: HeaderProps) => {
             </DropdownMenu>
           </nav>
 
-          {/* Right Side Actions */}
           <div className="flex items-center gap-2">
+            {/* Install App Button - Desktop only */}
+            <InstallAppButton variant="ghost" size="sm" className="hidden md:flex" />
+
             {/* Tutorial Button - Desktop only */}
             <Button
               variant="ghost"
