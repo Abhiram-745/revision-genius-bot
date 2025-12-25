@@ -18,6 +18,7 @@ import { OwlMascot } from "@/components/mascot/OwlMascot";
 import { motion } from "framer-motion";
 import PremiumGrantNotification from "@/components/PremiumGrantNotification";
 import { AmbassadorApprovalNotification } from "@/components/dashboard/AmbassadorApprovalNotification";
+import { PremiumUpgradeCTA } from "@/components/dashboard/PremiumUpgradeCTA";
 import { format } from "date-fns";
 
 // Import owl mascot images only
@@ -754,6 +755,9 @@ const Dashboard = () => {
                 </motion.div>
               )}
 
+              {/* Premium Upgrade CTA */}
+              <PremiumUpgradeCTA />
+
               {/* Motivational Footer */}
               <motion.div
                 variants={itemVariants}
@@ -763,7 +767,7 @@ const Dashboard = () => {
                   className="flex items-center gap-3 px-6 py-3 rounded-2xl bg-gradient-to-r from-primary/10 to-accent/10 border border-primary/20"
                   whileHover={{ scale: 1.02 }}
                 >
-                  <motion.div animate={{ rotate: 360 }} transition={{ duration: 20, repeat: Infinity, ease: "linear" }}>
+                  <motion.div animate={{ rotate: 360 }} transition={{ duration: 20, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}>
                     <Sparkles className="h-5 w-5 text-primary" />
                   </motion.div>
                   <span className="font-medium text-sm">
