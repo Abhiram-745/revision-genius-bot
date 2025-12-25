@@ -249,8 +249,12 @@ const Insights = () => {
               )}
             </div>
 
-            <Tabs defaultValue="overview" className="w-full">
+            <Tabs defaultValue="analysis" className="w-full">
               <TabsList className="grid w-full grid-cols-5 mb-4 sm:mb-6 h-auto p-1">
+                <TabsTrigger value="analysis" className="gap-1.5 text-xs sm:text-sm py-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-emerald-500/20 data-[state=active]:to-amber-500/20">
+                  <Sparkles className="h-3.5 w-3.5 hidden sm:inline" />
+                  AI Insights
+                </TabsTrigger>
                 <TabsTrigger value="overview" className="gap-1.5 text-xs sm:text-sm py-2">
                   <BarChart3 className="h-3.5 w-3.5 hidden sm:inline" />
                   Overview
@@ -266,10 +270,6 @@ const Insights = () => {
                 <TabsTrigger value="practice" className="gap-1.5 text-xs sm:text-sm py-2">
                   <Activity className="h-3.5 w-3.5 hidden sm:inline" />
                   Practice
-                </TabsTrigger>
-                <TabsTrigger value="analysis" className="gap-1.5 text-xs sm:text-sm py-2">
-                  <Sparkles className="h-3.5 w-3.5 hidden sm:inline" />
-                  AI Analysis
                 </TabsTrigger>
               </TabsList>
 
@@ -527,16 +527,19 @@ const Insights = () => {
                 )}
               </TabsContent>
 
-              {/* AI Analysis Tab */}
-              <TabsContent value="analysis">
+              {/* AI Insights Tab - Now the primary tab */}
+              <TabsContent value="analysis" className="space-y-6">
                 {selectedTimetableId ? (
                   <StudyInsightsPanel timetableId={selectedTimetableId} />
                 ) : (
-                  <Card>
+                  <Card className="border-emerald-200/50 dark:border-emerald-800/30 bg-gradient-to-br from-emerald-50/50 to-amber-50/30 dark:from-emerald-950/20 dark:to-amber-950/10">
                     <CardContent className="text-center py-16">
-                      <Brain className="h-12 w-12 mx-auto text-muted-foreground/40 mb-4" />
-                      <p className="text-muted-foreground">
-                        No timetable found. Create a timetable to view AI insights.
+                      <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-emerald-500 to-amber-500 flex items-center justify-center">
+                        <Brain className="h-8 w-8 text-white" />
+                      </div>
+                      <h3 className="text-lg font-semibold mb-2">AI Insights Awaiting</h3>
+                      <p className="text-muted-foreground max-w-sm mx-auto">
+                        Create a timetable to unlock personalized AI study insights and performance analysis.
                       </p>
                     </CardContent>
                   </Card>
