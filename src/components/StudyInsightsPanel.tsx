@@ -14,18 +14,33 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
-const ChartCard = ({ title, icon, children, className = "" }: { 
+// Green-yellow color palette matching the reference design
+const INSIGHT_COLORS = {
+  primary: "hsl(142, 76%, 36%)", // Forest green
+  secondary: "hsl(142, 69%, 48%)", // Light green
+  tertiary: "hsl(65, 70%, 45%)", // Yellow-green
+  quaternary: "hsl(45, 93%, 47%)", // Golden yellow
+  accent: "hsl(35, 90%, 50%)", // Warm orange
+};
+
+const ChartCard = ({ title, icon, children, className = "", description }: { 
   title: string; 
   icon: React.ReactNode; 
   children: React.ReactNode; 
   className?: string;
+  description?: string;
 }) => (
-  <Card className={`border-amber-100 dark:border-amber-900/30 bg-gradient-to-br from-amber-50/50 to-orange-50/30 dark:from-amber-950/20 dark:to-orange-950/10 ${className}`}>
+  <Card className={`border-emerald-200/50 dark:border-emerald-800/30 bg-gradient-to-br from-emerald-50/50 via-lime-50/30 to-amber-50/30 dark:from-emerald-950/20 dark:via-lime-950/10 dark:to-amber-950/10 rounded-2xl shadow-sm ${className}`}>
     <CardHeader className="pb-2">
       <CardTitle className="text-base font-semibold flex items-center gap-2">
-        {icon}
+        <div className="p-1.5 rounded-lg bg-gradient-to-br from-emerald-500 to-amber-500">
+          <span className="text-white">{icon}</span>
+        </div>
         {title}
       </CardTitle>
+      {description && (
+        <CardDescription className="text-xs">{description}</CardDescription>
+      )}
     </CardHeader>
     <CardContent>{children}</CardContent>
   </Card>
@@ -221,76 +236,99 @@ export const StudyInsightsPanel = ({ timetableId }: StudyInsightsPanelProps) => 
     : null;
 
   return (
-    <div className="space-y-4">
-      <Card className="border-primary/20 bg-gradient-to-br from-amber-50/30 to-orange-50/20 dark:from-amber-950/10 dark:to-orange-950/5">
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="flex items-center gap-2">
-                <Brain className="h-5 w-5 text-primary" />
-                AI Study Insights
-              </CardTitle>
-              <CardDescription>
-                Personalized analysis based on your reflections and study patterns
-              </CardDescription>
+    <div className="space-y-6">
+      {/* Main Insights Card with green-yellow theme */}
+      <Card className="border-emerald-200/50 dark:border-emerald-800/30 bg-gradient-to-br from-emerald-50/60 via-lime-50/40 to-amber-50/40 dark:from-emerald-950/30 dark:via-lime-950/20 dark:to-amber-950/20 rounded-3xl overflow-hidden">
+        <CardHeader className="relative">
+          {/* Decorative background elements */}
+          <div className="absolute -top-20 -right-20 w-40 h-40 bg-gradient-to-br from-emerald-400/20 to-amber-400/20 rounded-full blur-3xl" />
+          <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-gradient-to-br from-lime-400/15 to-emerald-400/15 rounded-full blur-2xl" />
+          
+          <div className="relative flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="p-3 rounded-2xl bg-gradient-to-br from-emerald-500 to-amber-500 shadow-lg">
+                <Brain className="h-6 w-6 text-white" />
+              </div>
+              <div>
+                <CardTitle className="text-xl font-bold bg-gradient-to-r from-emerald-700 to-amber-600 bg-clip-text text-transparent dark:from-emerald-400 dark:to-amber-400">
+                  AI Study Insights
+                </CardTitle>
+                <CardDescription className="text-sm">
+                  Personalized analysis powered by your study patterns
+                </CardDescription>
+              </div>
             </div>
             <Button
               onClick={generateInsights}
               disabled={loading || reflections.length === 0}
-              className="gap-2"
+              className="gap-2 bg-gradient-to-r from-emerald-600 to-amber-500 hover:from-emerald-700 hover:to-amber-600 text-white border-0 shadow-md"
             >
               <Sparkles className="h-4 w-4" />
               {loading ? "Analyzing..." : insights ? "Refresh Insights" : "Generate Insights"}
             </Button>
           </div>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-6">
           {reflections.length === 0 && (
-            <p className="text-sm text-muted-foreground">
-              Complete study sessions and add reflections to generate AI insights!
-            </p>
+            <div className="text-center py-8 px-4 rounded-2xl bg-gradient-to-br from-emerald-100/50 to-amber-100/30 dark:from-emerald-900/20 dark:to-amber-900/10">
+              <div className="w-12 h-12 mx-auto mb-3 rounded-xl bg-gradient-to-br from-emerald-500 to-amber-500 flex items-center justify-center">
+                <Lightbulb className="h-6 w-6 text-white" />
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Complete study sessions and add reflections to generate AI insights!
+              </p>
+            </div>
           )}
 
           {insights && (
-            <div className="space-y-6 pt-4 border-t">
-              {/* Overall Summary */}
-              <div className="p-4 bg-primary/5 rounded-lg">
-                <p className="text-sm">{insights.overallSummary}</p>
+            <div className="space-y-6">
+              {/* Overall Summary with enhanced styling */}
+              <div className="p-5 rounded-2xl bg-gradient-to-r from-emerald-100/80 via-lime-100/60 to-amber-100/60 dark:from-emerald-900/30 dark:via-lime-900/20 dark:to-amber-900/20 border border-emerald-200/50 dark:border-emerald-800/30">
+                <div className="flex items-start gap-3">
+                  <div className="p-2 rounded-lg bg-gradient-to-br from-emerald-500 to-lime-500 flex-shrink-0">
+                    <Sparkles className="h-4 w-4 text-white" />
+                  </div>
+                  <p className="text-sm leading-relaxed">{insights.overallSummary}</p>
+                </div>
               </div>
 
-              {/* Key Metrics Summary */}
-              <div className="grid grid-cols-3 gap-4">
-                <div className="text-center p-4 bg-card rounded-xl border shadow-sm">
-                  <div className="text-3xl font-display font-bold text-foreground">
+              {/* Key Metrics Summary with green-yellow gradient cards */}
+              <div className="grid grid-cols-3 gap-3 sm:gap-4">
+                <div className="text-center p-4 rounded-2xl bg-gradient-to-br from-amber-100/80 to-amber-200/60 dark:from-amber-900/30 dark:to-amber-800/20 border border-amber-200/50 dark:border-amber-800/30">
+                  <div className="text-2xl sm:text-3xl font-display font-bold text-amber-700 dark:text-amber-400">
                     {insights.strugglingTopics.length}
                   </div>
-                  <div className="text-xs text-muted-foreground mt-1">Topics to Focus</div>
+                  <div className="text-xs text-amber-600/80 dark:text-amber-400/70 mt-1 font-medium">Topics to Focus</div>
                 </div>
-                <div className="text-center p-4 bg-card rounded-xl border shadow-sm">
-                  <div className="text-3xl font-display font-bold text-foreground">
+                <div className="text-center p-4 rounded-2xl bg-gradient-to-br from-emerald-100/80 to-emerald-200/60 dark:from-emerald-900/30 dark:to-emerald-800/20 border border-emerald-200/50 dark:border-emerald-800/30">
+                  <div className="text-2xl sm:text-3xl font-display font-bold text-emerald-700 dark:text-emerald-400">
                     {insights.strongAreas.length}
                   </div>
-                  <div className="text-xs text-muted-foreground mt-1">Strong Areas</div>
+                  <div className="text-xs text-emerald-600/80 dark:text-emerald-400/70 mt-1 font-medium">Strong Areas</div>
                 </div>
-                <div className="text-center p-4 bg-card rounded-xl border shadow-sm">
-                  <div className="text-3xl font-display font-bold text-emerald-600">
+                <div className="text-center p-4 rounded-2xl bg-gradient-to-br from-lime-100/80 to-lime-200/60 dark:from-lime-900/30 dark:to-lime-800/20 border border-lime-200/50 dark:border-lime-800/30">
+                  <div className="text-2xl sm:text-3xl font-display font-bold text-lime-700 dark:text-lime-400">
                     {Object.keys(insights.subjectBreakdown).length}
                   </div>
-                  <div className="text-xs text-muted-foreground mt-1">Subjects Analyzed</div>
+                  <div className="text-xs text-lime-600/80 dark:text-lime-400/70 mt-1 font-medium">Subjects</div>
                 </div>
               </div>
 
               <Tabs defaultValue="overview" className="w-full">
-                <TabsList className="grid w-full grid-cols-4">
-                  <TabsTrigger value="overview">Overview</TabsTrigger>
-                  <TabsTrigger value="performance">Performance</TabsTrigger>
-                  <TabsTrigger value="insights">Insights</TabsTrigger>
-                  <TabsTrigger value="peak-hours">Peak Hours</TabsTrigger>
+                <TabsList className="grid w-full grid-cols-4 bg-gradient-to-r from-emerald-100/50 to-amber-100/50 dark:from-emerald-900/20 dark:to-amber-900/20 p-1 rounded-xl">
+                  <TabsTrigger value="overview" className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 rounded-lg">Overview</TabsTrigger>
+                  <TabsTrigger value="performance" className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 rounded-lg">Performance</TabsTrigger>
+                  <TabsTrigger value="insights" className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 rounded-lg">Insights</TabsTrigger>
+                  <TabsTrigger value="peak-hours" className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 rounded-lg">Peak Hours</TabsTrigger>
                 </TabsList>
 
                     <TabsContent value="overview" className="space-y-6">
-                      {/* Topic Confidence Scatter Chart */}
-                      <ChartCard title="Topic Confidence Map" icon={<Target className="h-4 w-4" />}>
+                      {/* Topic Confidence Scatter Chart - Enhanced with green-yellow theme */}
+                      <ChartCard 
+                        title="Topic Mastery Map" 
+                        icon={<Target className="h-4 w-4" />}
+                        description="Visual overview of your confidence across all topics"
+                      >
                         {(() => {
                           // Build scatter chart data with reasons
                           const heatmapChartData: Array<{
@@ -381,22 +419,23 @@ export const StudyInsightsPanel = ({ timetableId }: StudyInsightsPanelProps) => 
                                       );
                                     }}
                                   />
-                                  <Scatter 
+                                    <Scatter 
                                     name="Topics" 
                                     data={heatmapChartData}
                                     shape={(props: any) => {
                                       const { cx, cy, payload } = props;
-                                      const color = payload.confidence >= 7 ? '#22c55e' : 
-                                                   payload.confidence >= 4 ? '#facc15' : '#ef4444';
+                                      // Use green-yellow color scheme
+                                      const color = payload.confidence >= 7 ? INSIGHT_COLORS.primary : 
+                                                   payload.confidence >= 4 ? INSIGHT_COLORS.quaternary : '#ef4444';
                                       return (
                                         <circle 
                                           cx={cx} 
                                           cy={cy} 
-                                          r={10} 
+                                          r={12} 
                                           fill={color}
                                           stroke="white"
                                           strokeWidth={2}
-                                          style={{ cursor: 'pointer' }}
+                                          style={{ cursor: 'pointer', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.1))' }}
                                         />
                                       );
                                     }}
@@ -404,19 +443,19 @@ export const StudyInsightsPanel = ({ timetableId }: StudyInsightsPanelProps) => 
                                 </ScatterChart>
                               </ResponsiveContainer>
 
-                              {/* Legend */}
-                              <div className="flex items-center justify-center gap-6 text-xs border-t pt-4">
-                                <div className="flex items-center gap-2">
-                                  <div className="w-4 h-4 rounded-full bg-emerald-500" />
-                                  <span>High Confidence (7-10)</span>
+                              {/* Enhanced Legend with green-yellow colors */}
+                              <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 text-xs border-t border-emerald-200/50 dark:border-emerald-800/30 pt-4 mt-4">
+                                <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-100/80 dark:bg-emerald-900/30">
+                                  <div className="w-3 h-3 rounded-full" style={{ backgroundColor: INSIGHT_COLORS.primary }} />
+                                  <span className="font-medium text-emerald-700 dark:text-emerald-400">Mastered (7-10)</span>
                                 </div>
-                                <div className="flex items-center gap-2">
-                                  <div className="w-4 h-4 rounded-full bg-yellow-400" />
-                                  <span>Medium (4-6)</span>
+                                <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-100/80 dark:bg-amber-900/30">
+                                  <div className="w-3 h-3 rounded-full" style={{ backgroundColor: INSIGHT_COLORS.quaternary }} />
+                                  <span className="font-medium text-amber-700 dark:text-amber-400">Learning (4-6)</span>
                                 </div>
-                                <div className="flex items-center gap-2">
-                                  <div className="w-4 h-4 rounded-full bg-red-500" />
-                                  <span>Low (1-3)</span>
+                                <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-red-100/80 dark:bg-red-900/30">
+                                  <div className="w-3 h-3 rounded-full bg-red-500" />
+                                  <span className="font-medium text-red-700 dark:text-red-400">Needs Work (1-3)</span>
                                 </div>
                               </div>
                             </div>
@@ -527,50 +566,69 @@ export const StudyInsightsPanel = ({ timetableId }: StudyInsightsPanelProps) => 
                     </TabsContent>
 
                     <TabsContent value="performance" className="space-y-6">
-                      {/* Subject Performance Bar Chart */}
-                      <ChartCard title="Subject Performance Breakdown" icon={<BarChart3 className="h-4 w-4" />}>
+                      {/* Subject Performance Bar Chart - Enhanced with green-yellow gradient */}
+                      <ChartCard 
+                        title="Subject Performance" 
+                        icon={<BarChart3 className="h-4 w-4" />}
+                        description="Confidence scores across your subjects"
+                      >
                         <ChartContainer
                           config={Object.entries(insights.subjectBreakdown).reduce((acc, [subject], idx) => ({
                             ...acc,
                             [subject]: {
                               label: subject,
-                              color: `hsl(var(--chart-${(idx % 5) + 1}))`,
+                              color: Object.values(INSIGHT_COLORS)[idx % 5],
                             }
                           }), {})}
                           className="h-[300px]"
                         >
                           <ResponsiveContainer width="100%" height="100%">
-                            <BarChart data={Object.entries(insights.subjectBreakdown).map(([subject, data]) => ({
+                            <BarChart data={Object.entries(insights.subjectBreakdown).map(([subject, data], idx) => ({
                               subject,
                               score: data.confidenceScore,
                               topics: data.topicsCount,
+                              fill: Object.values(INSIGHT_COLORS)[idx % 5],
                             }))}>
-                              <XAxis dataKey="subject" tick={{ fill: 'hsl(var(--muted-foreground))' }} />
+                              <defs>
+                                <linearGradient id="performanceGradient" x1="0" y1="0" x2="0" y2="1">
+                                  <stop offset="0%" stopColor={INSIGHT_COLORS.primary} />
+                                  <stop offset="100%" stopColor={INSIGHT_COLORS.secondary} />
+                                </linearGradient>
+                              </defs>
+                              <XAxis dataKey="subject" tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }} />
                               <YAxis domain={[0, 10]} tick={{ fill: 'hsl(var(--muted-foreground))' }} />
                               <RechartsTooltip 
                                 contentStyle={{ 
                                   backgroundColor: 'hsl(var(--card))',
                                   border: '1px solid hsl(var(--border))',
-                                  borderRadius: '8px'
+                                  borderRadius: '12px',
+                                  boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
                                 }}
+                                formatter={(value: any) => [`${value}/10`, 'Confidence']}
                               />
-                              <Bar dataKey="score" name="Confidence Score" fill="#22c55e" radius={[8, 8, 0, 0]} />
+                              <Bar dataKey="score" name="Confidence Score" fill="url(#performanceGradient)" radius={[8, 8, 0, 0]} />
                             </BarChart>
                           </ResponsiveContainer>
                         </ChartContainer>
-                          <div className="flex items-center justify-center gap-6 mt-4 text-xs">
-                            <div className="flex items-center gap-2">
-                              <div className="w-3 h-3 rounded-full bg-emerald-500" />
-                              <span className="text-muted-foreground">Confidence Score</span>
-                            </div>
-                          </div>
                           
-                          <div className="mt-4 space-y-2">
-                            {Object.entries(insights.subjectBreakdown).map(([subject, data]) => (
-                              <div key={subject} className="text-sm">
-                                <div className="flex justify-between mb-1">
-                                  <span className="font-medium">{subject}</span>
-                                  <span className="text-muted-foreground">{data.confidenceScore}/10</span>
+                          {/* Subject breakdown cards */}
+                          <div className="mt-6 grid gap-3">
+                            {Object.entries(insights.subjectBreakdown).map(([subject, data], idx) => (
+                              <div 
+                                key={subject} 
+                                className="p-3 rounded-xl border border-emerald-200/50 dark:border-emerald-800/30 bg-gradient-to-r from-emerald-50/50 to-transparent dark:from-emerald-950/20"
+                              >
+                                <div className="flex items-center justify-between mb-2">
+                                  <span className="font-medium text-sm">{subject}</span>
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-xs text-muted-foreground">{data.topicsCount} topics</span>
+                                    <span 
+                                      className="px-2 py-0.5 rounded-full text-xs font-semibold text-white"
+                                      style={{ backgroundColor: Object.values(INSIGHT_COLORS)[idx % 5] }}
+                                    >
+                                      {data.confidenceScore}/10
+                                    </span>
+                                  </div>
                                 </div>
                                 <p className="text-xs text-muted-foreground">{data.summary}</p>
                               </div>
@@ -633,128 +691,145 @@ export const StudyInsightsPanel = ({ timetableId }: StudyInsightsPanelProps) => 
                       </div>
                     </TabsContent>
 
-                    <TabsContent value="insights" className="space-y-4">
-                      {/* Personalized Tips */}
-                      <Card>
-                        <CardHeader>
-                          <CardTitle className="text-base flex items-center gap-2">
-                            <Lightbulb className="h-4 w-4 text-yellow-600" />
-                            Personalized Study Tips
-                          </CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                          <ul className="space-y-2 text-sm">
-                            {insights.personalizedTips.map((tip, idx) => (
-                              <li key={idx} className="flex gap-2 p-2 rounded bg-muted/50">
-                                <span className="text-primary mt-1">•</span>
-                                <span>{tip}</span>
-                              </li>
-                            ))}
-                          </ul>
-                        </CardContent>
-                      </Card>
+                    <TabsContent value="insights" className="space-y-5">
+                      {/* Personalized Tips - Enhanced with green-yellow theme */}
+                      <ChartCard 
+                        title="Personalized Study Tips" 
+                        icon={<Lightbulb className="h-4 w-4" />}
+                        description="AI-generated recommendations just for you"
+                      >
+                        <div className="space-y-2">
+                          {insights.personalizedTips.map((tip, idx) => (
+                            <div 
+                              key={idx} 
+                              className="flex gap-3 p-3 rounded-xl bg-gradient-to-r from-amber-100/60 to-amber-50/30 dark:from-amber-900/20 dark:to-amber-950/10 border border-amber-200/40 dark:border-amber-800/20"
+                            >
+                              <div className="flex-shrink-0 w-6 h-6 rounded-full bg-gradient-to-br from-amber-500 to-amber-600 flex items-center justify-center text-white text-xs font-bold">
+                                {idx + 1}
+                              </div>
+                              <span className="text-sm">{tip}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </ChartCard>
 
-                      {/* Learning Patterns */}
-                      <Card>
-                        <CardHeader>
-                          <CardTitle className="text-base flex items-center gap-2">
-                            <Brain className="h-4 w-4" />
-                            Learning Patterns Detected
-                          </CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                          <ul className="space-y-2 text-sm">
-                            {insights.learningPatterns.map((pattern, idx) => (
-                              <li key={idx} className="flex gap-2 p-2 rounded bg-muted/50">
-                                <span className="text-primary mt-1">•</span>
-                                <span>{pattern}</span>
-                              </li>
-                            ))}
-                          </ul>
-                        </CardContent>
-                      </Card>
+                      {/* Learning Patterns - Enhanced */}
+                      <ChartCard 
+                        title="Learning Patterns Detected" 
+                        icon={<Brain className="h-4 w-4" />}
+                        description="How you learn best based on your study data"
+                      >
+                        <div className="space-y-2">
+                          {insights.learningPatterns.map((pattern, idx) => (
+                            <div 
+                              key={idx} 
+                              className="flex gap-3 p-3 rounded-xl bg-gradient-to-r from-lime-100/60 to-lime-50/30 dark:from-lime-900/20 dark:to-lime-950/10 border border-lime-200/40 dark:border-lime-800/20"
+                            >
+                              <div className="flex-shrink-0 w-6 h-6 rounded-full bg-gradient-to-br from-lime-500 to-lime-600 flex items-center justify-center">
+                                <Sparkles className="h-3 w-3 text-white" />
+                              </div>
+                              <span className="text-sm">{pattern}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </ChartCard>
 
-                      {/* Recommended Focus */}
-                      <Card>
-                        <CardHeader>
-                          <CardTitle className="text-base flex items-center gap-2">
-                            <Target className="h-4 w-4" />
-                            Recommended Focus Areas
-                          </CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                          <ul className="space-y-2 text-sm">
-                            {insights.recommendedFocus.map((focus, idx) => (
-                              <li key={idx} className="flex gap-2 p-2 rounded bg-muted/50">
-                                <span className="text-primary mt-1">•</span>
-                                <span>{focus}</span>
-                              </li>
-                            ))}
-                          </ul>
-                        </CardContent>
-                      </Card>
+                      {/* Recommended Focus - Enhanced */}
+                      <ChartCard 
+                        title="Recommended Focus Areas" 
+                        icon={<Target className="h-4 w-4" />}
+                        description="Priority areas for your next study sessions"
+                      >
+                        <div className="space-y-2">
+                          {insights.recommendedFocus.map((focus, idx) => (
+                            <div 
+                              key={idx} 
+                              className="flex gap-3 p-3 rounded-xl bg-gradient-to-r from-emerald-100/60 to-emerald-50/30 dark:from-emerald-900/20 dark:to-emerald-950/10 border border-emerald-200/40 dark:border-emerald-800/20"
+                            >
+                              <div className="flex-shrink-0 w-6 h-6 rounded-full bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center">
+                                <Target className="h-3 w-3 text-white" />
+                              </div>
+                              <span className="text-sm">{focus}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </ChartCard>
 
                     </TabsContent>
 
                     <TabsContent value="peak-hours" className="space-y-4">
                       {insights.peakStudyHours ? (
                         <>
+                          {/* Peak hours cards with enhanced green-yellow theme */}
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <Card className="bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-900">
-                              <CardContent className="p-4">
-                                <div className="flex items-center gap-2 mb-2">
-                                  <TrendingUp className="h-5 w-5 text-green-600" />
-                                  <h4 className="font-semibold text-sm">Best Performance</h4>
+                            <Card className="bg-gradient-to-br from-emerald-100/80 to-lime-100/60 dark:from-emerald-900/30 dark:to-lime-900/20 border-emerald-200/50 dark:border-emerald-800/30 rounded-2xl">
+                              <CardContent className="p-5">
+                                <div className="flex items-center gap-2 mb-3">
+                                  <div className="p-1.5 rounded-lg bg-gradient-to-br from-emerald-500 to-lime-500">
+                                    <TrendingUp className="h-4 w-4 text-white" />
+                                  </div>
+                                  <h4 className="font-semibold text-sm">Peak Performance Time</h4>
                                 </div>
-                                <p className="text-2xl font-bold text-green-700 dark:text-green-400 capitalize">
+                                <p className="text-2xl font-bold text-emerald-700 dark:text-emerald-400 capitalize">
                                   {insights.peakStudyHours.bestTimeWindow}
                                 </p>
                                 <p className="text-xs text-muted-foreground mt-1">
                                   {insights.peakStudyHours.bestTimeRange}
                                 </p>
-                                 <div className="mt-3 space-y-1 text-xs">
-                                   <p>
-                                     <span className="font-medium">Completion Rate:</span>{" "}
-                                     {normalizeCompletionRate(insights.peakStudyHours.completionRateByWindow[insights.peakStudyHours.bestTimeWindow as keyof typeof insights.peakStudyHours.completionRateByWindow]).toFixed(0)}%
-                                   </p>
-                                   <p>
-                                     <span className="font-medium">Avg Difficulty:</span>{" "}
-                                     {normalizeDifficulty(insights.peakStudyHours.avgDifficultyByWindow[insights.peakStudyHours.bestTimeWindow as keyof typeof insights.peakStudyHours.avgDifficultyByWindow] || 0).toFixed(1)}/10
-                                   </p>
+                                 <div className="mt-4 space-y-2 text-xs">
+                                   <div className="flex items-center justify-between p-2 rounded-lg bg-emerald-200/50 dark:bg-emerald-800/30">
+                                     <span className="font-medium">Completion Rate</span>
+                                     <span className="font-bold text-emerald-700 dark:text-emerald-400">
+                                       {normalizeCompletionRate(insights.peakStudyHours.completionRateByWindow[insights.peakStudyHours.bestTimeWindow as keyof typeof insights.peakStudyHours.completionRateByWindow]).toFixed(0)}%
+                                     </span>
+                                   </div>
+                                   <div className="flex items-center justify-between p-2 rounded-lg bg-lime-200/50 dark:bg-lime-800/30">
+                                     <span className="font-medium">Avg Difficulty</span>
+                                     <span className="font-bold text-lime-700 dark:text-lime-400">
+                                       {normalizeDifficulty(insights.peakStudyHours.avgDifficultyByWindow[insights.peakStudyHours.bestTimeWindow as keyof typeof insights.peakStudyHours.avgDifficultyByWindow] || 0).toFixed(1)}/10
+                                     </span>
+                                   </div>
                                  </div>
                               </CardContent>
                             </Card>
 
-                            <Card className="bg-red-50 dark:bg-red-950/20 border-red-200 dark:border-red-900">
-                              <CardContent className="p-4">
-                                <div className="flex items-center gap-2 mb-2">
-                                  <TrendingDown className="h-5 w-5 text-red-600" />
-                                  <h4 className="font-semibold text-sm">Most Challenging</h4>
+                            <Card className="bg-gradient-to-br from-amber-100/80 to-orange-100/60 dark:from-amber-900/30 dark:to-orange-900/20 border-amber-200/50 dark:border-amber-800/30 rounded-2xl">
+                              <CardContent className="p-5">
+                                <div className="flex items-center gap-2 mb-3">
+                                  <div className="p-1.5 rounded-lg bg-gradient-to-br from-amber-500 to-orange-500">
+                                    <TrendingDown className="h-4 w-4 text-white" />
+                                  </div>
+                                  <h4 className="font-semibold text-sm">Challenging Time</h4>
                                 </div>
-                                <p className="text-2xl font-bold text-red-700 dark:text-red-400 capitalize">
+                                <p className="text-2xl font-bold text-amber-700 dark:text-amber-400 capitalize">
                                   {insights.peakStudyHours.worstTimeWindow}
                                 </p>
                                 <p className="text-xs text-muted-foreground mt-1">
                                   {insights.peakStudyHours.worstTimeRange}
                                 </p>
-                                 <div className="mt-3 space-y-1 text-xs">
-                                   <p>
-                                     <span className="font-medium">Completion Rate:</span>{" "}
-                                     {normalizeCompletionRate(insights.peakStudyHours.completionRateByWindow[insights.peakStudyHours.worstTimeWindow as keyof typeof insights.peakStudyHours.completionRateByWindow]).toFixed(0)}%
-                                   </p>
-                                   <p>
-                                     <span className="font-medium">Avg Difficulty:</span>{" "}
-                                     {normalizeDifficulty(insights.peakStudyHours.avgDifficultyByWindow[insights.peakStudyHours.worstTimeWindow as keyof typeof insights.peakStudyHours.avgDifficultyByWindow] || 0).toFixed(1)}/10
-                                   </p>
+                                 <div className="mt-4 space-y-2 text-xs">
+                                   <div className="flex items-center justify-between p-2 rounded-lg bg-amber-200/50 dark:bg-amber-800/30">
+                                     <span className="font-medium">Completion Rate</span>
+                                     <span className="font-bold text-amber-700 dark:text-amber-400">
+                                       {normalizeCompletionRate(insights.peakStudyHours.completionRateByWindow[insights.peakStudyHours.worstTimeWindow as keyof typeof insights.peakStudyHours.completionRateByWindow]).toFixed(0)}%
+                                     </span>
+                                   </div>
+                                   <div className="flex items-center justify-between p-2 rounded-lg bg-orange-200/50 dark:bg-orange-800/30">
+                                     <span className="font-medium">Avg Difficulty</span>
+                                     <span className="font-bold text-orange-700 dark:text-orange-400">
+                                       {normalizeDifficulty(insights.peakStudyHours.avgDifficultyByWindow[insights.peakStudyHours.worstTimeWindow as keyof typeof insights.peakStudyHours.avgDifficultyByWindow] || 0).toFixed(1)}/10
+                                     </span>
+                                   </div>
                                  </div>
                               </CardContent>
                             </Card>
                           </div>
 
-                          <ChartCard title="Performance by Time Window" icon={<Clock className="h-4 w-4" />}>
-                            <p className="text-sm text-muted-foreground mb-4">
-                              Your most productive times based on session completion rates
-                            </p>
+                          <ChartCard 
+                            title="Performance by Time of Day" 
+                            icon={<Clock className="h-4 w-4" />}
+                            description="Your productivity patterns throughout the day"
+                          >
                             <div className="h-[250px] sm:h-[300px] w-full">
                               <ResponsiveContainer width="100%" height="100%">
                                 <BarChart
@@ -792,42 +867,70 @@ export const StudyInsightsPanel = ({ timetableId }: StudyInsightsPanelProps) => 
                                        fontSize: 12
                                      }}
                                    />
+                                  <defs>
+                                    <linearGradient id="completionGradient" x1="0" y1="0" x2="0" y2="1">
+                                      <stop offset="0%" stopColor={INSIGHT_COLORS.primary} />
+                                      <stop offset="100%" stopColor={INSIGHT_COLORS.secondary} />
+                                    </linearGradient>
+                                    <linearGradient id="difficultyGradient" x1="0" y1="0" x2="0" y2="1">
+                                      <stop offset="0%" stopColor={INSIGHT_COLORS.quaternary} />
+                                      <stop offset="100%" stopColor={INSIGHT_COLORS.accent} />
+                                    </linearGradient>
+                                  </defs>
                                   <Bar 
                                     dataKey="completion" 
                                     name="Completion Rate %" 
-                                    fill="#22c55e" 
+                                    fill="url(#completionGradient)" 
                                     radius={[8, 8, 0, 0]} 
                                   />
                                   <Bar 
                                     dataKey="difficulty" 
                                     name="Avg Difficulty (1-10)" 
-                                    fill="hsl(var(--destructive))" 
+                                    fill="url(#difficultyGradient)" 
                                     radius={[8, 8, 0, 0]} 
                                   />
                                 </BarChart>
                               </ResponsiveContainer>
                             </div>
+                            {/* Legend */}
+                            <div className="flex items-center justify-center gap-6 text-xs mt-4">
+                              <div className="flex items-center gap-2">
+                                <div className="w-3 h-3 rounded-full" style={{ backgroundColor: INSIGHT_COLORS.primary }} />
+                                <span>Completion Rate</span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <div className="w-3 h-3 rounded-full" style={{ backgroundColor: INSIGHT_COLORS.quaternary }} />
+                                <span>Avg Difficulty</span>
+                              </div>
+                            </div>
                           </ChartCard>
 
-                          <Card className="bg-blue-50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-900">
-                            <CardContent className="p-4">
-                              <h4 className="font-semibold text-sm mb-2 flex items-center gap-2">
-                                <Lightbulb className="h-4 w-4 text-blue-600" />
-                                Smart Scheduling Recommendation
-                              </h4>
-                              <p className="text-sm text-muted-foreground">
-                                {insights.peakStudyHours.recommendation}
-                              </p>
+                          {/* Smart Recommendation Card */}
+                          <Card className="bg-gradient-to-br from-lime-100/80 to-emerald-100/60 dark:from-lime-900/30 dark:to-emerald-900/20 border-lime-200/50 dark:border-lime-800/30 rounded-2xl">
+                            <CardContent className="p-5">
+                              <div className="flex items-start gap-3">
+                                <div className="p-2 rounded-xl bg-gradient-to-br from-lime-500 to-emerald-500 flex-shrink-0">
+                                  <Lightbulb className="h-5 w-5 text-white" />
+                                </div>
+                                <div>
+                                  <h4 className="font-semibold text-sm mb-1 text-lime-800 dark:text-lime-300">Smart Scheduling Tip</h4>
+                                  <p className="text-sm text-muted-foreground">
+                                    {insights.peakStudyHours.recommendation}
+                                  </p>
+                                </div>
+                              </div>
                             </CardContent>
                           </Card>
                         </>
                       ) : (
-                        <Card>
-                          <CardContent className="py-8">
-                            <div className="text-center text-muted-foreground">
-                              <Clock className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                              <p className="text-sm">No peak study hours data yet</p>
-                              <p className="text-xs mt-1">Complete more study sessions with difficulty ratings to see your peak performance times</p>
+                        <Card className="border-emerald-200/50 dark:border-emerald-800/30 bg-gradient-to-br from-emerald-50/30 to-amber-50/20 dark:from-emerald-950/10 dark:to-amber-950/5 rounded-2xl">
+                          <CardContent className="py-10">
+                            <div className="text-center">
+                              <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-emerald-400/30 to-amber-400/30 flex items-center justify-center">
+                                <Clock className="h-8 w-8 text-emerald-600/60 dark:text-emerald-400/60" />
+                              </div>
+                              <p className="text-sm font-medium mb-1">Peak Hours Data Coming Soon</p>
+                              <p className="text-xs text-muted-foreground max-w-xs mx-auto">Complete more study sessions with difficulty ratings to discover your optimal study times</p>
                             </div>
                           </CardContent>
                         </Card>
