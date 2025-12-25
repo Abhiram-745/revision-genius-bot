@@ -176,9 +176,16 @@ const SmartTopicsStep = ({ subjects, topics, setTopics }: SmartTopicsStepProps) 
 
       // Separate images and text documents
       const images = processedFiles.filter(f => f.type === 'image').map(f => f.dataUrl);
+      
+      // Documents with extracted text (txt, md)
       const documentTexts = processedFiles
         .filter(f => f.type === 'document' && f.text)
         .map(f => ({ name: f.name, text: f.text! }));
+      
+      // PDF/DOCX files sent as base64 for backend processing
+      const binaryDocs = processedFiles
+        .filter(f => f.type === 'document' && !f.text && f.dataUrl)
+        .map(f => f.dataUrl);
       
       // Add notes to document texts
       const noteTexts = queuedNotes.map((n, i) => ({ 
@@ -188,8 +195,11 @@ const SmartTopicsStep = ({ subjects, topics, setTopics }: SmartTopicsStepProps) 
       
       const allTexts = [...documentTexts, ...noteTexts];
       
+      // Combine binary docs with images (both use vision API)
+      const allImages = [...images, ...binaryDocs];
+      
       // Calculate total items for batching
-      const totalItems = images.length + allTexts.length;
+      const totalItems = allImages.length + allTexts.length;
       const BATCH_SIZE = 10;
       
       let extractedCount = 0;
@@ -197,7 +207,7 @@ const SmartTopicsStep = ({ subjects, topics, setTopics }: SmartTopicsStepProps) 
 
       if (totalItems > BATCH_SIZE) {
         // Batch processing
-        const imageBatches = batchItems(images, BATCH_SIZE);
+        const imageBatches = batchItems(allImages, BATCH_SIZE);
         const textBatches = batchItems(allTexts, BATCH_SIZE);
         const totalBatches = imageBatches.length + textBatches.length;
         let currentBatch = 0;
@@ -237,7 +247,7 @@ const SmartTopicsStep = ({ subjects, topics, setTopics }: SmartTopicsStepProps) 
           : undefined;
 
         extractedCount = await callParseTopics({
-          images: images.length > 0 ? images : undefined,
+          images: allImages.length > 0 ? allImages : undefined,
           text: combinedText,
           subjectName,
           extractionMode
