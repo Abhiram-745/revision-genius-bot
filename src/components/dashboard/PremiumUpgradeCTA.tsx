@@ -9,8 +9,8 @@ export const PremiumUpgradeCTA = () => {
   const navigate = useNavigate();
   const { data: userRole, isLoading } = useUserRole();
 
-  // Don't show for premium users or while loading
-  if (isLoading || userRole === "paid") {
+  // Don't show for premium users (show while loading to prevent flash)
+  if (!isLoading && userRole === "paid") {
     return null;
   }
 
