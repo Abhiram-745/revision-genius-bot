@@ -1,64 +1,50 @@
-import * as pdfjs from 'pdfjs-dist';
-import mammoth from 'mammoth';
+/**
+ * File content extraction utilities
+ * Handles PDF, DOCX, TXT, MD, and images for topic extraction
+ * 
+ * PDF and DOCX files are sent as base64 to the backend for processing
+ * Text files are read directly in the browser
+ * Images are converted to base64 data URLs
+ */
 
-// Set PDF.js worker
-pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
+export type FileType = 'pdf' | 'docx' | 'txt' | 'md' | 'image' | 'unknown';
 
 export interface ExtractedContent {
   name: string;
-  text: string;
-  type: 'pdf' | 'docx' | 'txt' | 'md' | 'image';
+  type: FileType;
+  content: string;
+  isBase64?: boolean;
 }
 
 export interface ProcessedFile {
   name: string;
-  dataUrl: string; // For images
-  text?: string; // For documents with extractable text
+  dataUrl: string;
+  text?: string;
   type: 'image' | 'document';
+  originalType?: FileType;
 }
 
 /**
- * Extract text from a PDF file
+ * Determine file type based on extension and MIME type
  */
-async function extractTextFromPDF(file: File): Promise<string> {
-  const arrayBuffer = await file.arrayBuffer();
-  const pdf = await pdfjs.getDocument({ data: arrayBuffer }).promise;
+export function getFileType(file: File): FileType {
+  const extension = file.name.split('.').pop()?.toLowerCase() || '';
+  const mimeType = file.type.toLowerCase();
   
-  let fullText = '';
-  const numPages = Math.min(pdf.numPages, 50); // Limit to 50 pages
+  if (extension === 'pdf' || mimeType === 'application/pdf') return 'pdf';
+  if (extension === 'docx' || mimeType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') return 'docx';
+  if (extension === 'doc' || mimeType === 'application/msword') return 'docx';
+  if (extension === 'txt' || mimeType === 'text/plain') return 'txt';
+  if (extension === 'md' || mimeType === 'text/markdown') return 'md';
+  if (mimeType.startsWith('image/')) return 'image';
   
-  for (let i = 1; i <= numPages; i++) {
-    const page = await pdf.getPage(i);
-    const textContent = await page.getTextContent();
-    const pageText = textContent.items
-      .map((item: any) => item.str)
-      .join(' ');
-    fullText += pageText + '\n\n';
-  }
-  
-  return fullText.trim();
-}
-
-/**
- * Extract text from a DOCX file
- */
-async function extractTextFromDOCX(file: File): Promise<string> {
-  const arrayBuffer = await file.arrayBuffer();
-  const result = await mammoth.extractRawText({ arrayBuffer });
-  return result.value.trim();
-}
-
-/**
- * Extract text from a plain text file (TXT, MD)
- */
-async function extractTextFromTextFile(file: File): Promise<string> {
-  return await file.text();
+  return 'unknown';
 }
 
 /**
  * Convert a file to a data URL
  */
-async function fileToDataUrl(file: File): Promise<string> {
+export function fileToDataUrl(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => resolve(reader.result as string);
@@ -68,20 +54,15 @@ async function fileToDataUrl(file: File): Promise<string> {
 }
 
 /**
- * Determine file type based on extension and MIME type
+ * Read file as text
  */
-function getFileType(file: File): 'pdf' | 'docx' | 'txt' | 'md' | 'image' | 'unknown' {
-  const extension = file.name.split('.').pop()?.toLowerCase() || '';
-  const mimeType = file.type.toLowerCase();
-  
-  if (extension === 'pdf' || mimeType === 'application/pdf') return 'pdf';
-  if (extension === 'docx' || mimeType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') return 'docx';
-  if (extension === 'doc' || mimeType === 'application/msword') return 'docx'; // Try mammoth for .doc too
-  if (extension === 'txt' || mimeType === 'text/plain') return 'txt';
-  if (extension === 'md' || mimeType === 'text/markdown') return 'md';
-  if (mimeType.startsWith('image/')) return 'image';
-  
-  return 'unknown';
+export function fileToText(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = reject;
+    reader.readAsText(file);
+  });
 }
 
 /**
@@ -101,45 +82,35 @@ export async function processFile(file: File): Promise<ProcessedFile | null> {
       return {
         name: file.name,
         dataUrl,
-        type: 'image'
+        type: 'image',
+        originalType: fileType
       };
     }
     
-    let text = '';
-    
-    switch (fileType) {
-      case 'pdf':
-        text = await extractTextFromPDF(file);
-        break;
-      case 'docx':
-        text = await extractTextFromDOCX(file);
-        break;
-      case 'txt':
-      case 'md':
-        text = await extractTextFromTextFile(file);
-        break;
-    }
-    
-    // If we got text, return as document
-    if (text.trim()) {
+    // For text files, read directly
+    if (fileType === 'txt' || fileType === 'md') {
+      const text = await fileToText(file);
       return {
         name: file.name,
-        dataUrl: '', // Not needed for text documents
-        text,
-        type: 'document'
+        dataUrl: '',
+        text: text.trim(),
+        type: 'document',
+        originalType: fileType
       };
     }
     
-    // If PDF/DOCX has no extractable text (scanned), try as image
-    // For now, we'll just return it as a document with empty text
-    console.warn(`No text extracted from ${file.name}, might be a scanned document`);
-    return {
-      name: file.name,
-      dataUrl: '',
-      text: '',
-      type: 'document'
-    };
+    // For PDF and DOCX, send as base64 to backend for processing
+    if (fileType === 'pdf' || fileType === 'docx') {
+      const dataUrl = await fileToDataUrl(file);
+      return {
+        name: file.name,
+        dataUrl,
+        type: 'document',
+        originalType: fileType
+      };
+    }
     
+    return null;
   } catch (error) {
     console.error(`Error processing file ${file.name}:`, error);
     return null;
@@ -160,11 +131,8 @@ export async function processFiles(files: File[]): Promise<ProcessedFile[]> {
  */
 export function cleanTopicText(text: string): string {
   return text
-    // Remove leading numbering patterns: "1.", "1)", "(1)", "a.", "a)", "(a)", etc.
     .replace(/^\s*(?:\d+[.)]\s*|\(\d+\)\s*|[a-zA-Z][.)]\s*|\([a-zA-Z]\)\s*|[-•●○▪▸▹→]\s*)/gm, '')
-    // Remove extra whitespace
     .replace(/\s+/g, ' ')
-    // Trim
     .trim();
 }
 
