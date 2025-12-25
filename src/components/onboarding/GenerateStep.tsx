@@ -174,19 +174,29 @@ const GenerateStep = ({
       );
 
       // Save homeworks to database (use upsert to avoid duplicates)
-      if (homeworks.length > 0) {
+      // Filter out homeworks with missing due dates and handle both camelCase and snake_case
+      // AgendaStep uses dueDate, HomeworkStep uses due_date
+      const validHomeworks = homeworks.filter(hw => {
+        const dueDate = (hw as any).dueDate || hw.due_date;
+        return !!dueDate;
+      });
+      
+      if (validHomeworks.length > 0) {
         const { error: homeworkError } = await supabase
           .from("homeworks")
           .upsert(
-            homeworks.map((hw) => ({
-              user_id: user.id,
-              subject: hw.subject,
-              title: hw.title,
-              description: hw.description,
-              due_date: hw.due_date,
-              duration: hw.duration,
-              completed: false,
-            })),
+            validHomeworks.map((hw) => {
+              const dueDate = (hw as any).dueDate || hw.due_date;
+              return {
+                user_id: user.id,
+                subject: hw.subject,
+                title: hw.title,
+                description: hw.description || null,
+                due_date: dueDate,
+                duration: hw.duration || null,
+                completed: false,
+              };
+            }),
             {
               onConflict: "user_id,title,subject,due_date",
               ignoreDuplicates: true,
