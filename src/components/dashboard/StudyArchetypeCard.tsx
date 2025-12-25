@@ -5,16 +5,24 @@ import { Loader2, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 // Import archetype images
-import archetypeNightOwl from "@/assets/archetype-night-owl.png";
-import archetypeEarlyBird from "@/assets/archetype-early-bird.png";
-import archetypePlanner from "@/assets/archetype-planner.png";
-import archetypePerfectionist from "@/assets/archetype-perfectionist.png";
+import archetypeNightOwl from "@/assets/archetype-night-owl-card.png";
+import archetypeEarlyBird from "@/assets/archetype-early-bird-card.png";
+import archetypePlanner from "@/assets/archetype-planner-card.png";
+import archetypePerfectionist from "@/assets/archetype-perfectionist-card.png";
+import archetypeVisualLearner from "@/assets/archetype-visual-learner-card.png";
+import archetypePracticeGrinder from "@/assets/archetype-practice-grinder-card.png";
 
 interface StudyArchetypeCardProps {
   userId: string;
 }
 
-type ArchetypeType = "night-owl" | "early-bird" | "planner" | "perfectionist";
+type ArchetypeType =
+  | "night-owl"
+  | "early-bird"
+  | "planner"
+  | "perfectionist"
+  | "visual-learner"
+  | "practice-grinder";
 
 interface ArchetypeData {
   type: ArchetypeType;
@@ -40,7 +48,7 @@ const archetypes: Record<ArchetypeType, ArchetypeData> = {
     type: "early-bird",
     title: "The Early Bird",
     description: "You seize the day at dawn. Morning hours fuel your sharpest thinking and productivity.",
-    traits: ["Morning Person", "Energetic", "Productive"],
+    traits: ["Morning Energy", "Fresh Focus", "Productive"],
     image: archetypeEarlyBird,
     glowColor: "hsl(var(--accent))",
     gradient: "from-amber-400 via-orange-400 to-yellow-500",
@@ -63,10 +71,29 @@ const archetypes: Record<ArchetypeType, ArchetypeData> = {
     glowColor: "hsl(var(--destructive))",
     gradient: "from-rose-400 via-pink-500 to-fuchsia-500",
   },
+  "visual-learner": {
+    type: "visual-learner",
+    title: "The Visual Learner",
+    description: "You understand fastest when you can see it. Diagrams, charts, and visuals make ideas click.",
+    traits: ["Diagram Thinker", "Pattern Spotter", "Big Picture"],
+    image: archetypeVisualLearner,
+    glowColor: "hsl(var(--accent))",
+    gradient: "from-lime-300 via-emerald-300 to-teal-400",
+  },
+  "practice-grinder": {
+    type: "practice-grinder",
+    title: "The Practice Grinder",
+    description: "You learn by doing. Practice questions and repetition are your path to confident mastery.",
+    traits: ["Repetition", "Active Recall", "Consistency"],
+    image: archetypePracticeGrinder,
+    glowColor: "hsl(var(--primary))",
+    gradient: "from-amber-300 via-lime-300 to-emerald-400",
+  },
 };
 
 export const StudyArchetypeCard = ({ userId }: StudyArchetypeCardProps) => {
   const [archetype, setArchetype] = useState<ArchetypeData | null>(null);
+  const [secondaryArchetype, setSecondaryArchetype] = useState<ArchetypeData | null>(null);
   const [loading, setLoading] = useState(true);
   const [isFlipped, setIsFlipped] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -196,7 +223,9 @@ export const StudyArchetypeCard = ({ userId }: StudyArchetypeCardProps) => {
       const [sessionsResult, preferencesResult] = await Promise.all([
         supabase
           .from("study_sessions")
-          .select("planned_start, actual_duration_minutes, focus_score, status, created_at")
+          .select(
+            "planned_start, actual_duration_minutes, focus_score, status, created_at, session_type"
+          )
           .eq("user_id", userId)
           .order("created_at", { ascending: false })
           .limit(100),
@@ -210,20 +239,32 @@ export const StudyArchetypeCard = ({ userId }: StudyArchetypeCardProps) => {
       const sessions = sessionsResult.data || [];
       const preferences = preferencesResult.data;
 
+      const pickSecondaryForNewUser = (): ArchetypeType => {
+        const startHour = preferences?.preferred_start_time
+          ? parseInt(preferences.preferred_start_time.split(":")[0])
+          : null;
+        if (startHour !== null && !Number.isNaN(startHour) && startHour >= 20) return "night-owl";
+        return "early-bird";
+      };
+
       // Default to planner for new users with insufficient data
       if (!sessions || sessions.length < 5) {
+        const secondary = pickSecondaryForNewUser();
         setArchetype(archetypes["planner"]);
+        setSecondaryArchetype(archetypes[secondary]);
         setLoading(false);
         setIsRefreshing(false);
         return;
       }
 
       // Scoring system for each archetype - start all at 0
-      let scores = {
+      const scores: Record<ArchetypeType, number> = {
         "night-owl": 0,
         "early-bird": 0,
-        "planner": 10,
-        "perfectionist": 0,
+        planner: 10,
+        perfectionist: 0,
+        "visual-learner": 0,
+        "practice-grinder": 0,
       };
 
       // Analyze session timing patterns
@@ -237,11 +278,12 @@ export const StudyArchetypeCard = ({ userId }: StudyArchetypeCardProps) => {
       let focusCount = 0;
       let totalDuration = 0;
       let sessionCount = 0;
+      let practiceSessionCount = 0;
 
       sessions.forEach((session) => {
         if (session.planned_start) {
           const hour = new Date(session.planned_start).getHours();
-          
+
           if (hour < 8) earlyMorningCount++;
           if (hour >= 8 && hour < 10) morningCount++;
           if (hour >= 18 && hour < 22) eveningCount++;
@@ -253,6 +295,11 @@ export const StudyArchetypeCard = ({ userId }: StudyArchetypeCardProps) => {
           sessionCount++;
           if (session.actual_duration_minutes) {
             totalDuration += session.actual_duration_minutes;
+          }
+
+          const st = (session.session_type || "").toLowerCase();
+          if (/(practice|quiz|blurt|pmt|save|gradlify)/.test(st)) {
+            practiceSessionCount++;
           }
         } else if (session.status === "skipped" || session.status === "missed") {
           skippedCount++;
@@ -287,40 +334,52 @@ export const StudyArchetypeCard = ({ userId }: StudyArchetypeCardProps) => {
       const missedRate = totalTracked > 0 ? skippedCount / totalTracked : 0;
 
       // Planner scoring
-      if (completionRate >= 0.85 && missedRate < 0.15) scores["planner"] += 40;
-      else if (completionRate >= 0.7) scores["planner"] += 25;
-      else if (completionRate >= 0.5) scores["planner"] += 10;
+      if (completionRate >= 0.85 && missedRate < 0.15) scores.planner += 40;
+      else if (completionRate >= 0.7) scores.planner += 25;
+      else if (completionRate >= 0.5) scores.planner += 10;
 
       // Perfectionist scoring
-      if (avgFocus >= 4.5) scores["perfectionist"] += 40;
-      else if (avgFocus >= 4) scores["perfectionist"] += 25;
-      else if (avgFocus >= 3.5) scores["perfectionist"] += 15;
-      if (avgDuration >= 50) scores["perfectionist"] += 20;
-      else if (avgDuration >= 40) scores["perfectionist"] += 10;
+      if (avgFocus >= 4.5) scores.perfectionist += 40;
+      else if (avgFocus >= 4) scores.perfectionist += 25;
+      else if (avgFocus >= 3.5) scores.perfectionist += 15;
+      if (avgDuration >= 50) scores.perfectionist += 20;
+      else if (avgDuration >= 40) scores.perfectionist += 10;
+
+      // Visual Learner scoring (balanced duration + solid focus)
+      if (avgFocus >= 3.5 && avgFocus <= 4.4) scores["visual-learner"] += 20;
+      if (avgDuration >= 25 && avgDuration <= 45) scores["visual-learner"] += 20;
+      if (completionRate >= 0.6 && missedRate < 0.25) scores["visual-learner"] += 10;
+
+      // Practice Grinder scoring (practice-heavy sessions + consistency)
+      const practiceRatio = sessionCount > 0 ? practiceSessionCount / sessionCount : 0;
+      if (practiceRatio > 0.5) scores["practice-grinder"] += 45;
+      else if (practiceRatio > 0.3) scores["practice-grinder"] += 25;
+      if (completionRate >= 0.75) scores["practice-grinder"] += 10;
+      if (avgDuration <= 40) scores["practice-grinder"] += 10;
 
       // Check preferred study time
       if (preferences?.preferred_start_time) {
-        const startHour = parseInt(preferences.preferred_start_time.split(':')[0]);
+        const startHour = parseInt(preferences.preferred_start_time.split(":")[0]);
         if (startHour < 7) scores["early-bird"] += 15;
         else if (startHour >= 20) scores["night-owl"] += 15;
       }
 
-      // Determine winning archetype
-      let determinedType: ArchetypeType = "planner";
-      let maxScore = scores["planner"];
+      // Rank and pick top 2 (ensure we always keep a secondary archetype)
+      const ranked = (Object.entries(scores) as [ArchetypeType, number][]).sort(
+        (a, b) => b[1] - a[1]
+      );
 
-      (Object.entries(scores) as [ArchetypeType, number][]).forEach(([type, score]) => {
-        if (score > maxScore) {
-          maxScore = score;
-          determinedType = type;
-        }
-      });
+      const primaryType = ranked[0]?.[0] ?? "planner";
+      const secondaryType =
+        ranked.find(([t]) => t !== primaryType)?.[0] ?? pickSecondaryForNewUser();
 
-      console.log("Archetype scores:", scores, "Winner:", determinedType);
-      setArchetype(archetypes[determinedType]);
+      console.log("Archetype scores:", scores, "Primary:", primaryType, "Secondary:", secondaryType);
+      setArchetype(archetypes[primaryType]);
+      setSecondaryArchetype(archetypes[secondaryType]);
     } catch (error) {
       console.error("Error determining archetype:", error);
       setArchetype(archetypes["planner"]);
+      setSecondaryArchetype(archetypes["early-bird"]);
     } finally {
       setLoading(false);
       setIsRefreshing(false);
@@ -389,6 +448,14 @@ export const StudyArchetypeCard = ({ userId }: StudyArchetypeCardProps) => {
           <RefreshCw className={`h-4 w-4 text-muted-foreground ${isRefreshing ? 'animate-spin' : ''}`} />
         </Button>
       </div>
+
+      {secondaryArchetype && (
+        <p className="text-[11px] text-muted-foreground/70 mb-3 text-center">
+          Primary: <span className="font-medium text-foreground/80">{archetype.title}</span> · Secondary:{" "}
+          <span className="font-medium text-foreground/80">{secondaryArchetype.title}</span>
+        </p>
+      )}
+
       <p className="text-xs text-muted-foreground/70 mb-4">Click card to flip</p>
       
       <div className="perspective-1000" style={{ perspective: "1200px" }}>
@@ -470,7 +537,8 @@ export const StudyArchetypeCard = ({ userId }: StudyArchetypeCardProps) => {
                 {/* The archetype image as the card background */}
                 <img
                   src={archetype.image}
-                  alt={archetype.title}
+                  alt={`${archetype.title} study archetype card`}
+                  loading="lazy"
                   className="absolute inset-0 w-full h-full object-cover"
                   style={{ transform: "translateZ(0)" }}
                 />
