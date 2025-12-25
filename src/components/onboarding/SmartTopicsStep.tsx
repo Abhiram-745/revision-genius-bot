@@ -6,12 +6,14 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { MessageSquare, Plus, X, Upload, Loader2, Image, ClipboardList, BookOpen, Check } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { MessageSquare, Plus, X, Upload, Loader2, Image, ClipboardList, BookOpen, Check, FileText, File, Trash2, StickyNote } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Subject, Topic } from "../OnboardingWizard";
 import { TopicChatInterface } from "./TopicChatInterface";
 import { DraggableTopicList } from "./DraggableTopicList";
+import { processFiles, ProcessedFile, batchItems } from "@/utils/fileExtractor";
 
 interface SmartTopicsStepProps {
   subjects: Subject[];
@@ -21,14 +23,24 @@ interface SmartTopicsStepProps {
 
 type ExtractionMode = "exact" | "general";
 
+interface QueuedNote {
+  id: string;
+  content: string;
+}
+
 const SmartTopicsStep = ({ subjects, topics, setTopics }: SmartTopicsStepProps) => {
   const [activeTab, setActiveTab] = useState("upload");
   const [isProcessing, setIsProcessing] = useState(false);
+  const [processingStatus, setProcessingStatus] = useState("");
   const [manualTopic, setManualTopic] = useState("");
   const [selectedSubject, setSelectedSubject] = useState(subjects[0]?.id || subjects[0]?.name || "");
   const [isDragging, setIsDragging] = useState(false);
-  const [uploadedFile, setUploadedFile] = useState<{ name: string; type: string } | null>(null);
   const [extractionMode, setExtractionMode] = useState<ExtractionMode>("exact");
+  
+  // Multi-file and notes state
+  const [queuedFiles, setQueuedFiles] = useState<File[]>([]);
+  const [queuedNotes, setQueuedNotes] = useState<QueuedNote[]>([]);
+  const [newNote, setNewNote] = useState("");
 
   const handleAddManualTopic = () => {
     if (!manualTopic.trim() || !selectedSubject) return;
@@ -68,119 +80,239 @@ const SmartTopicsStep = ({ subjects, topics, setTopics }: SmartTopicsStepProps) 
     setIsDragging(false);
   }, []);
 
-  const processFile = async (file: File) => {
-    const isImage = file.type.startsWith('image/');
-    
-    // Currently only support images for topic extraction
-    if (!isImage) {
-      toast.error("Topic extraction currently supports images only (PNG, JPG). Please take a screenshot of your document.");
-      return;
-    }
-
-    if (file.size > 10 * 1024 * 1024) {
-      toast.error("File too large. Maximum size is 10MB.");
-      return;
-    }
-
-    setIsProcessing(true);
-    setUploadedFile({ name: file.name, type: file.type });
-
-    try {
-      // Convert file to full data URL
-      const dataUrl = await new Promise<string>((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => {
-          const result = reader.result as string;
-          console.log('Image data URL created:', result.substring(0, 100));
-          resolve(result);
-        };
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
-      });
-
-      const images = [dataUrl];
-      let extractedCount = 0;
-      
-      // Process for each subject
-      for (const subject of subjects) {
-        const subjectId = subject.id || subject.name;
-        
-        console.log('Sending to parse-topics:', { 
-          subjectName: subject.name, 
-          imagesCount: images.length,
-          imagePreview: images[0].substring(0, 80),
-          extractionMode
-        });
-        
-        const { data, error } = await supabase.functions.invoke("parse-topics", {
-          body: { 
-            text: extractionMode === "exact" 
-              ? `Extract all topics EXACTLY as written in this image for ${subject.name}. Copy every topic word-for-word.`
-              : `Identify the main concepts and learning topics from this educational material for ${subject.name}.`,
-            subjectName: subject.name,
-            images: images,
-            extractionMode: extractionMode,
-          },
-        });
-
-        console.log('parse-topics response:', { data, error });
-
-        if (error) {
-          console.error("Parse error for", subject.name, error);
-          continue;
-        }
-
-        if (data?.topics && Array.isArray(data.topics) && data.topics.length > 0) {
-          const newTopics: Topic[] = data.topics.map((t: any) => ({
-            id: `topic-${Date.now()}-${Math.random()}`,
-            subject_id: subjectId,
-            name: typeof t === 'string' ? t : t.name,
-            confidence: typeof t === 'object' && t.confidence ? t.confidence : 50,
-          }));
-
-          // Avoid duplicates
-          const existingNames = new Set(topics.map(t => `${t.subject_id}-${t.name.toLowerCase()}`));
-          const uniqueNewTopics = newTopics.filter(
-            t => !existingNames.has(`${t.subject_id}-${t.name.toLowerCase()}`)
-          );
-
-          if (uniqueNewTopics.length > 0) {
-            setTopics([...topics, ...uniqueNewTopics]);
-            extractedCount += uniqueNewTopics.length;
-          }
-        }
-      }
-
-      if (extractedCount > 0) {
-        toast.success(`Extracted ${extractedCount} topics from ${file.name}!`);
-      } else {
-        toast.warning("No topics found in the image. Try a clearer screenshot.");
-      }
-    } catch (error) {
-      console.error("Error processing file:", error);
-      toast.error("Failed to extract topics from document");
-    } finally {
-      setIsProcessing(false);
-      setUploadedFile(null);
-    }
-  };
-
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
     setIsDragging(false);
 
-    const files = e.dataTransfer.files;
-    if (files.length > 0) {
-      processFile(files[0]);
-    }
-  }, [subjects, topics, extractionMode]);
+    const files = Array.from(e.dataTransfer.files);
+    addFilesToQueue(files);
+  }, []);
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
-    if (files && files.length > 0) {
-      processFile(files[0]);
+    if (files) {
+      addFilesToQueue(Array.from(files));
     }
+    // Reset input
+    e.target.value = '';
+  };
+
+  const addFilesToQueue = (files: File[]) => {
+    const validTypes = [
+      'application/pdf',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'application/msword',
+      'text/plain',
+      'text/markdown',
+      'image/png',
+      'image/jpeg',
+      'image/webp',
+      'image/gif'
+    ];
+    
+    const validFiles = files.filter(f => {
+      const isValid = validTypes.some(t => f.type === t) || 
+                      f.name.endsWith('.md') || 
+                      f.name.endsWith('.txt') ||
+                      f.name.endsWith('.pdf') ||
+                      f.name.endsWith('.docx');
+      if (!isValid) {
+        toast.error(`${f.name} is not a supported file type`);
+      }
+      if (f.size > 20 * 1024 * 1024) {
+        toast.error(`${f.name} is too large. Maximum size is 20MB.`);
+        return false;
+      }
+      return isValid;
+    });
+
+    setQueuedFiles(prev => [...prev, ...validFiles]);
+    if (validFiles.length > 0) {
+      toast.success(`Added ${validFiles.length} file(s) to queue`);
+    }
+  };
+
+  const removeFileFromQueue = (index: number) => {
+    setQueuedFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const addNote = () => {
+    if (!newNote.trim()) return;
+    const note: QueuedNote = {
+      id: `note-${Date.now()}`,
+      content: newNote.trim()
+    };
+    setQueuedNotes(prev => [...prev, note]);
+    setNewNote("");
+    toast.success("Note added to queue");
+  };
+
+  const removeNote = (id: string) => {
+    setQueuedNotes(prev => prev.filter(n => n.id !== id));
+  };
+
+  const processQueue = async () => {
+    if (queuedFiles.length === 0 && queuedNotes.length === 0) {
+      toast.error("Please add files or notes to process");
+      return;
+    }
+
+    if (!selectedSubject) {
+      toast.error("Please select a subject first");
+      return;
+    }
+
+    setIsProcessing(true);
+    setProcessingStatus("Preparing files...");
+
+    try {
+      // Process files to extract content
+      let processedFiles: ProcessedFile[] = [];
+      if (queuedFiles.length > 0) {
+        setProcessingStatus(`Processing ${queuedFiles.length} file(s)...`);
+        processedFiles = await processFiles(queuedFiles);
+      }
+
+      // Separate images and text documents
+      const images = processedFiles.filter(f => f.type === 'image').map(f => f.dataUrl);
+      const documentTexts = processedFiles
+        .filter(f => f.type === 'document' && f.text)
+        .map(f => ({ name: f.name, text: f.text! }));
+      
+      // Add notes to document texts
+      const noteTexts = queuedNotes.map((n, i) => ({ 
+        name: `Note ${i + 1}`, 
+        text: n.content 
+      }));
+      
+      const allTexts = [...documentTexts, ...noteTexts];
+      
+      // Calculate total items for batching
+      const totalItems = images.length + allTexts.length;
+      const BATCH_SIZE = 10;
+      
+      let extractedCount = 0;
+      const subjectName = subjects.find(s => (s.id || s.name) === selectedSubject)?.name || selectedSubject;
+
+      if (totalItems > BATCH_SIZE) {
+        // Batch processing
+        const imageBatches = batchItems(images, BATCH_SIZE);
+        const textBatches = batchItems(allTexts, BATCH_SIZE);
+        const totalBatches = imageBatches.length + textBatches.length;
+        let currentBatch = 0;
+
+        // Process image batches
+        for (const imageBatch of imageBatches) {
+          currentBatch++;
+          setProcessingStatus(`Processing batch ${currentBatch}/${totalBatches}...`);
+          
+          const count = await callParseTopics({
+            images: imageBatch,
+            subjectName,
+            extractionMode
+          });
+          extractedCount += count;
+        }
+
+        // Process text batches
+        for (const textBatch of textBatches) {
+          currentBatch++;
+          setProcessingStatus(`Processing batch ${currentBatch}/${totalBatches}...`);
+          
+          const combinedText = textBatch.map(t => `--- ${t.name} ---\n${t.text}`).join('\n\n');
+          const count = await callParseTopics({
+            text: combinedText,
+            subjectName,
+            extractionMode
+          });
+          extractedCount += count;
+        }
+      } else {
+        // Single batch processing
+        setProcessingStatus("Extracting topics...");
+        
+        const combinedText = allTexts.length > 0 
+          ? allTexts.map(t => `--- ${t.name} ---\n${t.text}`).join('\n\n')
+          : undefined;
+
+        extractedCount = await callParseTopics({
+          images: images.length > 0 ? images : undefined,
+          text: combinedText,
+          subjectName,
+          extractionMode
+        });
+      }
+
+      if (extractedCount > 0) {
+        toast.success(`Extracted ${extractedCount} topics!`);
+        // Clear queue on success
+        setQueuedFiles([]);
+        setQueuedNotes([]);
+      } else {
+        toast.warning("No topics found. Try clearer documents or different content.");
+      }
+    } catch (error) {
+      console.error("Error processing queue:", error);
+      toast.error("Failed to extract topics. Please try again.");
+    } finally {
+      setIsProcessing(false);
+      setProcessingStatus("");
+    }
+  };
+
+  const callParseTopics = async (params: {
+    images?: string[];
+    text?: string;
+    notes?: string[];
+    subjectName: string;
+    extractionMode: ExtractionMode;
+  }): Promise<number> => {
+    const { images, text, notes, subjectName, extractionMode } = params;
+
+    const { data, error } = await supabase.functions.invoke("parse-topics", {
+      body: { 
+        text,
+        subjectName,
+        images,
+        notes,
+        extractionMode,
+      },
+    });
+
+    if (error) {
+      console.error("Parse error:", error);
+      throw error;
+    }
+
+    if (data?.topics && Array.isArray(data.topics) && data.topics.length > 0) {
+      const newTopics: Topic[] = data.topics.map((t: any) => ({
+        id: `topic-${Date.now()}-${Math.random()}`,
+        subject_id: selectedSubject,
+        name: typeof t === 'string' ? t : t.name,
+        confidence: typeof t === 'object' && t.confidence ? t.confidence : 50,
+      }));
+
+      // Avoid duplicates
+      const existingNames = new Set(topics.map(t => `${t.subject_id}-${t.name.toLowerCase()}`));
+      const uniqueNewTopics = newTopics.filter(
+        t => !existingNames.has(`${t.subject_id}-${t.name.toLowerCase()}`)
+      );
+
+      if (uniqueNewTopics.length > 0) {
+        setTopics([...topics, ...uniqueNewTopics]);
+        return uniqueNewTopics.length;
+      }
+    }
+
+    return 0;
+  };
+
+  const getFileIcon = (file: File) => {
+    if (file.type.startsWith('image/')) return <Image className="w-4 h-4" />;
+    if (file.type === 'application/pdf') return <FileText className="w-4 h-4 text-red-500" />;
+    if (file.type.includes('document') || file.name.endsWith('.docx')) return <FileText className="w-4 h-4 text-blue-500" />;
+    return <File className="w-4 h-4" />;
   };
 
   return (
@@ -206,6 +338,23 @@ const SmartTopicsStep = ({ subjects, topics, setTopics }: SmartTopicsStepProps) 
 
             {/* Upload Tab */}
             <TabsContent value="upload" className="space-y-4">
+              {/* Subject Selection */}
+              <div className="space-y-2">
+                <Label>Select Subject for Extraction</Label>
+                <Select value={selectedSubject} onValueChange={setSelectedSubject}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select subject" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {subjects.map(subject => (
+                      <SelectItem key={subject.id || subject.name} value={subject.id || subject.name}>
+                        {subject.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
               {/* Extraction Mode Selection */}
               <div className="space-y-2">
                 <Label className="text-sm font-medium">How should we extract topics?</Label>
@@ -285,53 +434,139 @@ const SmartTopicsStep = ({ subjects, topics, setTopics }: SmartTopicsStepProps) 
                     onDrop={handleDrop}
                     className="flex flex-col items-center justify-center text-center space-y-4"
                   >
-                    {isProcessing ? (
-                      <>
-                        <div className="p-4 rounded-full bg-primary/10">
-                          <Loader2 className="w-8 h-8 text-primary animate-spin" />
-                        </div>
-                        <div className="space-y-1">
-                          <p className="font-medium">Processing {uploadedFile?.name}...</p>
-                          <p className="text-xs text-muted-foreground">
-                            Extracting topics ({extractionMode === "exact" ? "exact mode" : "general mode"})
-                          </p>
-                        </div>
-                      </>
-                    ) : (
-                      <>
-                        <div className="p-4 rounded-full bg-muted">
-                          <Upload className="w-8 h-8 text-muted-foreground" />
-                        </div>
-                        <div className="space-y-1">
-                          <p className="font-medium">Drag & drop your document</p>
-                          <p className="text-xs text-muted-foreground">
-                            {extractionMode === "exact" 
-                              ? "Upload an exam spec or checklist image"
-                              : "Upload lesson slides or notes image"}
-                          </p>
-                        </div>
-                        <div className="flex flex-wrap justify-center gap-2 text-xs text-muted-foreground">
-                          <Badge variant="outline" className="gap-1">
-                            <Image className="w-3 h-3" /> PNG, JPG
-                          </Badge>
-                        </div>
-                        <label className="cursor-pointer">
-                          <input
-                            type="file"
-                            accept=".png,.jpg,.jpeg,.webp"
-                            onChange={handleFileSelect}
-                            className="hidden"
-                          />
-                          <Button variant="outline" className="pointer-events-none">
-                            <Upload className="w-4 h-4 mr-2" />
-                            Choose File
-                          </Button>
-                        </label>
-                      </>
-                    )}
+                    <div className="p-4 rounded-full bg-muted">
+                      <Upload className="w-8 h-8 text-muted-foreground" />
+                    </div>
+                    <div className="space-y-1">
+                      <p className="font-medium">Drag & drop files</p>
+                      <p className="text-xs text-muted-foreground">
+                        or click to select multiple files
+                      </p>
+                    </div>
+                    <div className="flex flex-wrap justify-center gap-2 text-xs text-muted-foreground">
+                      <Badge variant="outline" className="gap-1">
+                        <FileText className="w-3 h-3" /> PDF
+                      </Badge>
+                      <Badge variant="outline" className="gap-1">
+                        <FileText className="w-3 h-3" /> DOCX
+                      </Badge>
+                      <Badge variant="outline" className="gap-1">
+                        <File className="w-3 h-3" /> TXT, MD
+                      </Badge>
+                      <Badge variant="outline" className="gap-1">
+                        <Image className="w-3 h-3" /> Images
+                      </Badge>
+                    </div>
+                    <label className="cursor-pointer">
+                      <input
+                        type="file"
+                        accept=".pdf,.docx,.doc,.txt,.md,.png,.jpg,.jpeg,.webp,.gif"
+                        onChange={handleFileSelect}
+                        className="hidden"
+                        multiple
+                      />
+                      <Button variant="outline" className="pointer-events-none">
+                        <Upload className="w-4 h-4 mr-2" />
+                        Choose Files
+                      </Button>
+                    </label>
                   </div>
                 </CardContent>
               </Card>
+
+              {/* Queued Files */}
+              {queuedFiles.length > 0 && (
+                <div className="space-y-2">
+                  <Label className="text-sm">Files to process ({queuedFiles.length})</Label>
+                  <div className="space-y-2 max-h-40 overflow-y-auto">
+                    {queuedFiles.map((file, index) => (
+                      <div key={index} className="flex items-center justify-between p-2 bg-muted rounded-lg">
+                        <div className="flex items-center gap-2 overflow-hidden">
+                          {getFileIcon(file)}
+                          <span className="text-sm truncate">{file.name}</span>
+                          <span className="text-xs text-muted-foreground">
+                            ({(file.size / 1024).toFixed(0)}KB)
+                          </span>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-6 w-6 shrink-0"
+                          onClick={() => removeFileFromQueue(index)}
+                        >
+                          <X className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Notes Section */}
+              <div className="space-y-2">
+                <Label className="text-sm flex items-center gap-2">
+                  <StickyNote className="w-4 h-4" />
+                  Add Notes (optional)
+                </Label>
+                <div className="flex gap-2">
+                  <Textarea
+                    value={newNote}
+                    onChange={(e) => setNewNote(e.target.value)}
+                    placeholder="Paste or type notes here..."
+                    className="min-h-[80px]"
+                  />
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={addNote}
+                  disabled={!newNote.trim()}
+                >
+                  <Plus className="w-4 h-4 mr-1" />
+                  Add Note
+                </Button>
+              </div>
+
+              {/* Queued Notes */}
+              {queuedNotes.length > 0 && (
+                <div className="space-y-2">
+                  <Label className="text-sm">Notes to process ({queuedNotes.length})</Label>
+                  <div className="space-y-2 max-h-32 overflow-y-auto">
+                    {queuedNotes.map((note) => (
+                      <div key={note.id} className="flex items-start justify-between p-2 bg-muted rounded-lg">
+                        <p className="text-sm line-clamp-2 flex-1">{note.content}</p>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-6 w-6 shrink-0 ml-2"
+                          onClick={() => removeNote(note.id)}
+                        >
+                          <X className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Process Button */}
+              <Button
+                onClick={processQueue}
+                disabled={isProcessing || (queuedFiles.length === 0 && queuedNotes.length === 0)}
+                className="w-full"
+              >
+                {isProcessing ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    {processingStatus || "Processing..."}
+                  </>
+                ) : (
+                  <>
+                    <Upload className="w-4 h-4 mr-2" />
+                    Extract Topics ({queuedFiles.length + queuedNotes.length} items)
+                  </>
+                )}
+              </Button>
             </TabsContent>
 
             {/* AI Chat Tab */}
@@ -398,7 +633,7 @@ const SmartTopicsStep = ({ subjects, topics, setTopics }: SmartTopicsStepProps) 
               onClick={() => setTopics([])}
               className="text-destructive hover:text-destructive"
             >
-              <X className="w-4 h-4 mr-1" />
+              <Trash2 className="w-4 h-4 mr-1" />
               Clear All
             </Button>
           )}
