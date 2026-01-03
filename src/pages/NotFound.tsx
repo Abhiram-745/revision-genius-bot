@@ -4,10 +4,12 @@ import { Button } from "@/components/ui/button";
 import { Home, ArrowLeft } from "lucide-react";
 import PageTransition from "@/components/PageTransition";
 import { OwlMascot } from "@/components/mascot/OwlMascot";
+import { NotFoundSEO } from "@/components/SEO";
 
 const NotFound = () => {
   return (
     <PageTransition>
+      <NotFoundSEO />
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-muted/20 p-4">
         {/* Background decoration */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">

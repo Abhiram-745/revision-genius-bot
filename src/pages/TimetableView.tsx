@@ -35,6 +35,7 @@ import { DailyInsightsPanel } from "@/components/DailyInsightsPanel";
 import { TimetableHistoryDialog } from "@/components/TimetableHistoryDialog";
 import ManualTimetableEditor from "@/components/ManualTimetableEditor";
 import PageTransition from "@/components/PageTransition";
+import { TimetableViewSEO } from "@/components/SEO";
 
 interface TimetableSession {
   time: string;
@@ -399,6 +400,7 @@ const TimetableView = () => {
 
   return (
     <PageTransition>
+    <TimetableViewSEO />
     <div className="min-h-screen bg-background relative overflow-hidden">
       {/* Floating background elements - hidden on mobile */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none hidden md:block">

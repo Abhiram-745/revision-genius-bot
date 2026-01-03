@@ -12,6 +12,7 @@ import { motion } from "framer-motion";
 import studyingOwl from "@/assets/studying-owl.png";
 import owlChecklist from "@/assets/owl-checklist.png";
 import owlFolder from "@/assets/owl-folder.png";
+import { TimetablesSEO } from "@/components/SEO";
 
 const Timetables = () => {
   const navigate = useNavigate();
@@ -50,6 +51,7 @@ const Timetables = () => {
 
   return (
     <PageTransition>
+    <TimetablesSEO />
     <div className="min-h-screen bg-background relative overflow-hidden">
       
       {/* Floating background elements - hidden on mobile */}

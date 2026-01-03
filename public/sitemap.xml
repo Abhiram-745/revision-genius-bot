@@ -1,87 +1,92 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <!-- Homepage - Highest Priority -->
   <url>
     <loc>https://vistara-ai.app/</loc>
-    <lastmod>2025-11-29</lastmod>
+    <lastmod>2026-01-03</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
+  
+  <!-- Core Landing & Auth Pages -->
+  <url>
+    <loc>https://vistara-ai.app/pricing</loc>
+    <lastmod>2026-01-03</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+  </url>
   <url>
     <loc>https://vistara-ai.app/auth</loc>
-    <lastmod>2025-11-29</lastmod>
+    <lastmod>2026-01-03</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
+
+  <!-- Main App Pages -->
   <url>
     <loc>https://vistara-ai.app/dashboard</loc>
-    <lastmod>2025-11-29</lastmod>
-    <changefreq>weekly</changefreq>
+    <lastmod>2026-01-03</lastmod>
+    <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://vistara-ai.app/timetables</loc>
-    <lastmod>2025-11-29</lastmod>
-    <changefreq>weekly</changefreq>
+    <lastmod>2026-01-03</lastmod>
+    <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://vistara-ai.app/calendar</loc>
-    <lastmod>2025-11-29</lastmod>
+    <loc>https://vistara-ai.app/insights</loc>
+    <lastmod>2026-01-03</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
+    <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://vistara-ai.app/events</loc>
-    <lastmod>2025-11-29</lastmod>
+    <loc>https://vistara-ai.app/practice</loc>
+    <lastmod>2026-01-03</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
+    <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://vistara-ai.app/homework</loc>
-    <lastmod>2025-11-29</lastmod>
+    <loc>https://vistara-ai.app/blurt-ai</loc>
+    <lastmod>2026-01-03</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://vistara-ai.app/test-scores</loc>
-    <lastmod>2025-11-29</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://vistara-ai.app/ai-insights</loc>
-    <lastmod>2025-11-29</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://vistara-ai.app/social</loc>
-    <lastmod>2025-11-29</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
+    <priority>0.7</priority>
   </url>
   <url>
     <loc>https://vistara-ai.app/groups</loc>
-    <lastmod>2025-11-29</lastmod>
+    <lastmod>2026-01-03</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://vistara-ai.app/connect</loc>
+    <lastmod>2026-01-03</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://vistara-ai.app/social</loc>
+    <lastmod>2026-01-03</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://vistara-ai.app/agenda</loc>
+    <lastmod>2026-01-03</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://vistara-ai.app/calendar</loc>
+    <lastmod>2026-01-03</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
   </url>
   <url>
     <loc>https://vistara-ai.app/reflections</loc>
-    <lastmod>2025-11-29</lastmod>
+    <lastmod>2026-01-03</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://vistara-ai.app/import-timetable</loc>
-    <lastmod>2025-11-29</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.5</priority>
-  </url>
-  <url>
-    <loc>https://vistara-ai.app/import-account</loc>
-    <lastmod>2025-11-29</lastmod>
-    <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
 </urlset>

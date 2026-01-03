@@ -1,3 +1,10 @@
+# Vistara - AI Study Planner
+# https://vistara-ai.app
+
+User-agent: *
+Allow: /
+
+# Allow social media crawlers
 User-agent: Googlebot
 Allow: /
 
@@ -10,7 +17,17 @@ Allow: /
 User-agent: facebookexternalhit
 Allow: /
 
-User-agent: *
+User-agent: LinkedInBot
 Allow: /
 
+User-agent: Slackbot
+Allow: /
+
+# Disallow admin and private pages
+Disallow: /admin
+Disallow: /import-account
+Disallow: /import-timetable
+Disallow: /logo-generator
+
+# Sitemap location
 Sitemap: https://vistara-ai.app/sitemap.xml

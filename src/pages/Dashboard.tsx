@@ -20,6 +20,7 @@ import PremiumGrantNotification from "@/components/PremiumGrantNotification";
 import { AmbassadorApprovalNotification } from "@/components/dashboard/AmbassadorApprovalNotification";
 import { PremiumUpgradeCTA } from "@/components/dashboard/PremiumUpgradeCTA";
 import { format } from "date-fns";
+import { DashboardSEO } from "@/components/SEO";
 
 // Import owl mascot images only
 import studyingOwl from "@/assets/studying-owl.png";
@@ -223,6 +224,7 @@ const Dashboard = () => {
 
   return (
     <PageTransition>
+      <DashboardSEO />
       <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/20">
         <SimpleOnboarding />
         <Header onNewTimetable={() => setShowOnboarding(true)} />

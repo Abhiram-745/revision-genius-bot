@@ -17,6 +17,7 @@ import { useSectionTour } from "@/hooks/useSectionTour";
 import SectionSpotlight from "@/components/tours/SectionSpotlight";
 import { groupsPageSectionSteps } from "@/components/tours/groupSectionSteps";
 import PageTransition from "@/components/PageTransition";
+import { GroupsSEO } from "@/components/SEO";
 
 interface StudyGroup {
   id: string;
@@ -147,6 +148,7 @@ const Groups = () => {
 
   return (
     <PageTransition>
+    <GroupsSEO />
     <div className="min-h-screen bg-background relative overflow-hidden">
       {/* Floating background elements - hidden on mobile */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none hidden md:block">

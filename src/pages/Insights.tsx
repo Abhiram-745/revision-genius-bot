@@ -18,6 +18,7 @@ import { motion } from "framer-motion";
 import owlChart from "@/assets/owl-chart.png";
 import lightbulbIcon from "@/assets/lightbulb-icon.png";
 import magnifyingGlassIcon from "@/assets/magnifying-glass-icon.png";
+import { InsightsSEO } from "@/components/SEO";
 import {
   Select,
   SelectContent,
@@ -180,6 +181,7 @@ const Insights = () => {
 
   return (
     <PageTransition>
+      <InsightsSEO />
       <div className="min-h-screen bg-background relative overflow-hidden">
         {/* Floating background elements - hidden on mobile */}
         <div className="fixed inset-0 overflow-hidden pointer-events-none hidden md:block">

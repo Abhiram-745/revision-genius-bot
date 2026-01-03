@@ -21,6 +21,7 @@ import SocialStats from "@/components/social/SocialStats";
 import StudyOverview from "@/components/social/StudyOverview";
 import PageTransition from "@/components/PageTransition";
 import { BarChart3 } from "lucide-react";
+import { ConnectSEO } from "@/components/SEO";
 
 interface StudyGroup {
   id: string;
@@ -160,6 +161,7 @@ const Connect = () => {
 
   return (
     <PageTransition>
+      <ConnectSEO />
       <div className="min-h-screen bg-background relative overflow-hidden">
         {/* Floating background elements */}
         <div className="fixed inset-0 overflow-hidden pointer-events-none hidden md:block">
