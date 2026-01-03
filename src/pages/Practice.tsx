@@ -17,6 +17,7 @@ import SaveMyExamsLogo from "@/components/SaveMyExamsLogo";
 import { OwlMascot } from "@/components/mascot/OwlMascot";
 import { toast } from "sonner";
 import { UniversalPracticeSession } from "@/components/UniversalPracticeSession";
+import { PracticeSEO } from "@/components/SEO";
 
 type Category = "all" | "ai" | "gcse" | "alevel" | "ap" | "flashcards";
 
@@ -288,6 +289,7 @@ const Practice = () => {
 
   return (
     <PageTransition>
+      <PracticeSEO />
       <div className="min-h-screen bg-gradient-to-br from-background via-background to-accent/5">
         <Header />
 

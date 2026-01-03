@@ -11,6 +11,7 @@ import { GroupLeaderboard } from "@/components/social/GroupLeaderboard";
 import SocialStats from "@/components/social/SocialStats";
 import { GroupInvitations } from "@/components/groups/GroupInvitations";
 import PageTransition from "@/components/PageTransition";
+import { SocialSEO } from "@/components/SEO";
 
 const Social = () => {
   const navigate = useNavigate();
@@ -41,6 +42,7 @@ const Social = () => {
 
   return (
     <PageTransition>
+    <SocialSEO />
     <div className="min-h-screen bg-background relative overflow-hidden">
       {/* Floating background elements - hidden on mobile */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none hidden md:block">

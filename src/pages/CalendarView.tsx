@@ -15,6 +15,7 @@ import Header from "@/components/Header";
 import { useSectionTour } from "@/hooks/useSectionTour";
 import PageTransition from "@/components/PageTransition";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { CalendarSEO } from "@/components/SEO";
 
 interface CalendarItem {
   id: string;
@@ -593,6 +594,7 @@ const CalendarView = () => {
 
   return (
     <PageTransition>
+      <CalendarSEO />
       <div className="min-h-screen bg-background">
         <Header />
         

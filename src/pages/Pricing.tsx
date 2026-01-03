@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import PageTransition from "@/components/PageTransition";
 import { toast } from "sonner";
+import { PricingSEO } from "@/components/SEO";
 
 const floatAnimation = {
   y: [0, -10, 0],
@@ -108,6 +109,7 @@ const Pricing = () => {
 
   return (
     <PageTransition>
+      <PricingSEO />
       <div className="min-h-screen bg-gradient-to-b from-background via-background to-violet-950/20 overflow-hidden">
         {/* Animated background */}
         <div className="fixed inset-0 overflow-hidden pointer-events-none">

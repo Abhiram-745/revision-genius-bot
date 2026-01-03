@@ -35,6 +35,8 @@ import wavingOwl from "@/assets/waving-owl.png";
 import VistaraLogo from "@/components/VistaraLogo";
 import InstallAppButton from "@/components/InstallAppButton";
 import OfferCountdown from "@/components/landing/OfferCountdown";
+import { LandingSEO } from "@/components/SEO";
+
 const Landing = () => {
   const navigate = useNavigate();
   const [showComingSoon, setShowComingSoon] = useState(false);
@@ -95,6 +97,9 @@ const Landing = () => {
     });
   };
   return <PageTransition>
+      {/* SEO Meta Tags */}
+      <LandingSEO />
+
       {/* Scroll Progress Bar */}
       <ScrollProgressBar />
 

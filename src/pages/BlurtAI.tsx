@@ -12,6 +12,7 @@ import PageTransition from "@/components/PageTransition";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
 import { BlurtAIPracticeSession } from "@/components/BlurtAIPracticeSession";
+import { BlurtAISEO } from "@/components/SEO";
 
 interface Timetable {
   id: string;
@@ -325,6 +326,7 @@ const BlurtAI = () => {
 
   return (
     <PageTransition>
+      <BlurtAISEO />
       <div className="min-h-screen bg-gradient-to-br from-background via-background to-secondary/5">
         <Header />
         

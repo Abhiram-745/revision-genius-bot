@@ -14,6 +14,7 @@ import { motion } from "framer-motion";
 import owlChecklist from "@/assets/owl-checklist.png";
 import notebookIcon from "@/assets/notebook-icon.png";
 import penIcon from "@/assets/pen-icon.png";
+import { AgendaSEO } from "@/components/SEO";
 
 const Agenda = () => {
   const navigate = useNavigate();
@@ -35,6 +36,7 @@ const Agenda = () => {
 
   return (
     <PageTransition>
+      <AgendaSEO />
       <div className="min-h-screen bg-background relative overflow-hidden">
         
         {/* Floating background elements - hidden on mobile */}

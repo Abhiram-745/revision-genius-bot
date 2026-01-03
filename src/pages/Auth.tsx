@@ -14,6 +14,7 @@ import PageTransition from "@/components/PageTransition";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import PasswordStrengthIndicator from "@/components/auth/PasswordStrengthIndicator";
+import { AuthSEO } from "@/components/SEO";
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -228,6 +229,7 @@ const Auth = () => {
   if (showVerification) {
     return (
       <PageTransition>
+        <AuthSEO />
         <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-muted to-background p-4">
           <div className="absolute top-4 left-4">
             <Button
@@ -305,6 +307,7 @@ const Auth = () => {
 
   return (
     <PageTransition>
+      <AuthSEO />
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-muted to-background p-4">
         <div className="absolute top-4 left-4">
           <Button
