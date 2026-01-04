@@ -251,7 +251,7 @@ const Insights = () => {
               )}
             </div>
 
-            <Tabs defaultValue="analysis" className="w-full">
+            <Tabs defaultValue="analysis" className="w-full" data-tour="ai-insights">
               <TabsList className="grid w-full grid-cols-5 mb-4 sm:mb-6 h-auto p-1">
                 <TabsTrigger value="analysis" className="gap-1.5 text-xs sm:text-sm py-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-emerald-500/20 data-[state=active]:to-amber-500/20">
                   <Sparkles className="h-3.5 w-3.5 hidden sm:inline" />

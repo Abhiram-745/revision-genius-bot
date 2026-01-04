@@ -198,7 +198,7 @@ const Groups = () => {
           </div>
         </div>
 
-        <Tabs defaultValue="my-groups" className="space-y-6">
+        <Tabs defaultValue="my-groups" className="space-y-6" data-tour="groups-list">
           <TabsList className="glass-card p-1 rounded-xl">
             <TabsTrigger 
               value="my-groups" 

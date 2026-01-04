@@ -403,7 +403,7 @@ const Practice = () => {
               {activeCategory === "all" ? "All Study Apps" : `${categories.find(c => c.id === activeCategory)?.label} Apps`}
             </h2>
             <AnimatePresence mode="popLayout">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4" data-tour="practice-platforms">
                 {filteredApps.map((app, index) => (
                   <motion.div
                     key={app.id}

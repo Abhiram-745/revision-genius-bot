@@ -109,7 +109,7 @@ const Timetables = () => {
             onClick={() => setShowOnboarding(true)}
             className="gap-2 bg-gradient-hero hover:opacity-90 shadow-lg w-full sm:w-auto"
             size="default"
-            data-tour="new-timetable"
+            data-tour="create-timetable"
           >
             <Plus className="h-4 w-4 sm:h-5 sm:w-5" />
             New Timetable

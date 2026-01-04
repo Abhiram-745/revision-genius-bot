@@ -8,7 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import PageTransition from "@/components/PageTransition";
 import TypewriterText from "@/components/landing/TypewriterText";
 import FloatingIcon from "@/components/landing/FloatingIcon";
-import InteractiveTimetableDemo from "@/components/landing/InteractiveTimetableDemo";
+import InteractiveAppDemo from "@/components/landing/InteractiveAppDemo";
 import BlurtAIIntegration from "@/components/landing/BlurtAIIntegration";
 import ComingSoonDialog from "@/components/landing/ComingSoonDialog";
 import ScrollProgressBar from "@/components/landing/ScrollProgressBar";
@@ -554,28 +554,7 @@ const Landing = () => {
         <ColorChangeFeatures />
 
         {/* Interactive Demo Section */}
-        <section id="try-demo" className="py-24 px-6 bg-gradient-to-b from-background to-muted/50">
-          <div className="max-w-5xl mx-auto">
-            <motion.div initial={{
-            opacity: 0,
-            y: 30
-          }} whileInView={{
-            opacity: 1,
-            y: 0
-          }} viewport={{
-            once: true
-          }} className="text-center mb-12">
-              <h2 className="text-4xl md:text-5xl font-display font-bold mb-4">
-                Try it yourself
-              </h2>
-              <p className="text-xl text-muted-foreground">
-                See what a day with Vistara looks like
-              </p>
-            </motion.div>
-
-            <InteractiveTimetableDemo onArrowClick={() => setShowComingSoon(true)} />
-          </div>
-        </section>
+        <InteractiveAppDemo />
 
         {/* Stats Section with Animated Counters */}
         <section className="py-20 px-6 bg-gradient-to-r from-primary/10 via-secondary/10 to-accent/10">

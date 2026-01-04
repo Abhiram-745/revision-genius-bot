@@ -75,7 +75,7 @@ const TimetableList = ({ userId }: TimetableListProps) => {
   }
 
   return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3" data-tour="timetable-list">
       {timetables.map((timetable) => (
         <Card key={timetable.id} className="shadow-md hover:shadow-lg transition-shadow">
           <CardHeader>
