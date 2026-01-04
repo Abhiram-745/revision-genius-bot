@@ -89,4 +89,48 @@
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
+
+  <!-- Blog Section - High Priority for SEO -->
+  <url>
+    <loc>https://vistara-ai.app/blog</loc>
+    <lastmod>2026-01-04</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://vistara-ai.app/blog/active-recall-study-technique</loc>
+    <lastmod>2026-01-03</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://vistara-ai.app/blog/spaced-repetition-guide</loc>
+    <lastmod>2026-01-02</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://vistara-ai.app/blog/pomodoro-technique-students</loc>
+    <lastmod>2026-01-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://vistara-ai.app/blog/study-timetable-creation</loc>
+    <lastmod>2025-12-30</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://vistara-ai.app/blog/group-study-benefits</loc>
+    <lastmod>2025-12-28</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://vistara-ai.app/blog/exam-anxiety-tips</loc>
+    <lastmod>2025-12-25</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
 </urlset>

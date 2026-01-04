@@ -21,6 +21,8 @@ import Practice from "@/pages/Practice";
 import PMT from "@/pages/PMT";
 import Quizlet from "@/pages/Quizlet";
 import Pricing from "@/pages/Pricing";
+import Blog from "@/pages/Blog";
+import BlogPost from "@/pages/BlogPost";
 
 export const AnimatedRoutes = () => {
   const location = useLocation();
@@ -54,6 +56,8 @@ export const AnimatedRoutes = () => {
         <Route path="/import-account" element={<ImportAccount />} />
         <Route path="/admin" element={<Admin />} />
         <Route path="/pricing" element={<Pricing />} />
+        <Route path="/blog" element={<Blog />} />
+        <Route path="/blog/:slug" element={<BlogPost />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </AnimatePresence>
