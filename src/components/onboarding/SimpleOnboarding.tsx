@@ -1,14 +1,14 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronRight, ChevronLeft, Sparkles, Calendar, Brain, Users, Home, BarChart3, BookOpen, UserPlus, X } from "lucide-react";
+import { ChevronRight, ChevronLeft, Sparkles, Calendar, Brain, Users, Home, BarChart3, BookOpen, UserPlus, X, Map } from "lucide-react";
 import { OwlMascot } from "@/components/mascot/OwlMascot";
 import VistaraLogo from "@/components/VistaraLogo";
 
-// Simplified tour - stays on dashboard, no page navigation to prevent reload issues
+// Simplified tour - quick overview with option to take full guided tour
 const tourSteps = [
   {
     owl: "waving" as const,
@@ -90,20 +90,26 @@ const tourSteps = [
   {
     owl: "thumbsup" as const,
     title: "You're All Set!",
-    description: "You have 2 months of free premium! Create your first timetable now.",
+    description: "You have 2 months of free premium! Would you like a guided tour?",
     icon: UserPlus,
     highlights: [
       "2 months free premium",
       "Unlimited timetables",
       "Full AI features",
     ],
+    showTourOption: true,
   },
 ];
 
-export const SimpleOnboarding = () => {
+interface SimpleOnboardingProps {
+  onStartFullTour?: () => void;
+}
+
+export const SimpleOnboarding = ({ onStartFullTour }: SimpleOnboardingProps) => {
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
+  const [startingFullTour, setStartingFullTour] = useState(false);
 
   useEffect(() => {
     checkFirstLogin();
@@ -119,20 +125,32 @@ export const SimpleOnboarding = () => {
     }
   };
 
-  const handleComplete = async () => {
+  const handleComplete = async (skipFullTour = true) => {
     const { data: { user } } = await supabase.auth.getUser();
     if (user) {
       localStorage.setItem(`app_tour_complete_${user.id}`, "true");
+      if (!skipFullTour) {
+        // Mark that they want the full guided tour
+        localStorage.setItem(`start_full_tour_${user.id}`, "true");
+      }
     }
     setOpen(false);
+    if (!skipFullTour) {
+      setStartingFullTour(true);
+      onStartFullTour?.();
+    }
   };
 
   const handleNext = () => {
     if (currentStep < tourSteps.length - 1) {
       setCurrentStep(currentStep + 1);
     } else {
-      handleComplete();
+      handleComplete(true);
     }
+  };
+
+  const handleStartGuidedTour = () => {
+    handleComplete(false);
   };
 
   const handlePrev = () => {
@@ -142,12 +160,14 @@ export const SimpleOnboarding = () => {
   };
 
   const handleSkip = () => {
-    handleComplete();
+    handleComplete(true);
   };
 
   const step = tourSteps[currentStep];
   const Icon = step.icon;
   const progress = ((currentStep + 1) / tourSteps.length) * 100;
+  const isLastStep = currentStep === tourSteps.length - 1;
+  const showTourOption = (step as any).showTourOption;
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -271,23 +291,45 @@ export const SimpleOnboarding = () => {
                   ))}
                 </div>
 
-                <Button
-                  size="sm"
-                  onClick={handleNext}
-                  className="gap-1 bg-gradient-to-r from-lime-500 to-emerald-500 hover:from-lime-600 hover:to-emerald-600 text-white"
-                >
-                  {currentStep < tourSteps.length - 1 ? (
-                    <>
-                      Next
-                      <ChevronRight className="h-4 w-4" />
-                    </>
-                  ) : (
-                    <>
-                      Get Started
-                      <Sparkles className="h-4 w-4" />
-                    </>
-                  )}
-                </Button>
+                {/* Show guided tour option on last step */}
+                {showTourOption ? (
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={handleNext}
+                      className="gap-1"
+                    >
+                      Skip Tour
+                    </Button>
+                    <Button
+                      size="sm"
+                      onClick={handleStartGuidedTour}
+                      className="gap-1 bg-gradient-to-r from-lime-500 to-emerald-500 hover:from-lime-600 hover:to-emerald-600 text-white"
+                    >
+                      <Map className="h-4 w-4" />
+                      Take Guided Tour
+                    </Button>
+                  </div>
+                ) : (
+                  <Button
+                    size="sm"
+                    onClick={handleNext}
+                    className="gap-1 bg-gradient-to-r from-lime-500 to-emerald-500 hover:from-lime-600 hover:to-emerald-600 text-white"
+                  >
+                    {currentStep < tourSteps.length - 1 ? (
+                      <>
+                        Next
+                        <ChevronRight className="h-4 w-4" />
+                      </>
+                    ) : (
+                      <>
+                        Get Started
+                        <Sparkles className="h-4 w-4" />
+                      </>
+                    )}
+                  </Button>
+                )}
               </div>
             </div>
           </div>

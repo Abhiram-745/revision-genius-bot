@@ -13,6 +13,7 @@ import { AIInsightsCard } from "@/components/dashboard/AIInsightsCard";
 import { StudyArchetypeCard } from "@/components/dashboard/StudyArchetypeCard";
 import { MotivationCard } from "@/components/dashboard/MotivationCard";
 import SimpleOnboarding from "@/components/onboarding/SimpleOnboarding";
+import FullAppTour from "@/components/onboarding/FullAppTour";
 import PageTransition from "@/components/PageTransition";
 import { OwlMascot } from "@/components/mascot/OwlMascot";
 import { motion } from "framer-motion";
@@ -71,6 +72,7 @@ const Dashboard = () => {
   const [subjectProgress, setSubjectProgress] = useState<Record<string, number>>({});
   const [totalSessions, setTotalSessions] = useState(0);
   const [showAmbassadorNotification, setShowAmbassadorNotification] = useState(true);
+  const [showFullTour, setShowFullTour] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -226,7 +228,8 @@ const Dashboard = () => {
     <PageTransition>
       <DashboardSEO />
       <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/20">
-        <SimpleOnboarding />
+        <SimpleOnboarding onStartFullTour={() => setShowFullTour(true)} />
+        <FullAppTour startTour={showFullTour} onComplete={() => setShowFullTour(false)} />
         <Header onNewTimetable={() => setShowOnboarding(true)} />
 
         <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
@@ -277,7 +280,7 @@ const Dashboard = () => {
             >
               {/* Row 1: Hero Card - Centered Content */}
               <motion.div variants={itemVariants}>
-                <Card className="overflow-hidden border-0 shadow-xl bg-gradient-to-br from-primary/10 via-card to-accent/10">
+                <Card className="overflow-hidden border-0 shadow-xl bg-gradient-to-br from-primary/10 via-card to-accent/10" data-tour="dashboard-greeting">
                   <CardContent className="p-6 sm:p-8">
                     <div className="flex flex-col items-center justify-center gap-6 text-center">
                       <motion.div
@@ -344,7 +347,7 @@ const Dashboard = () => {
               )}
 
               {/* Row 3: Quick Stats - Visible on mobile */}
-              <motion.div variants={itemVariants} className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+              <motion.div variants={itemVariants} className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4" data-tour="progress-section">
                 {/* Streak Card */}
                 <motion.div whileHover={{ scale: 1.02 }}>
                   <Card className="bg-gradient-to-br from-orange-500/10 to-amber-500/10 border-orange-500/20 overflow-hidden">
