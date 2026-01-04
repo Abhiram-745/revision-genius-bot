@@ -28,7 +28,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Calendar, Plus, Home, LogOut, Settings, User, Sparkles, BookOpen, Users, Moon, Sun, ListTodo, CalendarClock, Menu, Brain, HelpCircle, Crown, Download } from "lucide-react";
+import { Calendar, Plus, Home, LogOut, Settings, User, Sparkles, BookOpen, Users, Moon, Sun, ListTodo, CalendarClock, Menu, Brain, HelpCircle, Crown, Download, FileText } from "lucide-react";
 import { toast } from "sonner";
 import ProfileSettings from "./ProfileSettings";
 import { useUserRole, useUsageLimits } from "@/hooks/useUserRole";
@@ -291,6 +291,21 @@ const Header = ({ onNewTimetable }: HeaderProps) => {
       )}
 
       <Separator className="my-2" />
+
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() => {
+          navigate("/blog");
+          onItemClick?.();
+        }}
+        className={`justify-start gap-3 w-full px-3 py-3 rounded-xl transition-all ${
+          isActivePath("/blog") ? "bg-primary/15 text-primary font-semibold" : "hover:bg-primary/10"
+        }`}
+      >
+        <FileText className="h-5 w-5 text-primary" />
+        <span className="font-medium">Study Tips Blog</span>
+      </Button>
 
       <Button
         variant="ghost"
